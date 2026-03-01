@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
@@ -71,7 +71,15 @@ function XpBoostTimer({ expiresAt }: { expiresAt: string }) {
   return <div style={{ fontFamily: "'Roboto', sans-serif", fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{remaining}</div>
 }
 
-export default function SettingsPage() {
+export default function SettingsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Loading...</div>}>
+      <SettingsPage />
+    </Suspense>
+  )
+}
+
+function SettingsPage() {
   const searchParams = useSearchParams()
   const tabParam = searchParams?.get('tab')
   const { user, refresh } = useAuth()
