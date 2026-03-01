@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
@@ -34,7 +34,15 @@ function renderFormatted(text: string) {
 // The conversation is NOT created until the user actually sends the first message
 type DraftCompose = { slug: string; userId: string; username: string; initials: string } | null
 
-export default function MailboxPage() {
+export default function MailboxPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Loading...</div>}>
+      <MailboxPage />
+    </Suspense>
+  )
+}
+
+function MailboxPage() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const [threads,    setThreads]    = useState<Thread[]>([])
