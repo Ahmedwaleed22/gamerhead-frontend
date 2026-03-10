@@ -7,23 +7,6 @@ import SearchFilter from '../components/SearchFilter'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
 
-interface TeamRow {
-  _id: string
-  name: string
-  slug: string
-  emoji: string
-  game: string
-  gameSlug: string
-  captainId: string
-  roster: any[]
-  wins: number
-  losses: number
-  cashEarned: number
-  ladderRank: number
-  isDisbanded: boolean
-  createdAt: string
-}
-
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
   borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
@@ -34,7 +17,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function AdminTeamsPage() {
-  const [teams, setTeams] = useState<TeamRow[]>([])
+  const [teams, setTeams] = useState<any[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
@@ -42,9 +25,23 @@ export default function AdminTeamsPage() {
 
   const [search, setSearch] = useState('')
   const [disbanded, setDisbanded] = useState('')
+  const [gameFilter, setGameFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
+  const [tournamentFilter, setTournamentFilter] = useState('')
+  const [games, setGames] = useState<any[]>([])
   const [detailModal, setDetailModal] = useState<any>(null)
   const [editModal, setEditModal] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', emoji: '', avatarUrl: '', bannerUrl: '', game: '', gameSlug: '' })
+  const [editForm, setEditForm] = useState({ name: '', avatarUrl: '', bannerUrl: '', bio: '', twitchUrl: '', twitterUrl: '', youtubeUrl: '', discordUrl: '' })
+
+  // Transfer leader
+  const [transferModal, setTransferModal] = useState(false)
+  const [transferUserId, setTransferUserId] = useState('')
+  const [transferring, setTransferring] = useState(false)
+
+  // Load games for filter dropdown
+  useEffect(() => {
+    adminApi.getGames({ limit: 50 }).then((res: any) => setGames(res.games || [])).catch(() => {})
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -52,13 +49,16 @@ export default function AdminTeamsPage() {
       const params: any = { page, limit: 25 }
       if (search) params.q = search
       if (disbanded) params.isDisbanded = disbanded
+      if (gameFilter) params.game = gameFilter
+      if (typeFilter) params.type = typeFilter
+      if (tournamentFilter) params.hasTournament = tournamentFilter
       const res = await adminApi.getTeams(params)
       setTeams(res.teams)
       setTotal(res.total)
       setPages(res.pages)
     } catch (err) { console.error('[Admin Teams] load error:', err) }
     setLoading(false)
-  }, [page, search, disbanded])
+  }, [page, search, disbanded, gameFilter, typeFilter, tournamentFilter])
 
   useEffect(() => { load() }, [load])
 
@@ -76,6 +76,7 @@ export default function AdminTeamsPage() {
   }
 
   const handleDisband = async (id: string) => {
+    if (!confirm('Disband this team?')) return
     try {
       await adminApi.disbandTeam(id)
       setDetailModal(null)
@@ -87,11 +88,13 @@ export default function AdminTeamsPage() {
     if (!detailModal) return
     setEditForm({
       name: detailModal.name || '',
-      emoji: detailModal.emoji || '',
-      avatarUrl: detailModal.avatarUrl || '',
+      avatarUrl: detailModal.avatarUrl || detailModal.logoUrl || '',
       bannerUrl: detailModal.bannerUrl || '',
-      game: detailModal.game || '',
-      gameSlug: detailModal.gameSlug || '',
+      bio: detailModal.bio || '',
+      twitchUrl: detailModal.twitchUrl || '',
+      twitterUrl: detailModal.twitterUrl || '',
+      youtubeUrl: detailModal.youtubeUrl || '',
+      discordUrl: detailModal.discordUrl || '',
     })
     setEditModal(true)
   }
@@ -109,41 +112,65 @@ export default function AdminTeamsPage() {
   const handleRemoveMember = async (teamId: string, memberId: string) => {
     try {
       await adminApi.removeTeamMember(teamId, memberId)
-      viewDetail(teamId) // Refresh detail
+      viewDetail(teamId)
       load()
     } catch { }
   }
 
-  const columns: Column<TeamRow>[] = [
-    { key: 'name', label: 'Team', width: '2fr',
-      render: (row) => (
+  const handleTransferLeader = async () => {
+    if (!detailModal || !transferUserId.trim()) return
+    setTransferring(true)
+    try {
+      await adminApi.transferCaptain(detailModal._id, transferUserId.trim())
+      setTransferModal(false)
+      setTransferUserId('')
+      viewDetail(detailModal._id)
+      load()
+    } catch (err: any) {
+      alert(err?.response?.data?.message || err?.message || 'Transfer failed')
+    }
+    setTransferring(false)
+  }
+
+  const columns: Column[] = [
+    { key: '_id', label: 'Team ID', width: '100px',
+      render: (row: any) => <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#8890A4' }}>{row._id?.slice(-8)}</span>,
+    },
+    { key: 'name', label: 'Team', width: '1.5fr',
+      render: (row: any) => (
         <span style={{ cursor: 'pointer', fontWeight: 700 }} onClick={() => viewDetail(row._id)}>
           {row.emoji} {row.name}
         </span>
       ),
     },
     { key: 'game', label: 'Game', width: '100px' },
+    { key: 'matchType', label: 'Type', width: '65px',
+      render: (row: any) => (
+        <span style={{ fontSize: 10, fontWeight: 700, color: row.matchType === 'cash' ? '#22c55e' : '#3b82f6', textTransform: 'uppercase' }}>
+          {row.matchType || 'xp'}
+        </span>
+      ),
+    },
+    { key: 'tournament', label: 'Tournament', width: '100px',
+      render: (row: any) => row.tournamentName
+        ? <span style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b' }}>{row.tournamentName}</span>
+        : <span style={{ color: '#4F5568' }}>—</span>,
+    },
     { key: 'members', label: 'Members', width: '70px',
-      render: (row) => row.roster?.length || 0,
+      render: (row: any) => row.roster?.length || 0,
     },
     { key: 'record', label: 'Record', width: '80px',
-      render: (row) => `${row.wins || 0}W - ${row.losses || 0}L`,
+      render: (row: any) => `${row.wins || 0}W - ${row.losses || 0}L`,
     },
-    { key: 'cashEarned', label: 'Earned', width: '80px',
-      render: (row) => `$${((row.cashEarned || 0) / 100).toFixed(2)}`,
-    },
-    { key: 'ladderRank', label: 'Rank', width: '60px',
-      render: (row) => row.ladderRank || '—',
-    },
-    { key: 'status', label: 'Status', width: '80px',
-      render: (row) => (
-        <span style={{ fontSize: 9, fontWeight: 700, color: row.isDisbanded ? '#e8000d' : '#22c55e' }}>
+    { key: 'status', label: 'Status', width: '75px',
+      render: (row: any) => (
+        <span style={{ fontSize: 10, fontWeight: 700, color: row.isDisbanded ? '#e8000d' : '#22c55e' }}>
           {row.isDisbanded ? 'DISBANDED' : 'ACTIVE'}
         </span>
       ),
     },
     { key: 'actions', label: 'Actions', width: '120px',
-      render: (row) => (
+      render: (row: any) => (
         <div style={{ display: 'flex', gap: 4 }}>
           <ActionBtn label="VIEW" color="#3b82f6" onClick={() => viewDetail(row._id)} />
           {!row.isDisbanded && <ActionBtn label="DISBAND" color="#e8000d" onClick={() => handleDisband(row._id)} />}
@@ -166,11 +193,23 @@ export default function AdminTeamsPage() {
       <SearchFilter
         search={searchInput}
         onSearch={setSearchInput}
-        searchPlaceholder="Search by team name..."
+        searchPlaceholder="Search by team name or ID..."
         filters={[
+          {
+            value: gameFilter, onChange: v => { setGameFilter(v); setPage(1) }, placeholder: 'All Games',
+            options: games.map((g: any) => ({ value: g.slug, label: g.name })),
+          },
+          {
+            value: typeFilter, onChange: v => { setTypeFilter(v); setPage(1) }, placeholder: 'All Types',
+            options: [{ value: 'cash', label: 'Cash' }, { value: 'xp', label: 'XP' }],
+          },
           {
             value: disbanded, onChange: v => { setDisbanded(v); setPage(1) }, placeholder: 'All Status',
             options: [{ value: 'false', label: 'Active' }, { value: 'true', label: 'Disbanded' }],
+          },
+          {
+            value: tournamentFilter, onChange: v => { setTournamentFilter(v); setPage(1) }, placeholder: 'All Teams',
+            options: [{ value: 'true', label: 'In Tournament' }, { value: 'false', label: 'No Tournament' }],
           },
         ]}
       />
@@ -182,9 +221,17 @@ export default function AdminTeamsPage() {
       )}
 
       {/* Detail Modal */}
-      {detailModal && (
-        <Modal title={`${detailModal.emoji || '🛡️'} ${detailModal.name}`} subtitle={`${detailModal.game} · ${detailModal.wins || 0}W ${detailModal.losses || 0}L`} onClose={() => setDetailModal(null)} width={500}>
+      {detailModal && !editModal && !transferModal && (
+        <Modal title={`${detailModal.emoji || '🛡️'} ${detailModal.name}`} subtitle={`${detailModal.game} · ${detailModal.matchType === 'cash' ? 'Cash' : 'XP'} · ${detailModal.wins || 0}W ${detailModal.losses || 0}L`} onClose={() => setDetailModal(null)} width={520}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Team ID */}
+            <div style={{ fontSize: 11, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568' }}>
+              Team ID: <span style={{ fontFamily: 'monospace', color: '#8890A4' }}>{detailModal._id}</span>
+              {detailModal.tournamentName && (
+                <span style={{ marginLeft: 12, fontWeight: 700, color: '#f59e0b' }}>Tournament: {detailModal.tournamentName}</span>
+              )}
+            </div>
+
             {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, fontSize: 10, fontFamily: 'Rajdhani, sans-serif' }}>
               {[
@@ -212,17 +259,19 @@ export default function AdminTeamsPage() {
                   <span style={{ fontWeight: 700, color: member.color || '#DDE0EA', flex: 1 }}>
                     {member.userInfo?.username || member.username || 'Unknown'}
                   </span>
-                  <span style={{ fontSize: 9, color: '#4F5568', fontWeight: 700 }}>{member.role}</span>
+                  <span style={{ fontSize: 10, color: '#4F5568', fontFamily: 'monospace' }}>{(member.userId || member.user)?.toString()?.slice(-8)}</span>
+                  <span style={{ fontSize: 9, color: member.role === 'Leader' ? '#f59e0b' : '#4F5568', fontWeight: 700 }}>{member.role}</span>
                   <ActionBtn label="REMOVE" color="#e8000d" onClick={() => handleRemoveMember(detailModal._id, (member.userId || member.user)?.toString())} />
                 </div>
               ))}
             </div>
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <ActionBtn label="EDIT TEAM" color="#f59e0b" onClick={openEditModal} />
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <ActionBtn label="EDIT TEAM" color="#f59e0b" size="md" onClick={openEditModal} />
+              <ActionBtn label="TRANSFER LEADER" color="#a855f7" size="md" onClick={() => { setTransferModal(true); setTransferUserId('') }} />
               {!detailModal.isDisbanded && (
-                <ActionBtn label="DISBAND TEAM" color="#e8000d" onClick={() => handleDisband(detailModal._id)} />
+                <ActionBtn label="DISBAND TEAM" color="#e8000d" size="md" onClick={() => handleDisband(detailModal._id)} />
               )}
             </div>
           </div>
@@ -231,15 +280,56 @@ export default function AdminTeamsPage() {
 
       {/* Edit Team Modal */}
       {editModal && detailModal && (
-        <Modal title="Edit Team" subtitle={detailModal.name} onClose={() => setEditModal(false)} width={460}>
+        <Modal title="Edit Team" subtitle={`${detailModal.name} · ${detailModal.game} (locked)`} onClose={() => setEditModal(false)} width={460}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div><div style={labelStyle}>Team Name</div><input value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} /></div>
-            <div><div style={labelStyle}>Emoji</div><input value={editForm.emoji} onChange={e => setEditForm(p => ({ ...p, emoji: e.target.value }))} style={inputStyle} /></div>
+            <div><div style={labelStyle}>Team Bio</div><textarea value={editForm.bio} onChange={e => setEditForm(p => ({ ...p, bio: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Team bio..." /></div>
             <div><div style={labelStyle}>Profile Picture URL</div><input value={editForm.avatarUrl} onChange={e => setEditForm(p => ({ ...p, avatarUrl: e.target.value }))} style={inputStyle} placeholder="https://..." /></div>
+            {editForm.avatarUrl && (
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <img src={editForm.avatarUrl} alt="Preview" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,.1)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              </div>
+            )}
             <div><div style={labelStyle}>Banner URL</div><input value={editForm.bannerUrl} onChange={e => setEditForm(p => ({ ...p, bannerUrl: e.target.value }))} style={inputStyle} placeholder="https://..." /></div>
-            <div><div style={labelStyle}>Game</div><input value={editForm.game} onChange={e => setEditForm(p => ({ ...p, game: e.target.value }))} style={inputStyle} /></div>
-            <div><div style={labelStyle}>Game Slug</div><input value={editForm.gameSlug} onChange={e => setEditForm(p => ({ ...p, gameSlug: e.target.value }))} style={inputStyle} /></div>
-            <ActionBtn label="SAVE CHANGES" color="#22c55e" onClick={handleEditTeam} />
+            {editForm.bannerUrl && (
+              <div style={{ borderRadius: 6, overflow: 'hidden', maxHeight: 80 }}>
+                <img src={editForm.bannerUrl} alt="Banner preview" style={{ width: '100%', height: 80, objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              </div>
+            )}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', paddingTop: 10, marginTop: 4 }}>
+              <div style={{ ...labelStyle, marginBottom: 6 }}>Socials</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div><input value={editForm.twitchUrl} onChange={e => setEditForm(p => ({ ...p, twitchUrl: e.target.value }))} style={inputStyle} placeholder="Twitch URL" /></div>
+                <div><input value={editForm.twitterUrl} onChange={e => setEditForm(p => ({ ...p, twitterUrl: e.target.value }))} style={inputStyle} placeholder="Twitter / X URL" /></div>
+                <div><input value={editForm.youtubeUrl} onChange={e => setEditForm(p => ({ ...p, youtubeUrl: e.target.value }))} style={inputStyle} placeholder="YouTube URL" /></div>
+                <div><input value={editForm.discordUrl} onChange={e => setEditForm(p => ({ ...p, discordUrl: e.target.value }))} style={inputStyle} placeholder="Discord URL" /></div>
+              </div>
+            </div>
+            <ActionBtn label="SAVE CHANGES" color="#22c55e" size="md" onClick={handleEditTeam} />
+          </div>
+        </Modal>
+      )}
+
+      {/* Transfer Leader Modal */}
+      {transferModal && detailModal && (
+        <Modal title="Transfer Leader" subtitle={detailModal.name} onClose={() => setTransferModal(false)} width={420}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#8890A4', margin: 0 }}>
+              Enter the User ID of the new leader. They must be a member of this team.
+            </p>
+            <div>
+              <div style={labelStyle}>User ID</div>
+              <input
+                value={transferUserId}
+                onChange={e => setTransferUserId(e.target.value)}
+                style={inputStyle}
+                placeholder="Paste user ID..."
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <ActionBtn label="CANCEL" color="#4F5568" size="md" onClick={() => setTransferModal(false)} />
+              <ActionBtn label={transferring ? 'TRANSFERRING...' : 'TRANSFER'} color="#a855f7" size="md" onClick={handleTransferLeader} />
+            </div>
           </div>
         </Modal>
       )}

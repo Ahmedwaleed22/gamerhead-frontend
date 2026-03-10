@@ -232,7 +232,7 @@ function SettingsPage() {
       setColorSaved(true)
       setTimeout(() => { setColorSaved(false); setColorMsg('') }, 3000)
     } catch (err: any) {
-      setColorMsg(err?.response?.data?.message || err?.message || 'Not enough credits')
+      setColorMsg(err?.response?.data?.message || err?.message || 'Not enough tickets')
       setTimeout(() => setColorMsg(''), 3000)
     }
   }
@@ -280,7 +280,20 @@ function SettingsPage() {
       setXpMsg(`Purchased! You now have ${(res as any).doubleXpTokens} token(s)`)
       setTimeout(() => setXpMsg(''), 3000)
     } catch (err: any) {
-      setXpMsg(err?.message || 'Not enough credits')
+      setXpMsg(err?.message || 'Not enough tickets')
+      setTimeout(() => setXpMsg(''), 3000)
+    }
+  }
+
+  const handleActivate2xp = async () => {
+    setXpMsg('')
+    try {
+      await usersApi.activate2xp()
+      await refresh()
+      setXpMsg('2XP activated for 24 hours!')
+      setTimeout(() => setXpMsg(''), 3000)
+    } catch (err: any) {
+      setXpMsg(err?.message || 'Failed to activate')
       setTimeout(() => setXpMsg(''), 3000)
     }
   }
@@ -366,6 +379,9 @@ function SettingsPage() {
   const canCompete = !!(form.state && form.country && form.zip && form.dob)
   const credits = (user as any).credits || 0
   const doubleXpTokens = (user as any).doubleXpTokens || 0
+  const doubleXpActive = (user as any).doubleXpActive || false
+  const doubleXpExpiresAt = (user as any).doubleXpExpiresAt ? new Date((user as any).doubleXpExpiresAt) : null
+  const isXpBoostActive = doubleXpActive && doubleXpExpiresAt && doubleXpExpiresAt > new Date()
   const linkedPlatforms: any[] = (user as any).linkedPlatforms || []
 
   return (
@@ -482,7 +498,7 @@ function SettingsPage() {
               <>
                 <div style={{ ...R, fontWeight: 500, fontSize: 15, color: '#fff', marginBottom: 6 }}>Account Features</div>
                 <div style={{ ...R, fontSize: 12, color: '#9CA3AF', marginBottom: 20 }}>
-                  Use your credits to unlock features. You have <span style={{ color: '#F39C12', fontWeight: 700 }}>{credits} Credits</span>.
+                  Use your tickets to unlock features. You have <span style={{ color: '#F39C12', fontWeight: 700 }}>{credits} Tickets</span>.
                 </div>
                 <div style={{ height: 1, background: '#303034', marginBottom: 24 }} />
 
@@ -495,7 +511,7 @@ function SettingsPage() {
                     <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>Name Change</div>
                     <div style={{ ...R, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: '14px' }}>Change your Display Name</div>
                     <div style={{ background: 'rgba(243,156,18,0.12)', border: '1px solid rgba(243,156,18,0.35)', borderRadius: 20, padding: '2px 9px', ...R, fontWeight: 700, fontSize: 10, color: '#F39C12' }}>
-                      {user.isPremium ? '★ Free (Premium)' : '🪙 5 Credits'}
+                      {user.isPremium ? '★ Free (Premium)' : '🪙 5 Tickets'}
                     </div>
                     <button onClick={() => { setNameModalOpen(true); setNewDisplayName(''); setNameError(''); setNameSuccess(false) }} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '7px 20px', ...R, fontWeight: 600, fontSize: 11, color: '#fff', cursor: 'pointer', width: '100%', marginTop: 'auto' }}>Change Name</button>
                   </div>
@@ -503,7 +519,7 @@ function SettingsPage() {
                   {/* Tournament Entry */}
                   <div style={{ background: '#25252C', borderRadius: 10, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ fontSize: 28 }}>🪙</div>
-                    <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>Credits</div>
+                    <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>Tickets</div>
                     <div style={{ ...R, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: '14px' }}>Free tournament entry</div>
                     <div style={{ background: 'rgba(243,156,18,0.12)', border: '1px solid rgba(243,156,18,0.35)', borderRadius: 20, padding: '2px 9px', ...R, fontWeight: 700, fontSize: 10, color: '#F39C12' }}>
                       Price varies
@@ -512,15 +528,25 @@ function SettingsPage() {
                   </div>
 
                   {/* 2XP Token */}
-                  <div style={{ background: '#25252C', borderRadius: 10, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ background: '#25252C', borderRadius: 10, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, border: isXpBoostActive ? '1px solid rgba(74,222,128,0.4)' : '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ fontSize: 28 }}>⚡</div>
                     <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>2XP Token</div>
-                    <div style={{ ...R, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: '14px' }}>2x XP for profile level</div>
+                    <div style={{ ...R, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: '14px' }}>2x XP for 24 hours</div>
                     <div style={{ background: 'rgba(243,156,18,0.12)', border: '1px solid rgba(243,156,18,0.35)', borderRadius: 20, padding: '2px 9px', ...R, fontWeight: 700, fontSize: 10, color: '#F39C12' }}>
-                      🪙 2 Credits
+                      🪙 2 Tickets
                     </div>
                     <div style={{ ...R, fontSize: 11, color: '#4ade80', fontWeight: 600 }}>Owned: {doubleXpTokens}</div>
-                    <button onClick={handleRedeem2xp} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '7px 20px', ...R, fontWeight: 600, fontSize: 11, color: '#fff', cursor: 'pointer', width: '100%', marginTop: 'auto' }}>Purchase</button>
+                    {isXpBoostActive && doubleXpExpiresAt && (
+                      <div style={{ ...R, fontSize: 10, color: '#4ade80', fontWeight: 700, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 6, padding: '4px 10px', textAlign: 'center', width: '100%' }}>
+                        ACTIVE — expires {doubleXpExpiresAt.toLocaleString()}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 6, width: '100%', marginTop: 'auto' }}>
+                      <button onClick={handleRedeem2xp} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '7px 0', ...R, fontWeight: 600, fontSize: 11, color: '#fff', cursor: 'pointer', flex: 1 }}>Purchase</button>
+                      {doubleXpTokens > 0 && !isXpBoostActive && (
+                        <button onClick={handleActivate2xp} style={{ background: '#22c55e', border: 'none', borderRadius: 6, padding: '7px 0', ...R, fontWeight: 600, fontSize: 11, color: '#fff', cursor: 'pointer', flex: 1 }}>Activate</button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Username Color */}
@@ -585,52 +611,6 @@ function SettingsPage() {
                   </Link>
                 </div>
 
-                <div style={{ height: 1, background: '#303034', margin: '24px 0' }} />
-
-                {/* Role Toggles (Testing) */}
-                <div>
-                  <div style={{ ...R, fontWeight: 500, fontSize: 15, color: '#fff', marginBottom: 4 }}>Role Toggles</div>
-                  <div style={{ ...R, fontSize: 11, color: '#6B7280', marginBottom: 16 }}>Toggle roles on your account for testing features.</div>
-                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    {[
-                      { key: 'admin',   label: 'Admin',   active: (user as any).role === 'admin', color: '#ef4444', desc: 'Forum Moderation, User Management' },
-                      { key: 'premium', label: 'Premium', active: user.isPremium, color: '#F0AA1A', desc: '1.25x XP, No Ads, Profile Perks' },
-                      { key: 'coach',   label: 'Coach',   active: user.isCoach,   color: '#3CC8C8', desc: 'Coach Dashboard, Packages, Orders' },
-                    ].map(r => (
-                      <button
-                        key={r.key}
-                        onClick={async () => {
-                          try {
-                            await usersApi.toggleRole(r.key)
-                            // Refresh user data
-                            const fresh = await authApi.me()
-                            if (fresh) window.location.reload()
-                          } catch {}
-                        }}
-                        style={{
-                          display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6,
-                          background: r.active ? `${r.color}15` : '#303034',
-                          border: `1px solid ${r.active ? r.color : '#404044'}`,
-                          borderRadius: 10, padding: '14px 18px', cursor: 'pointer', minWidth: 180,
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-                          <span style={{ ...R, fontWeight: 700, fontSize: 13, color: r.active ? r.color : '#fff' }}>{r.label}</span>
-                          <span style={{
-                            marginLeft: 'auto',
-                            background: r.active ? r.color : '#4B5563',
-                            borderRadius: 10, padding: '2px 8px',
-                            fontSize: 9, fontWeight: 700, color: r.active ? '#000' : '#fff',
-                            fontFamily: 'Rajdhani, sans-serif', letterSpacing: 0.5,
-                          }}>
-                            {r.active ? 'ON' : 'OFF'}
-                          </span>
-                        </div>
-                        <span style={{ ...R, fontSize: 10, color: '#9CA3AF', lineHeight: 1.4 }}>{r.desc}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </>
             )}
 
@@ -842,7 +822,7 @@ function SettingsPage() {
           <div onClick={e => e.stopPropagation()} style={{ background: '#19191D', borderRadius: 12, padding: '28px 32px', width: 420, border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ ...R, fontWeight: 600, fontSize: 16, color: '#fff', marginBottom: 6 }}>Change Display Name</div>
             <div style={{ ...R, fontSize: 12, color: '#9CA3AF', marginBottom: 16 }}>
-              {user.isPremium ? 'Free for Premium members.' : 'This will cost 5 credits.'}
+              {user.isPremium ? 'Free for Premium members.' : 'This will cost 5 tickets.'}
               {' '}Your current name: <span style={{ color: hexColor, fontWeight: 600 }}>{(user as any).displayName || user.username}</span>
             </div>
             <div style={{ position: 'relative', marginBottom: 4 }}>

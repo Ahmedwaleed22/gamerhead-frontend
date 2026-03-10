@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { adminApi } from '@/lib/api'
+import { adminApi, gamesApi } from '@/lib/api'
 import DataTable, { Column } from '../components/DataTable'
 import ActionBtn from '../components/ActionBtn'
 import SearchFilter from '../components/SearchFilter'
@@ -20,6 +20,23 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 
+const DEFAULT_PRIZES = [
+  { place: '1st Place', amount: 0, color: '#F0C040', creditsBonus: 0, note: '' },
+  { place: '2nd Place', amount: 0, color: '#C0C0C0', creditsBonus: 0, note: '' },
+  { place: '3rd Place', amount: 0, color: '#CD7F32', creditsBonus: 0, note: '' },
+]
+
+function autoSplitPrizes(total: number) {
+  const first = Math.round(total * 0.5)
+  const second = Math.round(total * 0.3)
+  const third = total - first - second
+  return [
+    { ...DEFAULT_PRIZES[0], amount: first },
+    { ...DEFAULT_PRIZES[1], amount: second },
+    { ...DEFAULT_PRIZES[2], amount: third },
+  ]
+}
+
 export default function AdminTournamentsPage() {
   const [tournaments, setTournaments] = useState<any[]>([])
   const [total, setTotal] = useState(0)
@@ -29,12 +46,21 @@ export default function AdminTournamentsPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [createModal, setCreateModal] = useState(false)
   const [detailModal, setDetailModal] = useState<any>(null)
+  const [games, setGames] = useState<any[]>([])
   const [form, setForm] = useState({
-    name: '', slug: '', game: '', gameEmoji: '🎯', bracketType: 'Single Elimination', entryType: 'team',
-    format: 'Squads (4v4)', series: 'Best of 3', maxTeams: '64', entryCredits: '0', prizePool: '0',
-    startDate: '', startTime: '', region: 'North America', platform: 'Cross-Play', bannerUrl: '', accentColor: '#1A5C9E',
-    isFeatured: false,
+    name: '', game: '', gamemode: '', bracketType: 'Single Elimination', entryType: 'team',
+    format: 'Squads (4v4)', series: 'Best of 3', maxTeams: '64', entryCredits: '0',
+    prizePool: '0', prizePoolType: 'cash', prizePoolLabel: '',
+    startDate: '', startTime: '', region: 'North America', platform: 'Cross-Play',
+    bannerUrl: '', accentColor: '#1A5C9E', isFeatured: false,
   })
+  const [prizes, setPrizes] = useState(DEFAULT_PRIZES)
+  const [selectedGame, setSelectedGame] = useState<any>(null)
+
+  // Load games list on mount
+  useEffect(() => {
+    gamesApi.getAll().then(setGames).catch(() => {})
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -51,13 +77,48 @@ export default function AdminTournamentsPage() {
 
   useEffect(() => { load() }, [load])
 
+  // When game is selected from dropdown
+  const handleGameSelect = (gameName: string) => {
+    const game = games.find((g: any) => g.name === gameName)
+    setSelectedGame(game || null)
+    setForm(p => ({
+      ...p,
+      game: gameName,
+      gamemode: '',
+      accentColor: game?.accentColor || '#1A5C9E',
+      bannerUrl: game?.bannerUrl || '',
+    }))
+  }
+
+  // When prize pool total changes, auto-split
+  const handlePrizePoolChange = (value: string) => {
+    setForm(p => ({ ...p, prizePool: value }))
+    const num = Number(value)
+    if (num > 0) {
+      setPrizes(autoSplitPrizes(num))
+    }
+  }
+
   const handleCreate = async () => {
     try {
       await adminApi.createTournament({
-        ...form, maxTeams: Number(form.maxTeams), entryCredits: Number(form.entryCredits), prizePool: Number(form.prizePool),
+        ...form,
+        maxTeams: Number(form.maxTeams),
+        entryCredits: Number(form.entryCredits),
+        prizePool: Number(form.prizePool),
+        prizes,
+        gameEmoji: selectedGame?.bannerUrl || '🎯',
       })
       setCreateModal(false)
-      setForm({ name: '', slug: '', game: '', gameEmoji: '🎯', bracketType: 'Single Elimination', entryType: 'team', format: 'Squads (4v4)', series: 'Best of 3', maxTeams: '64', entryCredits: '0', prizePool: '0', startDate: '', startTime: '', region: 'North America', platform: 'Cross-Play', bannerUrl: '', accentColor: '#1A5C9E', isFeatured: false })
+      setForm({
+        name: '', game: '', gamemode: '', bracketType: 'Single Elimination', entryType: 'team',
+        format: 'Squads (4v4)', series: 'Best of 3', maxTeams: '64', entryCredits: '0',
+        prizePool: '0', prizePoolType: 'cash', prizePoolLabel: '',
+        startDate: '', startTime: '', region: 'North America', platform: 'Cross-Play',
+        bannerUrl: '', accentColor: '#1A5C9E', isFeatured: false,
+      })
+      setPrizes(DEFAULT_PRIZES)
+      setSelectedGame(null)
       load()
     } catch { }
   }
@@ -80,8 +141,13 @@ export default function AdminTournamentsPage() {
 
   const columns: Column[] = [
     { key: 'name', label: 'Name', width: '2fr', render: (r: any) => (
-      <div>
-        <span style={{ fontWeight: 700, cursor: 'pointer', color: '#DDE0EA' }} onClick={() => handleViewDetail(r._id)}>{r.gameEmoji} {r.name}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {r.bannerUrl || r.gameEmoji?.startsWith('/') ? (
+          <img src={r.bannerUrl || r.gameEmoji} alt="" style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'cover' }} />
+        ) : (
+          <span>{r.gameEmoji || '🎯'}</span>
+        )}
+        <span style={{ fontWeight: 700, cursor: 'pointer', color: '#DDE0EA' }} onClick={() => handleViewDetail(r._id)}>{r.name}</span>
         {r.isFeatured && <span style={{ fontSize: 8, color: '#f59e0b', fontWeight: 700, marginLeft: 6 }}>FEATURED</span>}
       </div>
     )},
@@ -142,10 +208,10 @@ export default function AdminTournamentsPage() {
               <div><span style={{ color: '#4F5568' }}>Bracket:</span> {detailModal.bracketType}</div>
               <div><span style={{ color: '#4F5568' }}>Format:</span> {detailModal.format}</div>
               <div><span style={{ color: '#4F5568' }}>Series:</span> {detailModal.series}</div>
-              <div><span style={{ color: '#4F5568' }}>Entry:</span> {detailModal.entryType}</div>
+              <div><span style={{ color: '#4F5568' }}>Gamemode:</span> {detailModal.gamemode || '—'}</div>
               <div><span style={{ color: '#4F5568' }}>Teams:</span> {detailModal.registeredCount}/{detailModal.maxTeams}</div>
               <div><span style={{ color: '#4F5568' }}>Prize Pool:</span> <span style={{ color: '#22c55e', fontWeight: 700 }}>${((detailModal.prizePool || 0) / 100).toFixed(2)}</span></div>
-              <div><span style={{ color: '#4F5568' }}>Entry Fee:</span> {detailModal.entryCredits} credits</div>
+              <div><span style={{ color: '#4F5568' }}>Entry Fee:</span> {detailModal.entryCredits} tickets</div>
               <div><span style={{ color: '#4F5568' }}>Region:</span> {detailModal.region}</div>
               <div><span style={{ color: '#4F5568' }}>Platform:</span> {detailModal.platform}</div>
               <div><span style={{ color: '#4F5568' }}>Start:</span> {detailModal.startDate} {detailModal.startTime}</div>
@@ -195,23 +261,165 @@ export default function AdminTournamentsPage() {
 
       {/* Create Modal */}
       {createModal && (
-        <Modal title="Create Tournament" onClose={() => setCreateModal(false)} width={500}>
+        <Modal title="Create Tournament" onClose={() => setCreateModal(false)} width={540}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[['Name', 'name'], ['Slug', 'slug'], ['Game', 'game'], ['Game Emoji', 'gameEmoji'], ['Format', 'format'], ['Series', 'series'], ['Max Teams', 'maxTeams'], ['Entry Credits', 'entryCredits'], ['Prize Pool (cents)', 'prizePool'], ['Start Date', 'startDate'], ['Start Time', 'startTime'], ['Banner URL', 'bannerUrl']].map(([l, k]) => (
-              <div key={k as string}><div style={labelStyle}>{l}</div><input value={(form as any)[k as string]} onChange={e => setForm(p => ({ ...p, [k as string]: e.target.value }))} style={inputStyle} /></div>
-            ))}
+            {/* Name */}
+            <div>
+              <div style={labelStyle}>Name</div>
+              <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} placeholder="Tournament name..." />
+            </div>
+
+            {/* Game Dropdown + Preview */}
+            <div>
+              <div style={labelStyle}>Game</div>
+              <select value={form.game} onChange={e => handleGameSelect(e.target.value)} style={inputStyle}>
+                <option value="">Select a game...</option>
+                {games.map((g: any) => (
+                  <option key={g.slug} value={g.name}>{g.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Game Image Preview */}
+            {selectedGame && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
+                <img
+                  src={selectedGame.bannerUrl}
+                  alt={selectedGame.name}
+                  style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', border: `2px solid ${selectedGame.accentColor}` }}
+                />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{selectedGame.name}</div>
+                  <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>
+                    {selectedGame.platforms?.join(' / ')} &mdash; {selectedGame.modes?.length || 0} modes
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: selectedGame.accentColor }} />
+                    <span style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>{selectedGame.accentColor}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Gamemode (from selected game) */}
+            {selectedGame && selectedGame.modes?.length > 0 && (
+              <div>
+                <div style={labelStyle}>Gamemode</div>
+                <select value={form.gamemode} onChange={e => setForm(p => ({ ...p, gamemode: e.target.value }))} style={inputStyle}>
+                  <option value="">Select a gamemode...</option>
+                  {selectedGame.modes.map((m: string) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Format & Series */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div><div style={labelStyle}>Bracket Type</div>
-                <select value={form.bracketType} onChange={e => setForm(p => ({ ...p, bracketType: e.target.value }))} style={inputStyle}>
-                  <option value="Single Elimination">Single Elimination</option>
-                  <option value="Double Elimination">Double Elimination</option>
+              <div>
+                <div style={labelStyle}>Format</div>
+                <select value={form.format} onChange={e => setForm(p => ({ ...p, format: e.target.value }))} style={inputStyle}>
+                  <option value="Solo (1v1)">Solo (1v1)</option>
+                  <option value="Duos (2v2)">Duos (2v2)</option>
+                  <option value="Trios (3v3)">Trios (3v3)</option>
+                  <option value="Squads (4v4)">Squads (4v4)</option>
                 </select>
               </div>
-              <div><div style={labelStyle}>Entry Type</div>
-                <select value={form.entryType} onChange={e => setForm(p => ({ ...p, entryType: e.target.value }))} style={inputStyle}>
-                  <option value="solo">Solo</option><option value="team">Team</option><option value="both">Both</option>
+              <div>
+                <div style={labelStyle}>Series</div>
+                <select value={form.series} onChange={e => setForm(p => ({ ...p, series: e.target.value }))} style={inputStyle}>
+                  <option value="Best of 1">Best of 1</option>
+                  <option value="Best of 3">Best of 3</option>
+                  <option value="Best of 5">Best of 5</option>
                 </select>
               </div>
+            </div>
+
+            {/* Max Teams & Entry Tickets */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <div style={labelStyle}>Max Teams</div>
+                <input value={form.maxTeams} onChange={e => setForm(p => ({ ...p, maxTeams: e.target.value }))} style={inputStyle} />
+              </div>
+              <div>
+                <div style={labelStyle}>Entry Tickets</div>
+                <input value={form.entryCredits} onChange={e => setForm(p => ({ ...p, entryCredits: e.target.value }))} style={inputStyle} />
+              </div>
+            </div>
+
+            {/* Prize Pool Type + Amount */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10 }}>
+              <div>
+                <div style={labelStyle}>Prize Type</div>
+                <select value={form.prizePoolType} onChange={e => setForm(p => ({ ...p, prizePoolType: e.target.value }))} style={inputStyle}>
+                  <option value="cash">Cash</option>
+                  <option value="credits">Tickets</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <div style={labelStyle}>
+                  {form.prizePoolType === 'cash' ? 'Prize Pool (cents)' : form.prizePoolType === 'credits' ? 'Prize Pool (tickets)' : 'Prize Pool Total'}
+                </div>
+                <input value={form.prizePool} onChange={e => handlePrizePoolChange(e.target.value)} style={inputStyle} placeholder="e.g. 10000" />
+              </div>
+            </div>
+
+            {/* Other label */}
+            {form.prizePoolType === 'other' && (
+              <div>
+                <div style={labelStyle}>Prize Description</div>
+                <input value={form.prizePoolLabel} onChange={e => setForm(p => ({ ...p, prizePoolLabel: e.target.value }))} style={inputStyle} placeholder="e.g. Gaming Chair + $500 Cash" />
+              </div>
+            )}
+
+            {/* Auto-split Prize Preview */}
+            {Number(form.prizePool) > 0 && (
+              <div style={{ background: 'rgba(255,255,255,.02)', borderRadius: 6, padding: '8px 12px', border: '1px solid rgba(255,255,255,.05)' }}>
+                <div style={{ ...labelStyle, marginBottom: 6 }}>Prize Split (auto)</div>
+                {prizes.map((p, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', fontFamily: 'Rajdhani, sans-serif', fontSize: 11 }}>
+                    <span style={{ fontSize: 14 }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+                    <span style={{ color: p.color, fontWeight: 700, width: 60 }}>{p.place}</span>
+                    <input
+                      value={p.amount}
+                      onChange={e => {
+                        const updated = [...prizes]
+                        updated[i] = { ...updated[i], amount: Number(e.target.value) || 0 }
+                        setPrizes(updated)
+                      }}
+                      style={{ ...inputStyle, width: 80, textAlign: 'center' }}
+                    />
+                    <span style={{ color: '#4F5568', fontSize: 9 }}>
+                      {form.prizePoolType === 'cash' ? `($${(p.amount / 100).toFixed(2)})` : form.prizePoolType === 'credits' ? 'tk' : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Start Date/Time */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <div style={labelStyle}>Start Date</div>
+                <input type="date" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} style={inputStyle} />
+              </div>
+              <div>
+                <div style={labelStyle}>Start Time</div>
+                <input type="time" value={form.startTime} onChange={e => setForm(p => ({ ...p, startTime: e.target.value }))} style={inputStyle} />
+              </div>
+            </div>
+
+            {/* Bracket Type */}
+            <div><div style={labelStyle}>Bracket Type</div>
+              <select value={form.bracketType} onChange={e => setForm(p => ({ ...p, bracketType: e.target.value }))} style={inputStyle}>
+                <option value="Single Elimination">Single Elimination</option>
+                <option value="Double Elimination">Double Elimination</option>
+              </select>
+            </div>
+
+            {/* Region & Platform */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div><div style={labelStyle}>Region</div>
                 <select value={form.region} onChange={e => setForm(p => ({ ...p, region: e.target.value }))} style={inputStyle}>
                   <option value="North America">North America</option><option value="Europe">Europe</option><option value="Asia">Asia</option><option value="Global">Global</option>
@@ -219,14 +427,19 @@ export default function AdminTournamentsPage() {
               </div>
               <div><div style={labelStyle}>Platform</div>
                 <select value={form.platform} onChange={e => setForm(p => ({ ...p, platform: e.target.value }))} style={inputStyle}>
-                  <option value="Cross-Play">Cross-Play</option><option value="PlayStation">PlayStation</option><option value="Xbox">Xbox</option><option value="PC">PC</option>
+                  <option value="Cross-Play">Cross-Play</option><option value="Console Only">Console Only (Xbox/PSN)</option><option value="PlayStation">PlayStation</option><option value="Xbox">Xbox</option><option value="PC">PC</option>
                 </select>
               </div>
             </div>
+
+            {/* Accent Color */}
             <div><div style={labelStyle}>Accent Color</div><input type="color" value={form.accentColor} onChange={e => setForm(p => ({ ...p, accentColor: e.target.value }))} style={{ ...inputStyle, height: 36, padding: 2 }} /></div>
+
+            {/* Featured */}
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>
               <input type="checkbox" checked={form.isFeatured} onChange={e => setForm(p => ({ ...p, isFeatured: e.target.checked }))} /> Featured Tournament
             </label>
+
             <ActionBtn label="CREATE TOURNAMENT" color="#22c55e" onClick={handleCreate} />
           </div>
         </Modal>

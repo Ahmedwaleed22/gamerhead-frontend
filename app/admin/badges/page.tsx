@@ -109,24 +109,57 @@ export default function AdminBadgesPage() {
       </div>
 
       {loading ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
-          {badges.map((b: any) => (
-            <div key={b._id} style={{
-              background: '#13131E', border: `1px solid ${RARITY_COLORS[b.rarity] || '#4F5568'}44`,
-              borderRadius: 10, padding: 14, textAlign: 'center', opacity: b.isActive ? 1 : 0.5,
-            }}>
-              {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 6 }} />}
-              <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{b.name}</div>
-              <div style={{ fontSize: 9, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700, fontFamily: 'Rajdhani, sans-serif' }}>{b.rarity}</div>
-              <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 4 }}>{b.slug} · {b.category}</div>
-              <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 8 }}>
-                <ActionBtn label="EDIT" color="#3b82f6" onClick={() => openEditModal(b)} />
-                <ActionBtn label={b.isActive ? 'DISABLE' : 'ENABLE'} color={b.isActive ? '#f59e0b' : '#22c55e'} onClick={() => handleToggle(b._id, b.isActive)} />
-                <ActionBtn label="DELETE" color="#e8000d" onClick={() => handleDelete(b._id)} />
-              </div>
+        <>
+          {/* Platform Badges */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>
+              Platform Badges ({badges.filter(b => b.category !== 'forum').length})
             </div>
-          ))}
-        </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+              {badges.filter((b: any) => b.category !== 'forum').map((b: any) => (
+                <div key={b._id} style={{
+                  background: '#13131E', border: `1px solid ${RARITY_COLORS[b.rarity] || '#4F5568'}44`,
+                  borderRadius: 10, padding: 14, textAlign: 'center', opacity: b.isActive ? 1 : 0.5,
+                }}>
+                  {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 6 }} />}
+                  <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{b.name}</div>
+                  <div style={{ fontSize: 9, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700, fontFamily: 'Rajdhani, sans-serif' }}>{b.rarity}</div>
+                  <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 4 }}>{b.slug}</div>
+                  <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 8 }}>
+                    <ActionBtn label="EDIT" color="#3b82f6" onClick={() => openEditModal(b)} />
+                    <ActionBtn label={b.isActive ? 'DISABLE' : 'ENABLE'} color={b.isActive ? '#f59e0b' : '#22c55e'} onClick={() => handleToggle(b._id, b.isActive)} />
+                    <ActionBtn label="DELETE" color="#e8000d" onClick={() => handleDelete(b._id)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Forum Badges */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>
+              Forum Badges ({badges.filter(b => b.category === 'forum').length})
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+              {badges.filter((b: any) => b.category === 'forum').map((b: any) => (
+                <div key={b._id} style={{
+                  background: '#13131E', border: `1px solid ${RARITY_COLORS[b.rarity] || '#4F5568'}44`,
+                  borderRadius: 10, padding: 14, textAlign: 'center', opacity: b.isActive ? 1 : 0.5,
+                }}>
+                  {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 6 }} />}
+                  <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{b.name}</div>
+                  <div style={{ fontSize: 9, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700, fontFamily: 'Rajdhani, sans-serif' }}>{b.rarity}</div>
+                  <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 4 }}>{b.slug}</div>
+                  <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 8 }}>
+                    <ActionBtn label="EDIT" color="#3b82f6" onClick={() => openEditModal(b)} />
+                    <ActionBtn label={b.isActive ? 'DISABLE' : 'ENABLE'} color={b.isActive ? '#f59e0b' : '#22c55e'} onClick={() => handleToggle(b._id, b.isActive)} />
+                    <ActionBtn label="DELETE" color="#e8000d" onClick={() => handleDelete(b._id)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       {createModal && (

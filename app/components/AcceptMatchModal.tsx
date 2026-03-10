@@ -129,6 +129,26 @@ export function AcceptMatchModal({ match, onClose, onAccepted }: AcceptMatchModa
                 </div>
               ))}
             </div>
+            {isCash && match.wagerPerPlayer && (
+              <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(212,146,10,0.08)', border: '1px solid rgba(212,146,10,0.2)', borderRadius: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Wager per player</span>
+                  <span style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#F0AA1A' }}>${(match.wagerPerPlayer / 100).toFixed(2)}</span>
+                </div>
+                {match.totalPot && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Total pot</span>
+                    <span style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#fff' }}>${(match.totalPot / 100).toFixed(2)}</span>
+                  </div>
+                )}
+                {match.winnerPayout && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Winner takes (~{match.platformFee || 7.5}% fee)</span>
+                    <span style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#4ade80' }}>~${(match.winnerPayout / 100).toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+            )}
             {match.message && (
               <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(255,255,255,0.04)', borderRadius: 6, ...R, fontSize: 12, color: '#9CA3AF', fontStyle: 'italic' }}>
                 "{match.message}"

@@ -54,32 +54,45 @@ export default function ForumPage() {
 
   useEffect(() => { sendActivity('Browsing Forum') }, [])
 
+  // Derive user's effective role for board visibility filtering
+  const userRole = user?.role === 'admin' ? 'admin' : (user as any)?.isCoach ? 'coach' : (user as any)?.isPremium ? 'premium' : user ? 'member' : null
+
   useEffect(() => {
     forumApi.getBoards().then((res: any) => {
-      const boards = Array.isArray(res) ? res : res.boards || res.categories || []
+      const raw = Array.isArray(res) ? res : res.boards || res.categories || []
+
+      // Filter boards by viewRoles: empty = public, otherwise user must have matching role
+      const canView = (b: any) => {
+        const vr = b.viewRoles || []
+        if (vr.length === 0) return true // public
+        return userRole && vr.includes(userRole)
+      }
+
       // If API returns flat boards, group them; if already grouped as categories, use directly
-      if (boards.length > 0 && boards[0].boards) {
-        setCategories(boards.map((cat: any) => ({
+      if (raw.length > 0 && raw[0].boards) {
+        setCategories(raw.map((cat: any) => ({
           name: cat.name || cat.category || 'General',
           emoji: cat.emoji || '💬',
-          boards: (cat.boards || []).map((b: any) => ({
+          boards: (cat.boards || []).filter(canView).map((b: any) => ({
             name: b.name || b.title,
             slug: b.slug,
             emoji: b.emoji || '💬',
             description: b.description || '',
             threads: b.threadCount ?? b.threads ?? 0,
             posts: b.postCount ?? b.posts ?? 0,
+            postRoles: b.postRoles || [],
             lastPost: b.lastPost ? { ...b.lastPost, authorSlug: b.lastPost.authorSlug || '', authorColor: b.lastPost.authorColor || '' } : { author: '—', title: '—', time: '—', authorRole: 'member', authorSlug: '', authorColor: '' },
           })),
-        })))
+        })).filter((cat: any) => cat.boards.length > 0))
       } else {
-        setCategories([{ name: 'All Boards', emoji: '💬', boards: boards.map((b: any) => ({
+        setCategories([{ name: 'All Boards', emoji: '💬', boards: raw.filter(canView).map((b: any) => ({
           name: b.name || b.title,
           slug: b.slug,
           emoji: b.emoji || '💬',
           description: b.description || '',
           threads: b.threadCount ?? b.threads ?? 0,
           posts: b.postCount ?? b.posts ?? 0,
+          postRoles: b.postRoles || [],
           lastPost: b.lastPost || { author: '—', title: '—', time: '—', authorRole: 'member' },
         })) }])
       }
@@ -242,17 +255,21 @@ export default function ForumPage() {
                       </div>
 
                       <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'14px 14px', borderLeft:'1px solid var(--border)', minWidth:0 }}>
-                        <div style={{ fontSize:11, color:'#e0e0e8', fontWeight:600, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', marginBottom:3 }}>{board.lastPost.title}</div>
-                        <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                          {board.lastPost.authorSlug ? (
-                            <span role="link" onClick={e=>{e.preventDefault();e.stopPropagation();router.push(`/profile/${board.lastPost.authorSlug}`)}} style={{ fontSize:11, fontWeight:700, color:board.lastPost.authorColor || ROLE_COLORS[board.lastPost.authorRole] || '#888', textDecoration:'none', cursor:'pointer' }}
-                              onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')} onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{board.lastPost.author}</span>
-                          ) : (
-                            <span style={{ fontSize:11, fontWeight:700, color:board.lastPost.authorColor || ROLE_COLORS[board.lastPost.authorRole] || '#888' }}>{board.lastPost.author}</span>
-                          )}
-                          <RoleBadge role={board.lastPost.authorRole} />
-                          <span style={{ fontSize:10, color:'var(--text-dim)' }}>· {board.lastPost.time}</span>
-                        </div>
+                        {board.lastPost.title === '—' || !board.lastPost.title ? (
+                          <span style={{ fontSize:11, color:'var(--text-dim)' }}>-</span>
+                        ) : (<>
+                          <div style={{ fontSize:11, color:'#e0e0e8', fontWeight:600, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', marginBottom:3 }}>{board.lastPost.title}</div>
+                          <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                            {board.lastPost.authorSlug ? (
+                              <span role="link" onClick={e=>{e.preventDefault();e.stopPropagation();router.push(`/profile/${board.lastPost.authorSlug}`)}} style={{ fontSize:11, fontWeight:700, color:board.lastPost.authorColor || ROLE_COLORS[board.lastPost.authorRole] || '#888', textDecoration:'none', cursor:'pointer' }}
+                                onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')} onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{board.lastPost.author}</span>
+                            ) : (
+                              <span style={{ fontSize:11, fontWeight:700, color:board.lastPost.authorColor || ROLE_COLORS[board.lastPost.authorRole] || '#888' }}>{board.lastPost.author}</span>
+                            )}
+                            <RoleBadge role={board.lastPost.authorRole} />
+                            <span style={{ fontSize:10, color:'var(--text-dim)' }}>· {board.lastPost.time}</span>
+                          </div>
+                        </>)}
                       </div>
                     </div>
                   ))}
@@ -260,18 +277,6 @@ export default function ForumPage() {
               )
             })}
 
-            {/* Legend */}
-            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:8, padding:'12px 16px' }}>
-              <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:0.6, color:'var(--text-dim)', marginBottom:10 }}>Thread Status Legend</div>
-              <div style={{ display:'flex', gap:20, flexWrap:'wrap' }}>
-                {[['🔥','Hot','#f97316'],['📌','Pinned','#f0c040'],['🛡️','Official','#38bdf8'],['🔒','Locked','#888'],['💬','Normal','var(--text-muted)']].map(([icon,label,color])=>(
-                  <div key={label} style={{ display:'flex', alignItems:'center', gap:5 }}>
-                    <span style={{ fontSize:13 }}>{icon}</span>
-                    <span style={{ fontSize:11, fontWeight:600, color }}>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* RIGHT SIDEBAR */}
@@ -329,6 +334,7 @@ export default function ForumPage() {
                     ) : (
                       <span style={{ fontSize:10, fontWeight:700, color:a.authorColor || ROLE_COLORS[a.role] }}>{a.author}</span>
                     )}
+                    <RoleBadge role={a.role} />
                     <span style={{ fontSize:10, color:'var(--text-dim)' }}>in</span>
                     <span style={{ fontSize:10, color:'var(--red)', fontWeight:600 }}>{a.board}</span>
                     <span style={{ fontSize:10, color:'var(--text-dim)', marginLeft:'auto', flexShrink:0 }}>{a.time}</span>
@@ -345,6 +351,19 @@ export default function ForumPage() {
                   <div key={role} style={{ display:'flex', alignItems:'center', gap:8 }}>
                     <span style={{ width:8, height:8, background:color, borderRadius:'50%', display:'inline-block', flexShrink:0 }} />
                     <span style={{ fontSize:12, fontWeight:700, color }}>{ROLE_LABELS[role]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Thread Status Legend */}
+            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
+              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff' }}>📋 Thread Status</div>
+              <div style={{ padding:'10px 14px', display:'flex', flexDirection:'column', gap:8 }}>
+                {[['🔥','Hot','#f97316'],['📌','Pinned','#f0c040'],['🛡️','Official','#38bdf8'],['🔒','Locked','#888'],['💬','Normal','var(--text-muted)']].map(([icon,label,color])=>(
+                  <div key={label} style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <span style={{ fontSize:13, width:18, textAlign:'center', flexShrink:0 }}>{icon}</span>
+                    <span style={{ fontSize:12, fontWeight:700, color }}>{label}</span>
                   </div>
                 ))}
               </div>

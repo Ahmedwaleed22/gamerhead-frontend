@@ -7,20 +7,29 @@ import { gamesApi } from '@/lib/api'
 
 const FILTERS = ['All Games', 'FPS', 'Sports', 'Battle Royale', 'Fighting', 'Racing', 'Other']
 
-function platformColor(platforms: string[]) {
+function platformColor(game: any) {
+  if (game.platformType === 'pc') return '#60A5FA'
+  if (game.platformType === 'console') return '#4ADE80'
+  if (game.platformType === 'crossplay' || game.crossplay) return '#F0AA1A'
+  // fallback to old logic
+  const platforms = game.platforms || []
   if (platforms.length === 1 && platforms[0] === 'PC') return '#60A5FA'
   if (!platforms.includes('PC')) return '#4ADE80'
   return '#F0AA1A'
 }
 
-function platformLabel(platforms: string[]) {
-  const p = platforms.map(s => s.toLowerCase())
+function platformLabel(game: any) {
+  if (game.platformType === 'pc') return 'PC Only'
+  if (game.platformType === 'console') return 'Console Only'
+  if (game.platformType === 'crossplay' || game.crossplay) return 'Cross-Play'
+  // fallback
+  const p = (game.platforms || []).map((s: string) => s.toLowerCase())
   const hasPC = p.includes('pc')
-  const hasConsole = p.some(s => ['ps5', 'ps4', 'playstation', 'xbox'].includes(s))
+  const hasConsole = p.some((s: string) => ['ps5', 'ps4', 'playstation', 'xbox', 'ps'].includes(s))
   if (hasPC && hasConsole) return 'Cross-Play'
   if (hasConsole && !hasPC) return 'Console Only'
   if (hasPC && !hasConsole) return 'PC Only'
-  return platforms.join(' / ')
+  return (game.platforms || []).join(' / ')
 }
 
 export default function GamesPage() {
@@ -120,8 +129,8 @@ export default function GamesPage() {
 
 function GameCard({ game }: { game: any }) {
   const [hovered, setHovered] = useState(false)
-  const pc      = platformColor(game.platforms || [])
-  const plLabel = platformLabel(game.platforms || [])
+  const pc      = platformColor(game)
+  const plLabel = platformLabel(game)
 
   return (
     <Link href={`/games/${game.slug}`} style={{ textDecoration: 'none', display: 'block' }}>

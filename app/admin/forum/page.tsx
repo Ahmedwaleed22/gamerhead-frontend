@@ -44,7 +44,7 @@ export default function AdminForumPage() {
   const [boardsLoading, setBoardsLoading] = useState(true)
   const [createBoardModal, setCreateBoardModal] = useState(false)
   const [editBoardModal, setEditBoardModal] = useState<any>(null)
-  const [boardForm, setBoardForm] = useState({ name: '', slug: '', emoji: '', category: 'General Gaming', description: '', sortOrder: '0', isActive: true })
+  const [boardForm, setBoardForm] = useState({ name: '', slug: '', emoji: '', category: 'General Gaming', description: '', sortOrder: '0', isActive: true, postRoles: [] as string[], viewRoles: [] as string[] })
 
   // Move modal
   const [moveModal, setMoveModal] = useState<{ threadId: string; title: string } | null>(null)
@@ -112,7 +112,7 @@ export default function AdminForumPage() {
     try {
       await adminApi.createBoard({ ...boardForm, sortOrder: Number(boardForm.sortOrder) })
       setCreateBoardModal(false)
-      setBoardForm({ name: '', slug: '', emoji: '', category: 'General Gaming', description: '', sortOrder: '0', isActive: true })
+      setBoardForm({ name: '', slug: '', emoji: '', category: 'General Gaming', description: '', sortOrder: '0', isActive: true, postRoles: [], viewRoles: [] })
       loadBoards()
     } catch { }
   }
@@ -132,7 +132,7 @@ export default function AdminForumPage() {
   }
 
   const openEditBoard = (b: any) => {
-    setBoardForm({ name: b.name, slug: b.slug, emoji: b.emoji || '', category: b.category, description: b.description || '', sortOrder: String(b.sortOrder || 0), isActive: b.isActive })
+    setBoardForm({ name: b.name, slug: b.slug, emoji: b.emoji || '', category: b.category, description: b.description || '', sortOrder: String(b.sortOrder || 0), isActive: b.isActive, postRoles: b.postRoles || [], viewRoles: b.viewRoles || [] })
     setEditBoardModal(b)
   }
 
@@ -254,6 +254,45 @@ export default function AdminForumPage() {
       <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>
         <input type="checkbox" checked={boardForm.isActive} onChange={e => setBoardForm(p => ({ ...p, isActive: e.target.checked }))} /> Active
       </label>
+
+      {/* Post Permission — who can create threads */}
+      <div>
+        <div style={labelStyle}>Post Threads — Allowed Roles</div>
+        <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginBottom: 4 }}>Leave all unchecked = everyone can post threads</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {['admin', 'premium', 'coach', 'member'].map(role => (
+            <label key={role} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: boardForm.postRoles.includes(role) ? '#DDE0EA' : '#4F5568', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <input type="checkbox" checked={boardForm.postRoles.includes(role)} onChange={e => {
+                setBoardForm(p => ({
+                  ...p,
+                  postRoles: e.target.checked ? [...p.postRoles, role] : p.postRoles.filter(r => r !== role),
+                }))
+              }} />
+              {role}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* View Permission — who can see this board */}
+      <div>
+        <div style={labelStyle}>View Board — Allowed Roles</div>
+        <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginBottom: 4 }}>Leave all unchecked = public to everyone</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {['admin', 'premium', 'coach', 'member'].map(role => (
+            <label key={role} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: boardForm.viewRoles.includes(role) ? '#DDE0EA' : '#4F5568', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <input type="checkbox" checked={boardForm.viewRoles.includes(role)} onChange={e => {
+                setBoardForm(p => ({
+                  ...p,
+                  viewRoles: e.target.checked ? [...p.viewRoles, role] : p.viewRoles.filter(r => r !== role),
+                }))
+              }} />
+              {role}
+            </label>
+          ))}
+        </div>
+      </div>
+
       <ActionBtn label={editBoardModal ? 'SAVE CHANGES' : 'CREATE BOARD'} color="#22c55e" onClick={editBoardModal ? handleUpdateBoard : handleCreateBoard} />
     </div>
   )
@@ -268,7 +307,7 @@ export default function AdminForumPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {tab === 'boards' && <ActionBtn label="+ NEW BOARD" color="#22c55e" onClick={() => { setBoardForm({ name: '', slug: '', emoji: '', category: 'General Gaming', description: '', sortOrder: '0', isActive: true }); setCreateBoardModal(true) }} />}
+          {tab === 'boards' && <ActionBtn label="+ NEW BOARD" color="#22c55e" onClick={() => { setBoardForm({ name: '', slug: '', emoji: '', category: 'General Gaming', description: '', sortOrder: '0', isActive: true, postRoles: [], viewRoles: [] }); setCreateBoardModal(true) }} />}
           <Link href="/forum" style={{ fontSize: 10, color: '#3b82f6', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, textDecoration: 'none', padding: '5px 12px', border: '1px solid rgba(59,130,246,.3)', borderRadius: 4, display: 'flex', alignItems: 'center' }}>
             VIEW FORUM
           </Link>

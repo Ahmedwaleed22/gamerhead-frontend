@@ -1,12 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { matchesApi, supportApi } from '@/lib/api'
-
-// FILE: app/tournaments/[id]/matches/[matchId]/page.tsx
 
 // ─── ACCENT COLOR: Blue / Tournament ─────────────────────
 const ACCENT     = '#5A9FD4'
@@ -19,43 +16,17 @@ interface Player {
   goldTrophies: number; silverTrophies: number; bronzeTrophies: number
   wins: number; losses: number; gameRank: number | null
   socials: { ttv?: string; tw?: string; yt?: string }
-  avatarGrad: string; avatarBorder: string; isYou?: boolean
+  avatarGrad: string; avatarBorder: string; isYou?: boolean; usernameColor?: string
+  avatarUrl?: string
 }
 interface Team {
-  name: string; slug: string; emoji: string; seed: number; bracket: string
+  name: string; slug: string; emoji: string; ladderRank: number; record: string; winPct: string
+  wins: number; losses: number
   bannerGrad: string; teamBorder: string; players: Player[]
+  logoUrl?: string; bannerUrl?: string
 }
 
-const TEAM_A: Team = {
-  name: 'Alpha Squad', slug: 'alpha-squad', emoji: '⚡', seed: 3, bracket: 'Upper Bracket',
-  bannerGrad: 'linear-gradient(135deg,#1C0606 0%,#320A0A 35%,#0E0E1C 100%)',
-  teamBorder: '#B82C2C',
-  players: [
-    { initials:'JS', name:'JSDesigner',  slug:'jsdesigner',  platform:'psn',  platformHandle:'JSDesign_PS5',   online:true,  premium:true, isCoach:false, rep:88, repLabel:'Elite',   repColor:'#F0AA1A', goldTrophies:5, silverTrophies:6, bronzeTrophies:3, wins:87,  losses:22, gameRank:12, socials:{ttv:'jsdesigner',tw:'jsdesigner_tv'}, avatarGrad:'linear-gradient(135deg,#13131E,#191926)', avatarBorder:'#F0AA1A', isYou:true },
-    { initials:'VX', name:'VortexX',     slug:'vortexx',     platform:'psn',  platformHandle:'VortexX_PSN',    online:true,  premium:true, isCoach:false, rep:76, repLabel:'Veteran', repColor:'#3CC8C8', goldTrophies:3, silverTrophies:4, bronzeTrophies:2, wins:64,  losses:31, gameRank:28, socials:{ttv:'vortexx_tv',yt:'vortexx'},        avatarGrad:'linear-gradient(135deg,#0D1A0D,#102010)', avatarBorder:'rgba(184,44,44,.4)' },
-    { initials:'RZ', name:'RaZor_99',    slug:'razor-99',    platform:'pc',   platformHandle:'RaZor99#Battle', online:true,  premium:false, isCoach:true,  rep:62, repLabel:'Skilled', repColor:'#4A9EFF', goldTrophies:1, silverTrophies:2, bronzeTrophies:2, wins:48,  losses:29, gameRank:41, socials:{tw:'razor99gg'},                       avatarGrad:'linear-gradient(135deg,#0D0D1A,#10102A)', avatarBorder:'rgba(184,44,44,.3)' },
-    { initials:'NK', name:'NightKing',   slug:'nightking',   platform:'xbox', platformHandle:'NightKing XBOX', online:false, premium:false, isCoach:false, rep:44, repLabel:'Regular', repColor:'#8890A4', goldTrophies:0, silverTrophies:1, bronzeTrophies:2, wins:33,  losses:28, gameRank:77, socials:{},                                    avatarGrad:'linear-gradient(135deg,#1A0D0D,#2A1010)', avatarBorder:'rgba(184,44,44,.3)' },
-  ],
-}
-const TEAM_B: Team = {
-  name: 'Bravo Unit', slug: 'bravo-unit', emoji: '🛡️', seed: 6, bracket: 'Upper Bracket',
-  bannerGrad: 'linear-gradient(135deg,#060C1C 0%,#0A1432 35%,#0E0E1C 100%)',
-  teamBorder: '#2A6CC4',
-  players: [
-    { initials:'GS', name:'GhostSniper', slug:'ghostsniper', platform:'psn',  platformHandle:'GhostSnpr_PS',    online:true,  premium:true, isCoach:false, rep:91, repLabel:'Legend',  repColor:'#F0AA1A', goldTrophies:8, silverTrophies:7, bronzeTrophies:6, wins:112, losses:18, gameRank:5,  socials:{ttv:'ghostsniper',tw:'ghostsniper_gg'}, avatarGrad:'linear-gradient(135deg,#1A0A2A,#251030)', avatarBorder:'rgba(184,44,44,.4)' },
-    { initials:'TK', name:'TacticalKev', slug:'tacticalkev', platform:'xbox', platformHandle:'TacKev_XBX',      online:true,  premium:true, isCoach:false, rep:79, repLabel:'Veteran', repColor:'#3CC8C8', goldTrophies:4, silverTrophies:4, bronzeTrophies:3, wins:73,  losses:24, gameRank:19, socials:{tw:'tacticalkev'},                     avatarGrad:'linear-gradient(135deg,#0A1A0A,#102010)', avatarBorder:'rgba(184,44,44,.3)' },
-    { initials:'NW', name:'NightWolfe',  slug:'nightwolfe',  platform:'pc',   platformHandle:'NightWolfe#4892', online:true,  premium:false, isCoach:false, rep:58, repLabel:'Skilled', repColor:'#4A9EFF', goldTrophies:1, silverTrophies:3, bronzeTrophies:2, wins:51,  losses:33, gameRank:33, socials:{ttv:'nightwolfe',yt:'nightwolfe_yt'},   avatarGrad:'linear-gradient(135deg,#0A0A1A,#101022)', avatarBorder:'rgba(184,44,44,.3)' },
-    { initials:'KX', name:'KingXavier',  slug:'kingxavier',  platform:'psn',  platformHandle:'KingXav_PSN',     online:true,  premium:false, isCoach:false, rep:51, repLabel:'Skilled', repColor:'#4A9EFF', goldTrophies:0, silverTrophies:2, bronzeTrophies:2, wins:42,  losses:31, gameRank:50, socials:{ttv:'kingxavier',tw:'kingxavier_tv',yt:'kingxavier'}, avatarGrad:'linear-gradient(135deg,#1A150A,#2A2010)', avatarBorder:'rgba(184,44,44,.3)' },
-  ],
-}
-const MAPS = [
-  { num:1, name:'Al Mazrah',     mode:'Resurgence', emoji:'🏙️', hostTeam:'Alpha Squad', hostColor:'#B82C2C', tGrad:'linear-gradient(135deg,rgba(184,44,44,.25),rgba(184,44,44,.08))', tBorder:'rgba(184,44,44,.3)' },
-  { num:2, name:'Ashika Island', mode:'Resurgence', emoji:'🗺️', hostTeam:'Bravo Unit',  hostColor:'#2A6CC4', tGrad:'linear-gradient(135deg,rgba(42,108,196,.25),rgba(42,108,196,.08))', tBorder:'rgba(42,108,196,.3)' },
-  { num:3, name:'Vondel',        mode:'Resurgence', emoji:'🌍',        hostTeam:'Highest K/D', hostColor:'#8890A4', tGrad:'linear-gradient(135deg,rgba(255,255,255,.08),#191926)', tBorder:'rgba(255,255,255,.055)' },
-]
-
-const MATCH_ID = 'GH-WZC-S6-R3-042'
-
+// ─── SHARED COMPONENTS ─────────────────────────────────
 function TrophySvg({ color, size = 14 }: { color: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -73,6 +44,7 @@ function PlatformPill({ platform, handle }: { platform:'psn'|'xbox'|'pc'; handle
     xbox: { bg:'rgba(16,124,16,.1)',  border:'rgba(16,124,16,.3)',  color:'#5CDB5C' },
     pc:   { bg:'rgba(212,146,10,.1)', border:'rgba(212,146,10,.3)', color:'#F0AA1A' },
   }[platform]
+  if (!handle) return null
   return <span style={{ display:'inline-flex', alignItems:'center', background:c.bg, border:`1px solid ${c.border}`, borderRadius:3, padding:'1px 7px', fontSize:9, fontWeight:700, color:c.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, whiteSpace:'nowrap' }}>{handle}</span>
 }
 
@@ -116,13 +88,15 @@ function PlayerRow({ player, side }: { player:Player; side:'left'|'right' }) {
       style={{ display:'flex', flexDirection:'column', padding:'10px 14px', margin:'2px 6px', borderRadius:8, background:hover?'rgba(255,255,255,.03)':'transparent', border:`1px solid ${hover?'rgba(255,255,255,.08)':'transparent'}`, transition:'all .15s', textDecoration:'none' }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, flexDirection:isR?'row-reverse':'row' }}>
         <span style={{ width:6,height:6,borderRadius:3,background:player.online?'#27AE60':'#4F5568',flexShrink:0 }} />
-        <div style={{ width:38,height:38,borderRadius:7,background:player.avatarGrad,border:`1.5px solid ${player.avatarBorder}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative' }}>
-          <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:14,color:'#fff' }}>{player.initials}</span>
+        <div style={{ width:38,height:38,borderRadius:7,background:player.avatarGrad,border:`1.5px solid ${player.avatarBorder}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative',overflow:'hidden' }}>
+          {player.avatarUrl && (player.avatarUrl.startsWith('http') || player.avatarUrl.startsWith('/') || player.avatarUrl.startsWith('data:image'))
+            ? <img src={player.avatarUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+            : <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:14,color:'#fff' }}>{player.initials}</span>}
           {player.isYou && <div style={{ position:'absolute',bottom:-6,left:'50%',transform:'translateX(-50%)',background:'rgba(90,159,212,.9)',borderRadius:3,padding:'1px 4px',fontSize:6,fontWeight:900,color:'#000',whiteSpace:'nowrap' }}>YOU</div>}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ display:'flex',alignItems:'center',gap:5,flexDirection:isR?'row-reverse':'row',flexWrap:'wrap' }}>
-            <span style={{ fontFamily:'Rajdhani, sans-serif',fontWeight:700,fontSize:13,color:hover?ACCENT:'#fff',whiteSpace:'nowrap',transition:'color .15s' }}>{player.name}</span>
+            <span style={{ fontFamily:'Rajdhani, sans-serif',fontWeight:700,fontSize:13,color:hover?ACCENT:(player.usernameColor||'#fff'),whiteSpace:'nowrap',transition:'color .15s' }}>{player.name}</span>
             {player.premium && <span style={{ background:'rgba(243,156,18,0.15)',border:'1px solid rgba(243,156,18,0.4)',borderRadius:3,padding:'1px 5px',fontSize:7,fontWeight:700,color:'#F39C12',fontFamily:'Rajdhani, sans-serif',lineHeight:'14px',letterSpacing:0.4 }}>★ Premium</span>}
             {player.isCoach && <span style={{ background:'rgba(90,159,212,.2)',border:'1px solid rgba(90,159,212,.3)',borderRadius:3,padding:'1px 5px',fontSize:7,fontWeight:700,color:'#5A9FD4',fontFamily:'Rajdhani, sans-serif',lineHeight:'14px' }}>COACH</span>}
             <PlatformPill platform={player.platform} handle={player.platformHandle} />
@@ -160,19 +134,27 @@ function TeamBanner({ team, side }: { team:Team; side:'left'|'right' }) {
   const isR = side === 'right'
   const [hover, setHover] = useState(false)
   return (
-    <div style={{ position:'relative',height:96,overflow:'hidden' }}>
+    <div style={{ position:'relative',height:100,overflow:'hidden' }}>
       <div style={{ position:'absolute',inset:0,background:team.bannerGrad }} />
+      {team.bannerUrl && <img src={team.bannerUrl} alt="" style={{ position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:.45 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />}
       <div style={{ position:'absolute',inset:0,background:'linear-gradient(180deg,transparent 0%,rgba(15,15,24,.96) 100%)' }} />
       <div style={{ position:'absolute',inset:0,display:'flex',alignItems:'flex-end',padding:'0 16px 10px',flexDirection:isR?'row-reverse':'row',gap:12 }}>
-        <div style={{ width:54,height:54,background:'#13131E',border:`2px solid ${team.teamBorder}`,boxShadow:`0 0 14px ${team.teamBorder}66`,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0 }}>{team.emoji}</div>
+        <div style={{ width:54,height:54,background:'#13131E',border:`2px solid ${team.teamBorder}`,boxShadow:`0 0 14px ${team.teamBorder}66`,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0,overflow:'hidden' }}>
+          {team.logoUrl ? <img src={team.logoUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';e.currentTarget.parentElement!.textContent=team.emoji}} /> : team.emoji}
+        </div>
         <div style={{ flex:1,textAlign:isR?'right':'left' }}>
           <Link href={`/teams/${team.slug}`} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
-            style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:22,color:hover?ACCENT:'#fff',lineHeight:1,textDecoration:'none',transition:'color .15s',display:'inline-block' }}>
+            style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:20,color:hover?ACCENT:'#fff',lineHeight:1,textDecoration:'none',transition:'color .15s' }}>
             {team.name}
           </Link>
-          <div style={{ display:'flex',gap:8,marginTop:5,justifyContent:isR?'flex-end':'flex-start' }}>
-            <span style={{ background:ACCENT_DIM,border:`1px solid ${ACCENT_BDR}`,borderRadius:3,padding:'2px 8px',fontSize:9,fontWeight:700,color:ACCENT,fontFamily:'Rajdhani, sans-serif' }}>SEED #{team.seed}</span>
-            <span style={{ fontSize:9,fontWeight:700,color:'#4F5568',fontFamily:'Rajdhani, sans-serif',alignSelf:'center',textTransform:'uppercase' }}>{team.bracket}</span>
+          <div style={{ display:'flex',gap:8,marginTop:5,justifyContent:isR?'flex-end':'flex-start',alignItems:'center' }}>
+            {team.ladderRank > 0 && <span style={{ background:ACCENT_DIM,border:`1px solid ${ACCENT_BDR}`,borderRadius:3,padding:'2px 8px',fontSize:9,fontWeight:700,color:ACCENT,fontFamily:'Rajdhani, sans-serif' }}>#{team.ladderRank}</span>}
+            <span style={{ fontSize:9,fontFamily:'Rajdhani, sans-serif' }}>
+              <span style={{ color:'#4ade80', fontWeight:700 }}>{team.wins}W</span>
+              <span style={{ color:'#4F5568' }}> / </span>
+              <span style={{ color:'#ef4444', fontWeight:700 }}>{team.losses}L</span>
+              <span style={{ color:'#DDE0EA', fontWeight:600 }}> · {team.winPct}</span>
+            </span>
           </div>
         </div>
       </div>
@@ -191,141 +173,239 @@ function SectLabel({ children }: { children:React.ReactNode }) {
 
 // ─── MODALS ──────────────────────────────────────────────
 function ReportScoreModal({ bestOf, onSubmit, onClose }: { bestOf: string; onSubmit: (myWins: number, myLosses: number) => void; onClose: () => void }) {
-  const options: [number, number][] = bestOf === 'BO1'
-    ? [[1,0],[0,1]]
-    : bestOf === 'BO3'
-    ? [[2,0],[2,1],[1,2],[0,2]]
-    : [[3,0],[3,1],[3,2],[2,3],[1,3],[0,3]]
+  const [myScore, setMyScore] = useState('')
+  const [oppScore, setOppScore] = useState('')
+  const maxScore = bestOf === 'BO5' ? 3 : bestOf === 'BO3' ? 2 : 1
+  const canSubmit = myScore !== '' && oppScore !== '' && Number(myScore) >= 0 && Number(oppScore) >= 0
+
   return (
     <div style={{ position:'fixed',inset:0,zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.7)' }} onClick={onClose}>
       <div onClick={e=>e.stopPropagation()} style={{ background:'#13131E',border:'1px solid rgba(255,255,255,.1)',borderRadius:10,padding:24,width:340 }}>
         <div style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:18,color:'#fff',marginBottom:4 }}>Report Match Score</div>
-        <div style={{ fontSize:11,color:'#8890A4',marginBottom:16,fontFamily:'Rajdhani, sans-serif' }}>Select the final series score for your team.</div>
-        <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
-          {options.map(([w,l]) => {
-            const isWin = w > l
-            return (
-              <button key={`${w}-${l}`} onClick={()=>onSubmit(w,l)} style={{ padding:'10px 16px',background:isWin?'rgba(74,222,128,.08)':'rgba(239,68,68,.08)',border:`1px solid ${isWin?'rgba(74,222,128,.25)':'rgba(239,68,68,.25)'}`,borderRadius:6,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',transition:'all .15s' }}
-                onMouseEnter={e=>{e.currentTarget.style.background=isWin?'rgba(74,222,128,.15)':'rgba(239,68,68,.15)'}}
-                onMouseLeave={e=>{e.currentTarget.style.background=isWin?'rgba(74,222,128,.08)':'rgba(239,68,68,.08)'}}>
-                <span style={{ fontFamily:'Rajdhani, sans-serif',fontWeight:700,fontSize:13,color:isWin?'#4ade80':'#ef4444' }}>{isWin?'We Won':'We Lost'}</span>
-                <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:16,color:'#fff' }}>{w} - {l}</span>
-              </button>
-            )
-          })}
+        <div style={{ fontSize:11,color:'#8890A4',marginBottom:16,fontFamily:'Rajdhani, sans-serif' }}>Enter the final series score.</div>
+        <div style={{ display:'flex',gap:12,marginBottom:16 }}>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:.8,color:'#4F5568',fontFamily:'Rajdhani, sans-serif',marginBottom:4 }}>Your Score</div>
+            <input type="number" min={0} max={maxScore} value={myScore} onChange={e=>setMyScore(e.target.value)}
+              style={{ width:'100%',padding:'8px 10px',background:'#0B0B12',border:'1px solid rgba(255,255,255,.1)',borderRadius:5,fontSize:16,fontWeight:700,color:'#fff',outline:'none',fontFamily:'Barlow Condensed, sans-serif',textAlign:'center' }} />
+          </div>
+          <div style={{ display:'flex',alignItems:'center',paddingTop:16 }}>
+            <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:18,color:'#4F5568' }}>-</span>
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:.8,color:'#4F5568',fontFamily:'Rajdhani, sans-serif',marginBottom:4 }}>Opponent</div>
+            <input type="number" min={0} max={maxScore} value={oppScore} onChange={e=>setOppScore(e.target.value)}
+              style={{ width:'100%',padding:'8px 10px',background:'#0B0B12',border:'1px solid rgba(255,255,255,.1)',borderRadius:5,fontSize:16,fontWeight:700,color:'#fff',outline:'none',fontFamily:'Barlow Condensed, sans-serif',textAlign:'center' }} />
+          </div>
         </div>
-        <button onClick={onClose} style={{ marginTop:12,width:'100%',padding:'8px',background:'#191926',border:'1px solid rgba(255,255,255,.07)',borderRadius:6,fontSize:11,fontWeight:700,color:'#8890A4',cursor:'pointer',fontFamily:'Rajdhani, sans-serif' }}>Cancel</button>
+        <button onClick={()=>canSubmit && onSubmit(Number(myScore), Number(oppScore))} disabled={!canSubmit}
+          style={{ width:'100%',padding:'9px',background:ACCENT,border:'none',borderRadius:6,fontSize:12,fontWeight:700,color:'#000',cursor:canSubmit?'pointer':'not-allowed',fontFamily:'Rajdhani, sans-serif',opacity:canSubmit?1:0.4,marginBottom:8 }}>
+          Submit Report
+        </button>
+        <button onClick={onClose} style={{ width:'100%',padding:'8px',background:'#191926',border:'1px solid rgba(255,255,255,.07)',borderRadius:6,fontSize:11,fontWeight:700,color:'#8890A4',cursor:'pointer',fontFamily:'Rajdhani, sans-serif' }}>Cancel</button>
       </div>
     </div>
   )
 }
 
-function CreateTicketModal({ matchId, onClose }: { matchId: string; onClose: () => void }) {
-  const [category, setCategory] = useState('Score Dispute')
-  const [description, setDescription] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [done, setDone] = useState(false)
-
-  const submit = async () => {
-    if (!description.trim()) return
-    setSubmitting(true)
-    try {
-      await supportApi.create({ matchId, category, description: description.trim() })
-      setDone(true)
-    } catch (e) { console.error(e) }
-    setSubmitting(false)
+// ─── HELPERS ──────────────────────────────────────────
+function buildTeam(match: any, side: 'A' | 'B'): Team {
+  const name    = side === 'A' ? match.teamAName : match.teamBName
+  const slug    = side === 'A' ? match.teamASlug : match.teamBSlug
+  const emoji   = side === 'A' ? (match.teamAEmoji || '🎮') : (match.teamBEmoji || '🎮')
+  const players = (side === 'A' ? match.teamAPlayers : match.teamBPlayers) || []
+  const teamStats = side === 'A' ? match.teamAStats : match.teamBStats
+  const w = teamStats?.wins ?? 0
+  const l = teamStats?.losses ?? 0
+  const pct = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) + '%' : '0%'
+  const rank = teamStats?.ladderRank ?? 0
+  return {
+    name:       name || 'TBD',
+    slug:       slug || '',
+    emoji,
+    ladderRank: rank,
+    record:     `${w}W / ${l}L`,
+    winPct:     pct,
+    wins:       w,
+    losses:     l,
+    bannerGrad: side === 'A' ? 'linear-gradient(135deg,#1C0606 0%,#320A0A 35%,#0E0E1C 100%)' : 'linear-gradient(135deg,#060C1C 0%,#0A1432 35%,#0E0E1C 100%)',
+    teamBorder: side === 'A' ? '#B82C2C' : '#2A6CC4',
+    logoUrl:    teamStats?.logoUrl || '',
+    bannerUrl:  teamStats?.bannerUrl || '',
+    players:    players.map((p: any) => {
+      const gt = (p.gamertags || [])[0]
+      const platform: 'psn'|'xbox'|'pc' = gt?.platform === 'xbox' ? 'xbox' : gt?.platform === 'pc' ? 'pc' : 'psn'
+      const handle = gt?.tag || p.psnId || p.xboxGamertag || p.activisionId || ''
+      const socialsArr = Array.isArray(p.socials) ? p.socials : []
+      const socials: any = {}
+      for (const s of socialsArr) {
+        const lbl = (s.label || '').toLowerCase()
+        const url = s.url || ''
+        if (lbl.includes('twitch') || lbl === 'ttv') socials.ttv = url.replace(/^https?:\/\/(www\.)?twitch\.tv\/?/,'')
+        else if (lbl.includes('twitter') || lbl.includes('x.com') || lbl === 'tw') socials.tw = url.replace(/^https?:\/\/(www\.)?(twitter\.com|x\.com)\/?/,'')
+        else if (lbl.includes('youtube') || lbl === 'yt') socials.yt = url.replace(/^https?:\/\/(www\.)?youtube\.com\/@?/,'')
+      }
+      return {
+        initials:       p.initials || (p.username || '??').slice(0, 2).toUpperCase(),
+        name:           p.username || 'Player',
+        slug:           p.slug || '',
+        platform,
+        platformHandle: handle,
+        online:         p.isOnline ?? p.online ?? false,
+        premium:        p.isPremium ?? p.premium ?? false,
+        isCoach:        p.isCoach ?? false,
+        rep:            p.rep ?? p.reputation ?? 50,
+        repLabel:       p.repLabel || 'Regular',
+        repColor:       p.repColor || '#8890A4',
+        goldTrophies:   p.goldTrophies ?? 0,
+        silverTrophies: p.silverTrophies ?? 0,
+        bronzeTrophies: p.bronzeTrophies ?? 0,
+        wins:           p.wins ?? 0,
+        losses:         p.losses ?? 0,
+        gameRank:       p.gameRank ?? null,
+        socials,
+        avatarGrad:     'linear-gradient(135deg,#13131E,#191926)',
+        avatarBorder:   side === 'A' ? 'rgba(184,44,44,.4)' : 'rgba(42,108,196,.4)',
+        isYou:          false,
+        usernameColor:  p.usernameColor || p.color || '',
+        avatarUrl:      p.avatarUrl || '',
+      }
+    }),
   }
-
-  return (
-    <div style={{ position:'fixed',inset:0,zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.7)' }} onClick={onClose}>
-      <div onClick={e=>e.stopPropagation()} style={{ background:'#13131E',border:'1px solid rgba(255,255,255,.1)',borderRadius:10,padding:24,width:380 }}>
-        {done ? (
-          <>
-            <div style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:18,color:'#4ade80',marginBottom:8 }}>Ticket Submitted</div>
-            <div style={{ fontSize:11,color:'#8890A4',marginBottom:16,fontFamily:'Rajdhani, sans-serif' }}>Our support team will review your ticket shortly.</div>
-            <button onClick={onClose} style={{ width:'100%',padding:'8px',background:'#1A5C9E',border:'none',borderRadius:6,fontSize:11,fontWeight:700,color:'#fff',cursor:'pointer',fontFamily:'Rajdhani, sans-serif' }}>Close</button>
-          </>
-        ) : (
-          <>
-            <div style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:18,color:'#fff',marginBottom:4 }}>Create a Ticket</div>
-            <div style={{ fontSize:11,color:'#8890A4',marginBottom:16,fontFamily:'Rajdhani, sans-serif' }}>Submit a support ticket for this match.</div>
-            <div style={{ marginBottom:12 }}>
-              <div style={{ fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:.8,color:'#4F5568',fontFamily:'Rajdhani, sans-serif',marginBottom:4 }}>Match ID</div>
-              <div style={{ padding:'6px 10px',background:'#0B0B12',border:'1px solid rgba(255,255,255,.07)',borderRadius:5,fontSize:12,color:'#8890A4',fontFamily:'Rajdhani, sans-serif' }}>{matchId}</div>
-            </div>
-            <div style={{ marginBottom:12 }}>
-              <div style={{ fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:.8,color:'#4F5568',fontFamily:'Rajdhani, sans-serif',marginBottom:4 }}>Category</div>
-              <select value={category} onChange={e=>setCategory(e.target.value)} style={{ width:'100%',padding:'6px 10px',background:'#0B0B12',border:'1px solid rgba(255,255,255,.07)',borderRadius:5,fontSize:11,color:'#fff',fontFamily:'Rajdhani, sans-serif',outline:'none' }}>
-                <option>Score Dispute</option>
-                <option>Player Conduct</option>
-                <option>Technical Issue</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div style={{ marginBottom:16 }}>
-              <div style={{ fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:.8,color:'#4F5568',fontFamily:'Rajdhani, sans-serif',marginBottom:4 }}>Description</div>
-              <textarea value={description} onChange={e=>setDescription(e.target.value)} rows={4} placeholder="Describe your issue..." style={{ width:'100%',padding:'6px 10px',background:'#0B0B12',border:'1px solid rgba(255,255,255,.07)',borderRadius:5,fontSize:11,color:'#fff',fontFamily:'Rajdhani, sans-serif',outline:'none',resize:'vertical' }} />
-            </div>
-            <div style={{ display:'flex',gap:8 }}>
-              <button onClick={onClose} style={{ flex:1,padding:'8px',background:'#191926',border:'1px solid rgba(255,255,255,.07)',borderRadius:6,fontSize:11,fontWeight:700,color:'#8890A4',cursor:'pointer',fontFamily:'Rajdhani, sans-serif' }}>Cancel</button>
-              <button onClick={submit} disabled={submitting || !description.trim()} style={{ flex:1,padding:'8px',background:'#1A5C9E',border:'none',borderRadius:6,fontSize:11,fontWeight:700,color:'#fff',cursor:'pointer',fontFamily:'Rajdhani, sans-serif',opacity:submitting||!description.trim()?0.5:1 }}>{submitting ? 'Submitting...' : 'Submit Ticket'}</button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  )
 }
 
+// ─── PAGE ──────────────────────────────────────────────
 export default function TournamentMatchPage({
-  params: _params,
+  params: paramsPromise,
 }: {
-  params: { id: string; matchId: string }
+  params: Promise<{ id: string; matchId: string }>
 }) {
+  const params = use(paramsPromise)
+  const tournamentId = params.id
+  const matchIdParam = params.matchId
   const { user } = useAuth()
-  const [timer,  setTimer]  = useState(254)
-  const [chatMsg, setChatMsg] = useState('')
-  const [msgs, setMsgs] = useState([
-    { from:'GH System',   initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:'Match created. Both teams must ready up before the timer expires. Winner advances to Quarterfinals.', type:'system' },
-    { from:'GhostSniper', initials:'GS', color:'#8890A4', bg:'#13131E',            text:'gl hf, see you in quarters', type:'recv' },
-    { from:'JSDesigner',  initials:'JS', color:'#8890A4', bg:'#B82C2C',            text:'gl, may the best team win', type:'sent' },
-  ])
-  const [showReportModal, setShowReportModal] = useState(false)
-  const [showTicketModal, setShowTicketModal] = useState(false)
+  const [match, setMatch] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    const t = setInterval(() => setTimer(s => s > 0 ? s - 1 : 0), 1000)
-    return () => clearInterval(t)
-  }, [])
+    if (matchIdParam) {
+      matchesApi.getById(matchIdParam).then((data: any) => {
+        setMatch(data)
+      }).catch((e: any) => {
+        setError(e?.message || 'Match not found')
+        console.error(e)
+      }).finally(() => setLoading(false))
+    }
+  }, [matchIdParam])
 
-  const fmt = (s: number) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`
+  const REAL_MATCH_ID = match?.matchId || matchIdParam || ''
+
+  // Build teams from API data
+  const teamA = match ? buildTeam(match, 'A') : null
+  const teamB = match ? buildTeam(match, 'B') : null
+
+  // Mark current user
+  if (user && teamA && teamB) {
+    const markYou = (players: Player[]) => players.map(p => ({
+      ...p,
+      isYou: p.slug === (user as any).slug || p.name === user.username,
+    }))
+    teamA.players = markYou(teamA.players)
+    teamB.players = markYou(teamB.players)
+  }
+
+  // Determine which team the current user is on
+  const userSide: 'A' | 'B' | null = (() => {
+    if (!user || !match) return null
+    const uid = (user as any)._id || (user as any).id
+    if (match.teamAPlayers?.some((p: any) => p.userId === uid)) return 'A'
+    if (match.teamBPlayers?.some((p: any) => p.userId === uid)) return 'B'
+    return null
+  })()
+
+  const matchStatus  = match?.status || 'live'
+  const gameName     = match?.game || ''
+  const gamemode     = match?.assignedGamemode || match?.gamemode || ''
+  const assignedMap  = match?.assignedMap || ''
+  const assignedMaps: string[] = match?.assignedMaps?.length ? match.assignedMaps : (assignedMap ? [assignedMap] : [])
+  const bestOf       = match?.bestOf || 'BO3'
+  const formatStr    = match?.format || 'Squad'
+
+  const [chatMsg, setChatMsg] = useState('')
+  const [msgs, setMsgs] = useState<any[]>([])
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [staffRequested, setStaffRequested] = useState(false)
+
+  useEffect(() => {
+    if (match?.chat?.length) {
+      setMsgs(match.chat.map((c: any) => ({
+        from:     c.username || 'System',
+        initials: c.initials || (c.username || 'SY').slice(0, 2).toUpperCase(),
+        color:    c.type === 'system' ? ACCENT : '#8890A4',
+        bg:       c.type === 'system' ? ACCENT_DIM : '#13131E',
+        text:     c.text,
+        type:     c.type || 'recv',
+      })))
+    } else if (match) {
+      setMsgs([
+        { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:`Tournament match ${REAL_MATCH_ID} created. ${match.tournamentRound || ''} · ${bestOf === 'BO1' ? 'Best of 1' : bestOf === 'BO3' ? 'Best of 3' : 'Best of 5'}`, type:'system' },
+      ])
+    }
+  }, [match])
+
+  // Poll for match updates while live
+  useEffect(() => {
+    if (!REAL_MATCH_ID || !['live','accepted','pending'].includes(matchStatus)) return
+    const poll = setInterval(() => {
+      matchesApi.getById(REAL_MATCH_ID).then(setMatch).catch(console.error)
+    }, 5000)
+    return () => clearInterval(poll)
+  }, [REAL_MATCH_ID, matchStatus])
+
+  const refreshMatch = () => matchesApi.getById(REAL_MATCH_ID).then(setMatch).catch(console.error)
 
   const send = () => {
     if (!chatMsg.trim()) return
     const username = user?.username || 'You'
     setMsgs(p => [...p, { from: username, initials: username.slice(0, 2).toUpperCase(), color:'#8890A4', bg:'#B82C2C', text:chatMsg.trim(), type:'sent' }])
+    matchesApi.sendChat(REAL_MATCH_ID, { text: chatMsg.trim() }).catch(console.error)
     setChatMsg('')
   }
 
   const handleReportScore = (myWins: number, myLosses: number) => {
-    // For tournament, assume user is Team A for now (hardcoded page)
-    const scoreA = myWins
-    const scoreB = myLosses
-    matchesApi.submitResult(MATCH_ID, { scoreA, scoreB }).then(() => {
-      setMsgs(p => [...p, { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:`Score reported: ${scoreA} - ${scoreB}. Waiting for opponent confirmation.`, type:'system' }])
+    const scoreA = userSide === 'A' ? myWins : myLosses
+    const scoreB = userSide === 'A' ? myLosses : myWins
+    matchesApi.submitResult(REAL_MATCH_ID, { scoreA, scoreB }).then(() => {
       setShowReportModal(false)
-    }).catch(console.error)
+      refreshMatch()
+    }).catch((err: any) => {
+      const msg = err?.message || 'Failed to report score'
+      setMsgs(p => [...p, { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:`Error: ${msg}`, type:'system' }])
+      setShowReportModal(false)
+    })
   }
+
+  if (loading) return (
+    <div style={{ background:'#0B0B12', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ fontFamily:'Rajdhani, sans-serif', fontSize:14, color:'#8890A4' }}>Loading match...</div>
+    </div>
+  )
+  if (error || !match || !teamA || !teamB) return (
+    <div style={{ background:'#0B0B12', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ fontFamily:'Rajdhani, sans-serif', fontSize:14, color:'#ef4444' }}>{error || 'Match not found'}</div>
+    </div>
+  )
+
+  const isActive = ['live','accepted','pending'].includes(matchStatus)
 
   return (
     <div style={{ background:'#0B0B12', minHeight:'100vh' }}>
 
-      {showReportModal && <ReportScoreModal bestOf="BO3" onSubmit={handleReportScore} onClose={()=>setShowReportModal(false)} />}
-      {showTicketModal && <CreateTicketModal matchId={MATCH_ID} onClose={()=>setShowTicketModal(false)} />}
+      {showReportModal && <ReportScoreModal bestOf={bestOf} onSubmit={handleReportScore} onClose={()=>setShowReportModal(false)} />}
 
-      {/* Page header */}
+      {/* ── Page Header ── */}
       <div style={{ maxWidth:1200, width:'100%', margin:'20px auto 0', padding:'0 16px', boxSizing:'border-box' }}>
-        {/* Match title row */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, marginBottom:16 }}>
           <div style={{ display:'flex', alignItems:'center', gap:14 }}>
             <div style={{ background:'linear-gradient(135deg,#1A5C9E,#2A6CC4)', boxShadow:'0 0 14px rgba(26,92,158,.3)', borderRadius:8, padding:'6px 14px', fontSize:11, fontWeight:700, color:'#fff', fontFamily:'Rajdhani, sans-serif', letterSpacing:.6, flexShrink:0 }}>
@@ -333,89 +413,94 @@ export default function TournamentMatchPage({
             </div>
             <div>
               <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#fff', lineHeight:1 }}>
-                Alpha Squad <span style={{ color:'#4F5568', fontSize:16, fontWeight:400 }}>vs</span> Bravo Unit
-              </div>
-              <div style={{ fontSize:11, color:'#4F5568', marginTop:3, fontFamily:'Rajdhani, sans-serif' }}>
-                Warzone Winter Cup · Round 3 of 16 · Upper Bracket · Best of 3
+                {teamA.name} <span style={{ color:'#4F5568', fontSize:16, fontWeight:400 }}>vs</span> {teamB.name}
               </div>
             </div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)', borderRadius:6, padding:'5px 12px' }}>
               <span style={{ fontSize:9, color:'#4F5568', fontFamily:'Rajdhani, sans-serif', fontWeight:700, letterSpacing:1, textTransform:'uppercase' }}>Match</span>
-              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:14, color:'#fff', letterSpacing:1 }}>{MATCH_ID}</span>
-              <span style={{ background:'rgba(184,44,44,.2)', border:'1px solid rgba(184,44,44,.4)', borderRadius:3, padding:'1px 6px', fontSize:9, fontWeight:700, color:'#ff6b6b', fontFamily:'Rajdhani, sans-serif', letterSpacing:.4 }}>LIVE</span>
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:8, background:'#13131E', border:'1px solid rgba(255,255,255,.07)', borderRadius:6, padding:'5px 12px' }}>
-              <span style={{ fontSize:10, color:'#4F5568', fontFamily:'Rajdhani, sans-serif', fontWeight:600 }}>Ready up</span>
-              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:18, color:timer<60?'#ef4444':ACCENT, lineHeight:1 }}>{fmt(timer)}</span>
-              <span style={{ width:6, height:6, borderRadius:3, background:timer<60?'#ef4444':ACCENT, display:'inline-block', animation:'tm-pulse 1.2s infinite' }} />
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:14, color:'#fff', letterSpacing:1 }}>{REAL_MATCH_ID}</span>
+              <span style={{ background: matchStatus==='completed'?'rgba(74,222,128,.15)':'rgba(184,44,44,.2)', border:`1px solid ${matchStatus==='completed'?'rgba(74,222,128,.35)':'rgba(184,44,44,.4)'}`, borderRadius:3, padding:'1px 6px', fontSize:9, fontWeight:700, color:matchStatus==='completed'?'#4ade80':'#ff6b6b', fontFamily:'Rajdhani, sans-serif', letterSpacing:.4 }}>{matchStatus.toUpperCase()}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main 3-col grid */}
-      <div style={{ flex:1, maxWidth:1200, width:'100%', margin:'0 auto 32px', padding:'0 16px', boxSizing:'border-box' }}>
+      {/* ── 3-Col Grid ── */}
+      <div style={{ maxWidth:1200, width:'100%', margin:'0 auto 32px', padding:'0 16px', boxSizing:'border-box' }}>
         <div style={{ background:'#0F0F18', border:'1px solid rgba(255,255,255,.055)', borderRadius:10, overflow:'hidden', display:'grid', gridTemplateColumns:'1fr 300px 1fr' }}>
 
           {/* LEFT */}
           <div style={{ display:'flex', flexDirection:'column', borderRight:'1px solid rgba(255,255,255,.055)' }}>
-            <TeamBanner team={TEAM_A} side="left" />
+            <TeamBanner team={teamA} side="left" />
             <SectLabel>Players</SectLabel>
-            {TEAM_A.players.map((p,i) => <PlayerRow key={i} player={p} side="left" />)}
+            {teamA.players.length > 0 ? teamA.players.map((p,i) => <PlayerRow key={i} player={p} side="left" />) : (
+              <div style={{ padding:'20px 16px', fontSize:11, color:'#4F5568', fontStyle:'italic' }}>No players listed</div>
+            )}
           </div>
 
           {/* CENTER */}
           <div style={{ display:'flex', flexDirection:'column', background:'#0B0B12', borderRight:'1px solid rgba(255,255,255,.055)' }}>
 
-            <SectLabel>Tournament Info</SectLabel>
-            <div style={{ padding:'4px 16px 12px', display:'flex', flexDirection:'column', gap:8 }}>
-              {[
-                { label:'Tournament',    value:'Warzone Winter Cup',    sub:'64-Team Single Elimination' },
-                { label:'Current Round', value:'Round 3 of 16',        sub:'Upper Bracket · Best of 3' },
-              ].map((c,i) => (
-                <div key={i} style={{ background:ACCENT_DIM, border:`1px solid ${ACCENT_BDR}`, borderRadius:6, padding:'8px 12px' }}>
-                  <div style={{ fontSize:9, fontWeight:700, letterSpacing:.8, textTransform:'uppercase', color:ACCENT, fontFamily:'Rajdhani, sans-serif', marginBottom:3 }}>{c.label}</div>
-                  <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:14, color:'#fff', lineHeight:1 }}>{c.value}</div>
-                  <div style={{ fontSize:9, color:'#8890A4', marginTop:3 }}>{c.sub}</div>
-                </div>
-              ))}
+            {/* Result / Tournament Info bar */}
+            <div style={{ margin:'12px 14px 4px', background:ACCENT_DIM, border:`1px solid ${ACCENT_BDR}`, borderRadius:6, padding:'10px 14px', textAlign:'center' }}>
+              {matchStatus === 'completed' && match?.winnerId ? (
+                <>
+                  <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'#4F5568', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>Match Result</div>
+                  <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:18, color:'#4ade80', lineHeight:1, marginBottom:4 }}>
+                    {match.winnerName || 'Winner'} wins!
+                  </div>
+                  <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:24, color:'#fff', lineHeight:1 }}>
+                    {match.scoreA} - {match.scoreB}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'#4F5568', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>Tournament</div>
+                  <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:16, color:ACCENT, lineHeight:1 }}>{match.tournamentRound || 'Round 1'}</div>
+                  <div style={{ fontSize:9, color:'#8890A4', marginTop:4, fontFamily:'Rajdhani, sans-serif' }}>
+                    {gameName} · {formatStr} · {bestOf === 'BO1' ? 'Best of 1' : bestOf === 'BO3' ? 'Best of 3' : 'Best of 5'}
+                  </div>
+                </>
+              )}
             </div>
 
             <SectLabel>Match Details</SectLabel>
             <div style={{ padding:'4px 16px 12px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4px 12px' }}>
               {[
-                { label:'Match ID', val:MATCH_ID,          color:'#DDE0EA' },
-                { label:'Type',     val:'Tournament',       color:ACCENT },
-                { label:'Game',     val:'Warzone',          color:'#DDE0EA' },
-                { label:'Format',   val:'Squads (4v4)',     color:'#DDE0EA' },
-                { label:'Series',   val:'Best of 3',        color:'#DDE0EA' },
-                { label:'Entry',    val:'Credits',          color:'#f0c040' },
+                { label:'Match ID',  val:REAL_MATCH_ID, color:'#DDE0EA' },
+                { label:'Type',      val:'Tournament',         color:ACCENT },
+                { label:'Game',      val:gameName,              color:'#DDE0EA' },
+                { label:'Format',    val:formatStr,             color:'#DDE0EA' },
+                { label:'Series',    val:bestOf === 'BO1' ? 'Best of 1' : bestOf === 'BO3' ? 'Best of 3' : bestOf === 'BO5' ? 'Best of 5' : bestOf, color:'#DDE0EA' },
+                { label:'Ruleset',   val:gamemode || 'Standard', color:'#8890A4' },
               ].map((d,i) => (
                 <div key={i} style={{ paddingBottom:8 }}>
                   <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:.8, color:'#4F5568', fontFamily:'Rajdhani, sans-serif', marginBottom:2 }}>{d.label}</div>
-                  <div style={{ fontSize:12, fontWeight:700, color:d.color, fontFamily:'Rajdhani, sans-serif' }}>{d.val}</div>
+                  <div style={{ fontSize:12, fontWeight:700, color:d.color, fontFamily:'Rajdhani, sans-serif', lineHeight:1.3 }}>{d.val}</div>
                 </div>
               ))}
             </div>
 
             <SectLabel>Maps &amp; Host</SectLabel>
             <div style={{ padding:'4px 16px 12px' }}>
-              {MAPS.map((m,i) => (
-                <div key={i} style={{ display:'grid', gridTemplateColumns:'22px 26px 1fr auto', gap:6, alignItems:'center', padding:'5px 0', borderBottom:i<MAPS.length-1?'1px solid rgba(255,255,255,.04)':'none' }}>
-                  <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, color:'#4F5568', textAlign:'center' }}>{m.num}</span>
-                  <div style={{ width:24, height:24, background:m.tGrad, border:`1px solid ${m.tBorder}`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12 }}>{m.emoji}</div>
-                  <div>
-                    <div style={{ fontSize:11, fontWeight:700, color:'#DDE0EA', fontFamily:'Rajdhani, sans-serif', lineHeight:1.2 }}>{m.name}</div>
-                    <div style={{ fontSize:9, color:'#4F5568', marginTop:1 }}>{m.mode}</div>
+              {Array.from({ length: bestOf === 'BO5' ? 5 : bestOf === 'BO3' ? 3 : 1 }).map((_, idx) => {
+                const mapName = assignedMaps[idx] || 'Pending'
+                const hostTeam = idx % 2 === 0 ? teamA : teamB
+                const hostColor = idx % 2 === 0 ? '#B82C2C' : '#2A6CC4'
+                return (
+                  <div key={idx} style={{ display:'grid', gridTemplateColumns:'22px 26px 1fr auto', gap:6, alignItems:'center', padding:'5px 0', borderBottom: idx < (bestOf === 'BO5' ? 4 : bestOf === 'BO3' ? 2 : 0) ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
+                    <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, color:'#4F5568', textAlign:'center' }}>{idx + 1}</span>
+                    <div style={{ width:24, height:24, background:`linear-gradient(135deg,${hostColor}40,${hostColor}14)`, border:`1px solid ${hostColor}4D`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12 }}>🗺️</div>
+                    <div>
+                      <div style={{ fontSize:11, fontWeight:700, color: mapName === 'Pending' ? '#4F5568' : '#DDE0EA', fontFamily:'Rajdhani, sans-serif', lineHeight:1.2 }}>{mapName}</div>
+                      <div style={{ fontSize:9, color:'#4F5568', marginTop:1 }}>{gamemode || 'Standard'}</div>
+                    </div>
+                    <span style={{ background:`${hostColor}22`, border:`1px solid ${hostColor}44`, borderRadius:3, padding:'2px 6px', fontSize:8, fontWeight:700, color:hostColor, fontFamily:'Rajdhani, sans-serif', textTransform:'uppercase', whiteSpace:'nowrap' }}>{hostTeam.name}</span>
                   </div>
-                  <span style={{ background:`${m.hostColor}22`, border:`1px solid ${m.hostColor}44`, borderRadius:3, padding:'2px 6px', fontSize:8, fontWeight:700, color:m.hostColor, fontFamily:'Rajdhani, sans-serif', textTransform:'uppercase', whiteSpace:'nowrap' }}>{m.hostTeam}</span>
-                </div>
-              ))}
-              <div style={{ marginTop:8, background:'rgba(255,255,255,.024)', border:'1px solid rgba(255,255,255,.055)', borderRadius:4, padding:'7px 10px', fontSize:9, color:'#8890A4', lineHeight:1.5 }}>
-                <strong style={{ color:'#4F5568' }}>BO3:</strong> Seed #3 hosts map 1, Seed #6 hosts map 2. Map 3 host decided by highest team K/D.
-              </div>
+                )
+              })}
             </div>
 
             <div style={{ borderTop:'1px solid rgba(255,255,255,.055)' }}>
@@ -434,34 +519,59 @@ export default function TournamentMatchPage({
                 ))}
               </div>
               <div style={{ borderTop:'1px solid rgba(255,255,255,.055)', padding:'8px 16px', display:'flex', gap:8 }}>
-                <input value={chatMsg} onChange={e=>setChatMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Message your opponent..." style={{ flex:1, background:'#13131E', border:'1px solid rgba(255,255,255,.09)', borderRadius:5, padding:'6px 10px', fontSize:11, color:'#fff', outline:'none', fontFamily:'Rajdhani, sans-serif' }} />
-                <button onClick={send} style={{ background:'#1A5C9E', border:'none', borderRadius:5, padding:'6px 14px', fontSize:11, fontWeight:700, color:'#fff', cursor:'pointer', fontFamily:'Rajdhani, sans-serif' }}>Send</button>
+                {['completed','disputed','cancelled'].includes(matchStatus) ? (
+                  <div style={{ flex:1, padding:'6px 10px', background:'#13131E', border:'1px solid rgba(255,255,255,.05)', borderRadius:5, fontSize:11, color:'#4F5568', fontFamily:'Rajdhani, sans-serif', textAlign:'center' }}>Match ended</div>
+                ) : (
+                  <>
+                    <input value={chatMsg} onChange={e=>setChatMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Message your opponent..." style={{ flex:1, background:'#13131E', border:'1px solid rgba(255,255,255,.09)', borderRadius:5, padding:'6px 10px', fontSize:11, color:'#fff', outline:'none', fontFamily:'Rajdhani, sans-serif' }} />
+                    <button onClick={send} style={{ background:ACCENT, border:'none', borderRadius:5, padding:'6px 14px', fontSize:11, fontWeight:700, color:'#000', cursor:'pointer', fontFamily:'Rajdhani, sans-serif' }}>Send</button>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* No Cancel button for tournament matches */}
             <div style={{ borderTop:'1px solid rgba(255,255,255,.055)', padding:'10px 16px', display:'flex', gap:8, flexWrap:'wrap' }}>
-              {[
-                { label:'Create a Ticket', color:'#8890A4', onClick: () => setShowTicketModal(true) },
-                { label:'View Bracket',    color:ACCENT,    onClick: () => {} },
-                { label:'Rules',           color:'#8890A4', onClick: () => {} },
-                { label:'Report Match',    color:'#ef4444', onClick: () => setShowReportModal(true) },
-              ].map((btn,i) => (
-                <button key={i} onClick={btn.onClick} style={{ flex:1, padding:'7px 6px', background:'#191926', border:'1px solid rgba(255,255,255,.07)', borderRadius:7, fontSize:10, fontWeight:700, color:btn.color, cursor:'pointer', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, whiteSpace:'nowrap', transition:'all .15s', minWidth:60 }}
+              {isActive && (
+                <button onClick={() => {
+                  if (staffRequested) return
+                  setStaffRequested(true)
+                  supportApi.requestStaff({
+                    category: 'tournament',
+                    contextId: REAL_MATCH_ID,
+                    contextLabel: `Tournament Match: ${teamA?.name || 'Team A'} vs ${teamB?.name || 'Team B'}`,
+                    message: `Staff requested for tournament match ${REAL_MATCH_ID}`,
+                  }).then(() => {
+                    setMsgs(p => [...p, { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:'Staff has been notified. A team member will join shortly.', type:'system' }])
+                  }).catch(() => setStaffRequested(false))
+                }} style={{ flex:1, padding:'7px 6px', background:'#191926', border:'1px solid rgba(255,255,255,.07)', borderRadius:7, fontSize:10, fontWeight:700, color: staffRequested ? '#4ade80' : '#F0AA1A', cursor:'pointer', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, whiteSpace:'nowrap', transition:'all .15s', minWidth:60 }}
                   onMouseEnter={e=>{e.currentTarget.style.background='#252535'}}
                   onMouseLeave={e=>{e.currentTarget.style.background='#191926'}}>
-                  {btn.label}
+                  {staffRequested ? 'Staff Requested' : 'Request Staff'}
                 </button>
-              ))}
+              )}
+              {isActive && userSide && (
+                <button onClick={() => setShowReportModal(true)} style={{ flex:1, padding:'7px 6px', background:'#191926', border:'1px solid rgba(255,255,255,.07)', borderRadius:7, fontSize:10, fontWeight:700, color:'#ef4444', cursor:'pointer', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, whiteSpace:'nowrap', transition:'all .15s', minWidth:60 }}
+                  onMouseEnter={e=>{e.currentTarget.style.background='#252535'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='#191926'}}>
+                  Report Match
+                </button>
+              )}
+              <button onClick={() => { window.location.href = `/tournaments/${tournamentId}` }} style={{ flex:1, padding:'7px 6px', background:'#191926', border:'1px solid rgba(255,255,255,.07)', borderRadius:7, fontSize:10, fontWeight:700, color:ACCENT, cursor:'pointer', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, whiteSpace:'nowrap', transition:'all .15s', minWidth:60 }}
+                onMouseEnter={e=>{e.currentTarget.style.background='#252535'}}
+                onMouseLeave={e=>{e.currentTarget.style.background='#191926'}}>
+                View Bracket
+              </button>
             </div>
 
           </div>
 
           {/* RIGHT */}
           <div style={{ display:'flex', flexDirection:'column' }}>
-            <TeamBanner team={TEAM_B} side="right" />
+            <TeamBanner team={teamB} side="right" />
             <SectLabel>Players</SectLabel>
-            {TEAM_B.players.map((p,i) => <PlayerRow key={i} player={p} side="right" />)}
+            {teamB.players.length > 0 ? teamB.players.map((p,i) => <PlayerRow key={i} player={p} side="right" />) : (
+              <div style={{ padding:'20px 16px', fontSize:11, color:'#4F5568', fontStyle:'italic' }}>No players listed</div>
+            )}
           </div>
 
         </div>

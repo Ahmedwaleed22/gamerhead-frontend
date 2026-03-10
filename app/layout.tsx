@@ -38,11 +38,9 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
   // ── Support chat state ──
   const [supportStep, setSupportStep]       = useState<'form' | 'chat' | 'closed'>('form')
-  const [supportGame, setSupportGame]       = useState('')
   const [supportDept, setSupportDept]       = useState('')
-  const [supportSubject, setSupportSubject] = useState('')
   const [supportDesc, setSupportDesc]       = useState('')
-  const [activeTicket, setActiveTicket]     = useState<any>(null)
+  const [activeSession, setActiveSession]   = useState<any>(null)
   const [supportMsgs, setSupportMsgs]       = useState<any[]>([])
   const [supportInput, setSupportInput]     = useState('')
   const [supportLoading, setSupportLoading] = useState(false)
@@ -129,31 +127,31 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     }
   }, [user])
 
-  // ── Check for existing open support ticket on mount ──
+  // ── Check for existing open live chat session on mount ──
   useEffect(() => {
     if (!user) return
-    supportApi.getMine().then((tickets: any) => {
-      const list = Array.isArray(tickets) ? tickets : []
-      const open = list.find((t: any) => t.status === 'open' || t.status === 'claimed')
-      if (open) {
-        setActiveTicket(open)
-        setSupportMsgs(open.messages || [])
+    supportApi.getMyLiveChat().then((session: any) => {
+      if (session && (session.status === 'queued' || session.status === 'active')) {
+        setActiveSession(session)
+        setSupportMsgs(session.messages || [])
         setSupportStep('chat')
       }
     }).catch(() => {})
   }, [user])
 
-  // ── Poll support messages every 5s when chat is open ──
+  // ── Poll live chat session every 5s when chat is open ──
   useEffect(() => {
-    if (supportStep !== 'chat' || !activeTicket?.ticketId || !chatOpen) return
+    if (supportStep !== 'chat' || !activeSession?.sessionId || !chatOpen) return
     const iv = setInterval(() => {
-      supportApi.getTicket(activeTicket.ticketId).then((t: any) => {
-        setSupportMsgs(t.messages || [])
-        if (t.status === 'closed') setSupportStep('closed')
+      supportApi.getMyLiveChat().then((s: any) => {
+        if (!s) { setSupportStep('closed'); return }
+        setActiveSession(s)
+        setSupportMsgs(s.messages || [])
+        if (s.status === 'closed') setSupportStep('closed')
       }).catch(() => {})
     }, 5000)
     return () => clearInterval(iv)
-  }, [supportStep, activeTicket?.ticketId, chatOpen])
+  }, [supportStep, activeSession?.sessionId, chatOpen])
 
   // ── Auto-scroll chat ──
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [supportMsgs])
@@ -174,40 +172,43 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     if (n.link) router.push(n.link)
   }
 
+  const DEPT_TO_CATEGORY: Record<string, string> = { 'Tournament Support': 'tournament', 'Technical Issue': 'technical', 'General': 'general' }
+
   const handleStartSupport = async () => {
-    if (!supportDept || !supportSubject) return
+    if (!supportDept || !supportDesc.trim()) return
     setSupportLoading(true)
     try {
-      const ticket = await supportApi.create({ game: supportGame, department: supportDept, subject: supportSubject, description: supportDesc })
-      setActiveTicket(ticket)
-      setSupportMsgs(ticket.messages || [])
-      setSupportStep('chat')
+      const category = DEPT_TO_CATEGORY[supportDept] || 'general'
+      const res = await supportApi.requestStaff({ category, message: supportDesc.trim() })
+      // Fetch the session we just created
+      const session = await supportApi.getMyLiveChat()
+      if (session) {
+        setActiveSession(session)
+        setSupportMsgs(session.messages || [])
+        setSupportStep('chat')
+      }
     } catch { /* error */ }
     setSupportLoading(false)
   }
 
   const handleSendSupport = async () => {
-    if (!supportInput.trim() || !activeTicket?.ticketId) return
+    if (!supportInput.trim() || !activeSession?.sessionId) return
     const text = supportInput.trim()
     setSupportInput('')
     try {
-      const updated = await supportApi.sendMessage(activeTicket.ticketId, { text })
+      const updated = await supportApi.sendLiveChatMessage(activeSession.sessionId, { text })
       setSupportMsgs(updated.messages || [])
     } catch { /* error */ }
   }
 
-  const handleCloseTicket = async () => {
-    if (!activeTicket?.ticketId) return
-    await supportApi.close(activeTicket.ticketId).catch(() => {})
+  const handleCloseChat = () => {
     setSupportStep('closed')
   }
 
-  const handleNewTicket = () => {
-    setActiveTicket(null)
+  const handleNewChat = () => {
+    setActiveSession(null)
     setSupportMsgs([])
-    setSupportGame('')
     setSupportDept('')
-    setSupportSubject('')
     setSupportDesc('')
     setSupportStep('form')
   }
@@ -377,7 +378,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                               {user.username}
                             </div>
                             <div className="nav-user-dd-sub">
-                              Level {user.level} · {user.credits} Credits · {cashDisplay}
+                              Level {user.level} · {user.credits} Tickets · {cashDisplay}
                             </div>
                           </div>
                         </div>
@@ -553,51 +554,39 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                 <>
                   <div className="livechat-header">
                     Live Support
-                    <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8, marginTop: 2 }}>Fill out the form below to start chatting with support.</div>
+                    <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.8, marginTop: 2 }}>Connect with a staff member in real-time.</div>
                   </div>
                   <div className="livechat-body" style={{ flex: 1, overflow: 'auto' }}>
-                    <select className="site-input" value={supportGame} onChange={e => setSupportGame(e.target.value)}>
-                      <option value="">Select Game (optional)</option>
-                      <option>Call of Duty</option>
-                      <option>Fortnite</option>
-                      <option>Valorant</option>
-                      <option>FIFA / EA FC</option>
-                      <option>Rocket League</option>
-                      <option>Other</option>
-                    </select>
                     <select className="site-input" value={supportDept} onChange={e => setSupportDept(e.target.value)}>
                       <option value="">Select Department *</option>
-                      <option>Match Dispute</option>
-                      <option>Payment Issue</option>
-                      <option>Technical Problem</option>
-                      <option>Account Issue</option>
+                      <option>Tournament Support</option>
+                      <option>Technical Issue</option>
                       <option>General</option>
                     </select>
-                    <input className="site-input" placeholder="Subject *" value={supportSubject} onChange={e => setSupportSubject(e.target.value)} />
-                    <textarea className="site-input" placeholder="Describe your issue..." value={supportDesc} onChange={e => setSupportDesc(e.target.value)} style={{ height: 70, resize: 'vertical', paddingTop: 8 }} />
+                    <textarea className="site-input" placeholder="How can we help? *" value={supportDesc} onChange={e => setSupportDesc(e.target.value)} style={{ height: 80, resize: 'vertical', paddingTop: 8 }} />
                     <button
                       className="btn-chat-start"
                       onClick={handleStartSupport}
-                      disabled={!supportDept || !supportSubject || supportLoading || !user}
-                      style={{ opacity: (!supportDept || !supportSubject || !user) ? 0.5 : 1 }}
+                      disabled={!supportDept || !supportDesc.trim() || supportLoading || !user}
+                      style={{ opacity: (!supportDept || !supportDesc.trim() || !user) ? 0.5 : 1 }}
                     >
-                      {!user ? '🔒 Sign in to start' : supportLoading ? 'Starting...' : '✈️ Start Support'}
+                      {!user ? '🔒 Sign in to start' : supportLoading ? 'Connecting...' : '💬 Start Live Chat'}
                     </button>
                   </div>
                 </>
               )}
 
               {/* ── CHAT STEP ── */}
-              {supportStep === 'chat' && activeTicket && (
+              {supportStep === 'chat' && activeSession && (
                 <>
                   <div className="livechat-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div>Live Support</div>
                       <div style={{ fontSize: 10, fontWeight: 400, opacity: 0.7 }}>
-                        Ticket #{activeTicket.ticketId} · {activeTicket.status === 'claimed' ? 'Agent connected' : 'Waiting for agent...'}
+                        {activeSession.status === 'active' ? 'Agent connected' : 'Waiting for agent...'}
                       </div>
                     </div>
-                    <button onClick={handleCloseTicket} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 4, padding: '4px 10px', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Close</button>
+                    <button onClick={handleCloseChat} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 4, padding: '4px 10px', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Close</button>
                   </div>
                   <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 200, maxHeight: 320 }}>
                     {supportMsgs.map((m: any, i: number) => {
@@ -635,11 +624,11 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
               {/* ── CLOSED STEP ── */}
               {supportStep === 'closed' && (
                 <>
-                  <div className="livechat-header">Ticket Closed</div>
+                  <div className="livechat-header">Chat Ended</div>
                   <div className="livechat-body" style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
-                    <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 16 }}>Your support ticket has been closed. Thank you for contacting us!</div>
-                    <button className="btn-chat-start" onClick={handleNewTicket}>Start New Ticket</button>
+                    <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 16 }}>Your chat session has ended. Thank you for contacting us!</div>
+                    <button className="btn-chat-start" onClick={handleNewChat}>Start New Chat</button>
                   </div>
                 </>
               )}

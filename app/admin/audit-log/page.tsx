@@ -43,19 +43,19 @@ export default function AdminAuditLogPage() {
       render: (r: any) => <span style={{ fontWeight: 700, color: '#a855f7' }}>{r.adminName}</span>,
     },
     { key: 'action', label: 'Action', width: '140px',
-      render: (r: any) => <span style={{ fontSize: 9, fontWeight: 700, color: ACTION_COLORS[r.action] || '#8890A4' }}>{r.action}</span>,
+      render: (r: any) => <span style={{ fontWeight: 700, color: ACTION_COLORS[r.action] || '#8890A4' }}>{r.action}</span>,
     },
     { key: 'targetType', label: 'Target', width: '90px',
       render: (r: any) => <span style={{ color: '#4F5568' }}>{r.targetType}</span>,
     },
-    { key: 'targetId', label: 'Target ID', width: '120px',
-      render: (r: any) => <span style={{ fontSize: 9, color: '#8890A4', fontFamily: 'monospace' }}>{r.targetId?.slice(-12)}</span>,
+    { key: 'targetId', label: 'Target ID', width: '130px',
+      render: (r: any) => <span style={{ color: '#8890A4', fontFamily: 'monospace' }}>{r.targetId?.slice(-12)}</span>,
     },
     { key: 'details', label: 'Details', width: '2fr',
       render: (r: any) => {
         const details = r.details || {}
         const summary = Object.entries(details).map(([k, v]) => `${k}: ${v}`).join(', ')
-        return <span style={{ color: '#4F5568', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', fontSize: 9 }}>{summary || '—'}</span>
+        return <span style={{ color: '#4F5568', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{summary || '—'}</span>
       },
     },
   ]

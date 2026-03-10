@@ -53,7 +53,7 @@ function OverviewTab() {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-      <StatCard icon="🪙" label="Credits in Circulation" value={summary.totalCredits?.toLocaleString()} />
+      <StatCard icon="🪙" label="Tickets in Circulation" value={summary.totalCredits?.toLocaleString()} />
       <StatCard icon="💵" label="Total Cash Held" value={`$${((summary.totalCash || 0) / 100).toFixed(2)}`} color="#22c55e" />
       <StatCard icon="⏳" label="Pending Withdrawals" value={`$${((summary.pendingWithdrawals || 0) / 100).toFixed(2)}`} color="#f59e0b" sub={`${summary.pendingWithdrawalCount || 0} requests`} />
       <StatCard icon="📤" label="Lifetime Payouts" value={`$${((summary.lifetimePayouts || 0) / 100).toFixed(2)}`} />
@@ -129,7 +129,7 @@ function TransactionsTab() {
           },
           {
             value: currency, onChange: v => { setCurrency(v); setPage(1) }, placeholder: 'All Currencies',
-            options: [{ value: 'cash', label: 'Cash' }, { value: 'credits', label: 'Credits' }],
+            options: [{ value: 'cash', label: 'Cash' }, { value: 'credits', label: 'Tickets' }],
           },
         ]}
       />

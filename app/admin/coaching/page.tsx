@@ -81,6 +81,9 @@ function CoachesTab() {
   const handleVerify = async (id: string) => {
     try { await adminApi.verifyCoach(id); load() } catch { }
   }
+  const handleUnverify = async (id: string) => {
+    try { await adminApi.unverifyCoach(id); load() } catch { }
+  }
   const handleSuspend = async (id: string) => {
     try { await adminApi.suspendCoach(id); load() } catch { }
   }
@@ -109,7 +112,10 @@ function CoachesTab() {
     { key: 'actions', label: 'Actions', width: '140px',
       render: (row: any) => (
         <div style={{ display: 'flex', gap: 4 }}>
-          {!row.isVerified && <ActionBtn label="VERIFY" color="#22c55e" onClick={() => handleVerify(row._id)} />}
+          {row.isVerified
+            ? <ActionBtn label="UNVERIFY" color="#f59e0b" onClick={() => handleUnverify(row._id)} />
+            : <ActionBtn label="VERIFY" color="#22c55e" onClick={() => handleVerify(row._id)} />
+          }
           {row.isActive ? (
             <ActionBtn label="SUSPEND" color="#e8000d" onClick={() => handleSuspend(row._id)} />
           ) : (

@@ -6,7 +6,27 @@ import ActionBtn from '../components/ActionBtn'
 import StatCard from '../components/StatCard'
 
 const CATEGORY_COLORS: Record<string, string> = {
-  match: '#3b82f6', tournament: '#a855f7', wager: '#f59e0b', premium: '#22c55e', general: '#8890A4',
+  match: '#3b82f6', tournament: '#a855f7', wager: '#f59e0b', premium: '#22c55e', technical: '#3b82f6', general: '#8890A4',
+}
+const CATEGORY_LABELS: Record<string, string> = {
+  tournament: 'Tournament', wager: 'Wager', match: 'Match', premium: 'Premium', technical: 'Technical', general: 'General',
+}
+const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
+  tournament: { label: 'HIGH', color: '#e8000d' },
+  wager: { label: 'HIGH', color: '#e8000d' },
+  match: { label: 'MED', color: '#f59e0b' },
+  premium: { label: 'MED', color: '#f59e0b' },
+  technical: { label: 'LOW', color: '#8890A4' },
+  general: { label: 'LOW', color: '#8890A4' },
+}
+
+function timeAgo(d: string | Date) {
+  const diff = Math.max(0, Date.now() - new Date(d).getTime())
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  return `${hrs}h ${mins % 60}m ago`
 }
 
 export default function AdminLiveChatPage() {
@@ -27,6 +47,12 @@ export default function AdminLiveChatPage() {
       setQueue(Array.isArray(qRes) ? qRes : qRes.sessions || [])
       setActive(Array.isArray(aRes) ? aRes : aRes.sessions || [])
       setStats(sRes)
+      // Refresh selected session if it's active
+      if (selected) {
+        const allActive = Array.isArray(aRes) ? aRes : aRes.sessions || []
+        const updated = allActive.find((s: any) => s.sessionId === selected.sessionId)
+        if (updated) setSelected(updated)
+      }
     } catch { }
   }
 
@@ -80,7 +106,7 @@ export default function AdminLiveChatPage() {
       )}
 
       {/* Main Layout: Queue/Active + Chat */}
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 14, minHeight: 500 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 14, minHeight: 500 }}>
         {/* Left Panel: Queue + Active */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* Queue */}
@@ -90,16 +116,32 @@ export default function AdminLiveChatPage() {
             </div>
             {queue.length === 0 ? (
               <div style={{ fontSize: 10, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', textAlign: 'center', padding: 12 }}>No users waiting</div>
-            ) : queue.map(s => (
-              <div key={s.sessionId} style={{ padding: '8px 10px', borderRadius: 6, background: 'rgba(255,255,255,.03)', marginBottom: 4, cursor: 'pointer' }} onClick={() => handleClaim(s.sessionId)}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontWeight: 700, fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{s.username}</span>
-                  <span style={{ fontSize: 8, fontWeight: 700, color: CATEGORY_COLORS[s.category] || '#8890A4', padding: '1px 4px', border: `1px solid ${CATEGORY_COLORS[s.category] || '#8890A4'}44`, borderRadius: 3 }}>{s.category}</span>
+            ) : queue.map(s => {
+              const priority = PRIORITY_MAP[s.category] || PRIORITY_MAP.general
+              const catColor = CATEGORY_COLORS[s.category] || '#8890A4'
+              return (
+                <div key={s.sessionId} style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(255,255,255,.03)', marginBottom: 6, border: '1px solid rgba(255,255,255,.04)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', flex: 1 }}>{s.username}</span>
+                    <span style={{
+                      fontSize: 8, fontWeight: 800, color: priority.color, padding: '1px 5px',
+                      border: `1px solid ${priority.color}44`, borderRadius: 3, letterSpacing: .5,
+                      fontFamily: 'Rajdhani, sans-serif',
+                    }}>{priority.label}</span>
+                    <span style={{
+                      fontSize: 8, fontWeight: 700, color: catColor, padding: '1px 5px',
+                      border: `1px solid ${catColor}44`, borderRadius: 3,
+                      fontFamily: 'Rajdhani, sans-serif',
+                    }}>{CATEGORY_LABELS[s.category] || s.category}</span>
+                  </div>
+                  {s.contextLabel && <div style={{ fontSize: 9, color: '#6B7280', fontFamily: 'Rajdhani, sans-serif', marginBottom: 4 }}>{s.contextLabel}</div>}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>{timeAgo(s.createdAt)}</span>
+                    <ActionBtn label="CLAIM" color="#22c55e" onClick={() => handleClaim(s.sessionId)} />
+                  </div>
                 </div>
-                {s.contextLabel && <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>{s.contextLabel}</div>}
-                <ActionBtn label="CLAIM" color="#22c55e" onClick={() => handleClaim(s.sessionId)} />
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Active Chats */}
@@ -109,16 +151,28 @@ export default function AdminLiveChatPage() {
             </div>
             {active.length === 0 ? (
               <div style={{ fontSize: 10, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', textAlign: 'center', padding: 12 }}>No active chats</div>
-            ) : active.map(s => (
-              <div key={s.sessionId} onClick={() => setSelected(s)} style={{
-                padding: '8px 10px', borderRadius: 6, cursor: 'pointer', marginBottom: 4,
-                background: selected?.sessionId === s.sessionId ? 'rgba(59,130,246,.1)' : 'rgba(255,255,255,.03)',
-                border: selected?.sessionId === s.sessionId ? '1px solid rgba(59,130,246,.3)' : '1px solid transparent',
-              }}>
-                <div style={{ fontWeight: 700, fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{s.username}</div>
-                <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>{s.category} · {s.messages?.length || 0} msgs</div>
-              </div>
-            ))}
+            ) : active.map(s => {
+              const catColor = CATEGORY_COLORS[s.category] || '#8890A4'
+              return (
+                <div key={s.sessionId} onClick={() => setSelected(s)} style={{
+                  padding: '10px 12px', borderRadius: 8, cursor: 'pointer', marginBottom: 4,
+                  background: selected?.sessionId === s.sessionId ? 'rgba(59,130,246,.1)' : 'rgba(255,255,255,.03)',
+                  border: selected?.sessionId === s.sessionId ? '1px solid rgba(59,130,246,.3)' : '1px solid transparent',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', flex: 1 }}>{s.username}</span>
+                    <span style={{
+                      fontSize: 8, fontWeight: 700, color: catColor, padding: '1px 5px',
+                      border: `1px solid ${catColor}44`, borderRadius: 3,
+                      fontFamily: 'Rajdhani, sans-serif',
+                    }}>{CATEGORY_LABELS[s.category] || s.category}</span>
+                  </div>
+                  <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 2 }}>
+                    {s.messages?.length || 0} msgs · {timeAgo(s.claimedAt || s.createdAt)}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
 
@@ -135,8 +189,13 @@ export default function AdminLiveChatPage() {
                 <div>
                   <span style={{ fontWeight: 700, fontSize: 14, color: '#fff', fontFamily: 'Rajdhani, sans-serif' }}>{selected.username}</span>
                   <span style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginLeft: 8 }}>
-                    {selected.category} {selected.contextLabel ? `· ${selected.contextLabel}` : ''}
+                    {CATEGORY_LABELS[selected.category] || selected.category} {selected.contextLabel ? `· ${selected.contextLabel}` : ''}
                   </span>
+                  {selected.userId && (
+                    <span style={{ fontSize: 9, color: '#4F5568', fontFamily: 'monospace', marginLeft: 8 }}>
+                      ID: {selected.userId?.toString?.()?.slice(-8) || ''}
+                    </span>
+                  )}
                 </div>
                 <ActionBtn label="CLOSE CHAT" color="#e8000d" onClick={() => handleClose(selected.sessionId)} />
               </div>
@@ -154,6 +213,9 @@ export default function AdminLiveChatPage() {
                       {msg.senderName}
                     </div>
                     <div style={{ fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{msg.text}</div>
+                    <div style={{ fontSize: 8, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 2, textAlign: 'right' }}>
+                      {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
                   </div>
                 ))}
                 <div ref={chatEndRef} />

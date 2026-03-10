@@ -69,13 +69,20 @@ function CreateModal({ isPremium, onClose, onCreated }: { isPremium: boolean; on
 
   const submit = async () => {
     if (!subject.trim()) return setError('Subject is required')
-    if (!description.trim()) return setError('Description is required')
-    if (description.trim().length < 50) return setError('Description must be at least 50 characters')
-    if (department === 'Match Dispute' && !matchId.trim()) return setError('Match ID is required')
-    if (department === 'Match Dispute' && !teamId.trim()) return setError('Team ID is required')
-    if (department === 'Match Dispute' && !proofLink.trim()) return setError('Proof link is required')
-    if (department === 'Payment Issue' && !paymentAmount.trim()) return setError('Amount is required')
-    if (department === 'Payment Issue' && !transactionId.trim()) return setError('Transaction / Order ID is required')
+    if (department === 'Match Dispute') {
+      if (!matchId.trim()) return setError('Match ID is required')
+      if (!teamId.trim()) return setError('Team ID is required')
+      if (!description.trim() || description.trim().length < 50) return setError('Please describe what happened (at least 50 characters)')
+      if (!proofLink.trim()) return setError('Proof link is required')
+    } else if (department === 'Payment Issue') {
+      if (!paymentAmount.trim()) return setError('Amount is required')
+      if (!transactionId.trim()) return setError('Transaction / Order ID is required')
+      if (!description.trim() || description.trim().length < 50) return setError('Please describe the issue in detail (at least 50 characters)')
+    } else if (department === 'Technical') {
+      if (!description.trim() || description.trim().length < 50) return setError('Please describe the steps to reproduce (at least 50 characters)')
+    } else {
+      if (!description.trim() || description.trim().length < 50) return setError('Please provide details (at least 50 characters)')
+    }
     setLoading(true)
     setError('')
     try {
@@ -192,7 +199,7 @@ function CreateModal({ isPremium, onClose, onCreated }: { isPremium: boolean; on
                     <option>PayPal</option>
                     <option>Credit / Debit Card</option>
                     <option>Crypto</option>
-                    <option>Credits</option>
+                    <option>Tickets</option>
                     <option>Other</option>
                   </select>
                 </div>
@@ -269,6 +276,251 @@ function CreateModal({ isPremium, onClose, onCreated }: { isPremium: boolean; on
           </button>
           <button onClick={onClose} style={{ background: '#202023', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '13px 24px', ...R, fontWeight: 600, fontSize: 13, color: '#9CA3AF', cursor: 'pointer' }}>Cancel</button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── LIVE SUPPORT MODAL ──────────────────────────────────────────────────────────
+
+const LIVE_DEPARTMENTS = [
+  { label: 'Tournament Support', category: 'tournament', desc: 'Issues with tournament matches, brackets, or scheduling', icon: '🏆' },
+  { label: 'Technical Issue', category: 'technical', desc: 'Bugs, errors, or things not working correctly', icon: '🔧' },
+  { label: 'General', category: 'general', desc: 'General questions or account help', icon: '💬' },
+]
+
+function LiveSupportModal({ onClose, onStarted }: { onClose: () => void; onStarted: (session: any) => void }) {
+  const [category, setCategory] = useState('general')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const inputS: React.CSSProperties = { background: '#0C0C11', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '11px 14px', ...R, fontSize: 13, color: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
+
+  const submit = async () => {
+    if (!message.trim() || message.trim().length < 10) return setError('Please describe your issue (at least 10 characters)')
+    setLoading(true)
+    setError('')
+    try {
+      const res = await supportApi.requestStaff({ category, message: message.trim() })
+      onStarted(res)
+    } catch (e: any) {
+      setError(e?.message || 'Failed to start live chat')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#18181C', borderRadius: 14, width: 500, maxHeight: '90vh', overflowY: 'auto', padding: '32px 36px', border: '1px solid #25252C', boxShadow: '0 32px 80px rgba(0,0,0,0.8)' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, color: '#fff', letterSpacing: 0.3 }}>Live Support</div>
+          <button onClick={onClose} style={{ background: '#25252C', border: 'none', width: 30, height: 30, borderRadius: 8, color: '#9CA3AF', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        </div>
+
+        <div style={{ ...R, fontSize: 12, color: '#9CA3AF', marginBottom: 20 }}>
+          Connect with a staff member in real-time. Select a department and describe your issue.
+        </div>
+
+        {/* Department selection */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+          {LIVE_DEPARTMENTS.map(d => (
+            <div
+              key={d.category}
+              onClick={() => setCategory(d.category)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 10, cursor: 'pointer',
+                background: category === d.category ? 'rgba(178,45,45,0.12)' : '#0C0C11',
+                border: `1px solid ${category === d.category ? 'rgba(178,45,45,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                transition: 'all 0.15s',
+              }}
+            >
+              <span style={{ fontSize: 20 }}>{d.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ ...R, fontWeight: 700, fontSize: 13, color: category === d.category ? '#fff' : '#9CA3AF' }}>{d.label}</div>
+                <div style={{ ...R, fontSize: 11, color: '#6B7280', marginTop: 2 }}>{d.desc}</div>
+              </div>
+              {category === d.category && (
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#B22D2D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Message */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ ...R, fontWeight: 700, fontSize: 11, color: '#9CA3AF', marginBottom: 8, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            How can we help? *
+          </label>
+          <textarea
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            placeholder="Describe your issue so our team can assist you..."
+            style={{ ...inputS, height: 100, resize: 'none', lineHeight: '1.6' }}
+          />
+        </div>
+
+        {error && <div style={{ ...R, fontSize: 12, color: '#E74C3C', marginBottom: 12 }}>{error}</div>}
+
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={submit} disabled={loading} style={{ flex: 1, background: '#22c55e', border: 'none', borderRadius: 10, padding: '13px 0', ...R, fontWeight: 700, fontSize: 14, color: '#fff', cursor: loading ? 'wait' : 'pointer', letterSpacing: 0.5, opacity: loading ? 0.6 : 1 }}>
+            {loading ? 'Connecting...' : 'Start Live Chat'}
+          </button>
+          <button onClick={onClose} style={{ background: '#202023', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '13px 24px', ...R, fontWeight: 600, fontSize: 13, color: '#9CA3AF', cursor: 'pointer' }}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── LIVE CHAT VIEW ──────────────────────────────────────────────────────────────
+
+const CATEGORY_LABELS: Record<string, string> = { tournament: 'Tournament Support', technical: 'Technical Issue', general: 'General', wager: 'Wager Match', match: 'Match Support', premium: 'Premium Match' }
+
+function LiveChatView({ userId, onClose }: { userId: string; onClose: () => void }) {
+  const [session, setSession] = useState<any>(null)
+  const [messages, setMessages] = useState<any[]>([])
+  const [text, setText] = useState('')
+  const [sending, setSending] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+
+  // Poll for session updates
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const s = await supportApi.getMyLiveChat()
+        if (!s) { onClose(); return }
+        setSession(s)
+        setMessages(s.messages || [])
+      } catch {}
+    }
+    poll()
+    const interval = setInterval(poll, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const send = async () => {
+    if (!text.trim() || sending || !session) return
+    setSending(true)
+    try {
+      const updated = await supportApi.sendLiveChatMessage(session.sessionId, { text: text.trim() })
+      setMessages(updated.messages || [])
+      setText('')
+    } catch {}
+    setSending(false)
+  }
+
+  const isQueued = session?.status === 'queued'
+  const isClosed = session?.status === 'closed'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)', minHeight: 0 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16, flexShrink: 0 }}>
+        <button onClick={onClose} style={{ background: '#202023', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 14px', ...R, fontWeight: 600, fontSize: 12, color: '#9CA3AF', cursor: 'pointer' }}>← Back</button>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, color: '#fff' }}>Live Support</div>
+          <div style={{ ...R, fontSize: 12, color: '#6B7280', marginTop: 3 }}>
+            {CATEGORY_LABELS[session?.category] || 'General'}
+            {session?.adminName && <span> · Agent: <span style={{ color: '#3B82F6', fontWeight: 700 }}>{session.adminName}</span></span>}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {isQueued && (
+            <span style={{ background: 'rgba(243,156,18,0.12)', border: '1px solid rgba(243,156,18,0.3)', borderRadius: 6, padding: '5px 12px', ...R, fontWeight: 700, fontSize: 11, color: '#F39C12' }}>Waiting for Agent</span>
+          )}
+          {session?.status === 'active' && (
+            <span style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 6, padding: '5px 12px', ...R, fontWeight: 700, fontSize: 11, color: '#22c55e' }}>Connected</span>
+          )}
+          {isClosed && (
+            <span style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 6, padding: '5px 12px', ...R, fontWeight: 700, fontSize: 11, color: '#4ade80' }}>Chat Ended</span>
+          )}
+        </div>
+      </div>
+
+      {/* Chat area */}
+      <div style={{ background: '#18181C', borderRadius: 12, overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Waiting indicator */}
+          {isQueued && messages.length === 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 16, padding: 40 }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid #25252C', borderTopColor: '#F39C12', animation: 'spin 1s linear infinite' }} />
+              <div style={{ ...R, fontWeight: 700, fontSize: 15, color: '#fff' }}>Waiting for an agent...</div>
+              <div style={{ ...R, fontSize: 12, color: '#6B7280', textAlign: 'center' }}>
+                Your request has been added to the queue. A staff member will be with you shortly.
+              </div>
+              <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+            </div>
+          )}
+
+          {/* Messages */}
+          {messages.map((msg: any, i: number) => {
+            const isMe = msg.senderId?.toString() === userId || msg.senderId === userId
+            const isAdmin = msg.isAdmin
+
+            return (
+              <div key={i} style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
+                <div style={{ display: 'flex', flexDirection: isMe ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 10, maxWidth: '75%' }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: isAdmin ? '50%' : 8, flexShrink: 0,
+                    background: isMe ? 'rgba(178,45,45,0.2)' : 'rgba(59,130,246,0.15)',
+                    border: `1.5px solid ${isMe ? '#B22D2D66' : '#3B82F666'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 13,
+                    color: isMe ? '#B22D2D' : '#3B82F6',
+                  }}>
+                    {isAdmin ? '🛡️' : (msg.senderName?.slice(0, 2).toUpperCase() || '??')}
+                  </div>
+                  <div style={{
+                    background: isMe ? 'rgba(178,45,45,0.12)' : '#202023',
+                    border: `1px solid ${isMe ? 'rgba(178,45,45,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                    borderRadius: isMe ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+                    padding: '10px 16px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ ...R, fontSize: 12, fontWeight: 700, color: isMe ? '#E74C3C' : '#3B82F6' }}>
+                        {msg.senderName || 'Unknown'}
+                      </span>
+                      {isAdmin && <span style={{ ...R, fontSize: 9, fontWeight: 700, color: '#3B82F6', background: 'rgba(59,130,246,0.12)', padding: '1px 6px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Staff</span>}
+                      <span style={{ ...R, fontSize: 10, color: '#555' }}>·</span>
+                      <span style={{ ...R, fontSize: 10, color: '#6B7280' }}>{fmtTime(msg.sentAt)}</span>
+                    </div>
+                    <div style={{ ...R, fontSize: 13, color: '#E0E0E0', lineHeight: '1.55', whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Input */}
+        {!isClosed ? (
+          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', gap: 10, flexShrink: 0 }}>
+            <input
+              style={{ flex: 1, background: '#0C0C11', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', ...R, fontSize: 13, color: '#fff', outline: 'none' }}
+              placeholder={isQueued ? 'Waiting for agent to connect...' : 'Type your message...'}
+              value={text}
+              onChange={e => setText(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+              disabled={isQueued}
+            />
+            <button onClick={send} disabled={sending || !text.trim() || isQueued} style={{ background: '#22c55e', border: 'none', borderRadius: 10, padding: '12px 24px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: sending || isQueued ? 'not-allowed' : 'pointer', opacity: !text.trim() || isQueued ? 0.5 : 1 }}>
+              {sending ? '...' : 'Send'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', textAlign: 'center', flexShrink: 0 }}>
+            <span style={{ ...R, fontSize: 13, color: '#4ade80', fontWeight: 600 }}>This chat has been resolved</span>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -479,6 +731,8 @@ export default function SupportPage() {
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [showLiveSupport, setShowLiveSupport] = useState(false)
+  const [showLiveChat, setShowLiveChat] = useState(false)
   const [filterSt, setFilterSt] = useState('All')
   const [filterAttn, setFilterAttn] = useState('All')
   const [search, setSearch] = useState('')
@@ -492,7 +746,13 @@ export default function SupportPage() {
     setLoading(false)
   }
 
-  useEffect(() => { fetchTickets() }, [])
+  // Check for existing live chat on load
+  useEffect(() => {
+    fetchTickets()
+    supportApi.getMyLiveChat().then((s: any) => {
+      if (s && (s.status === 'queued' || s.status === 'active')) setShowLiveChat(true)
+    }).catch(() => {})
+  }, [])
 
   const openTicket = async (t: any) => {
     try {
@@ -524,6 +784,20 @@ export default function SupportPage() {
     { label: 'Total', value: tickets.length, color: '#fff' },
   ]
 
+  // If viewing live chat, show that
+  if (showLiveChat) {
+    return (
+      <div style={{ background: '#0C0C11', height: '100vh', overflow: 'hidden' }}>
+        <div className="container" style={{ maxWidth: 1440, padding: '0 30px', height: '100%' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, paddingTop: 28, height: '100%', alignItems: 'start' }}>
+            <DashSidebar active="support" />
+            <LiveChatView userId={user?.id || ''} onClose={() => setShowLiveChat(false)} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // If viewing a ticket, show chat — lock page height so only chat scrolls
   if (viewTicket) {
     return (
@@ -547,6 +821,7 @@ export default function SupportPage() {
   return (
     <div style={{ background: '#0C0C11', minHeight: '100vh', paddingBottom: 80 }}>
       {showCreate && <CreateModal isPremium={user?.isPremium || false} onClose={() => setShowCreate(false)} onCreated={fetchTickets} />}
+      {showLiveSupport && <LiveSupportModal onClose={() => setShowLiveSupport(false)} onStarted={() => { setShowLiveSupport(false); setShowLiveChat(true) }} />}
 
       <div className="container" style={{ maxWidth: 1440, padding: '0 30px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, paddingTop: 28, alignItems: 'start' }}>
@@ -559,9 +834,16 @@ export default function SupportPage() {
                 <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 32, color: '#fff', margin: 0 }}>Support Center</h1>
                 <div style={{ ...R, fontSize: 13, color: '#9CA3AF', marginTop: 6 }}>Submit and track your support tickets</div>
               </div>
-              <button onClick={() => setShowCreate(true)} style={{ background: '#B22D2D', border: 'none', borderRadius: 10, padding: '12px 28px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', letterSpacing: 0.5, boxShadow: '0 0 20px rgba(178,45,45,0.3)' }}>
-                + Create Ticket
-              </button>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setShowLiveSupport(true)} style={{ background: '#22c55e', border: 'none', borderRadius: 10, padding: '12px 28px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', letterSpacing: 0.5, boxShadow: '0 0 20px rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', animation: 'pulse 2s ease-in-out infinite' }} />
+                  Live Support
+                  <style>{`@keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }`}</style>
+                </button>
+                <button onClick={() => setShowCreate(true)} style={{ background: '#B22D2D', border: 'none', borderRadius: 10, padding: '12px 28px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', letterSpacing: 0.5, boxShadow: '0 0 20px rgba(178,45,45,0.3)' }}>
+                  + Create Ticket
+                </button>
+              </div>
             </div>
 
             {/* Stat cards */}

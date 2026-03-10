@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { coachingApi, gamesApi } from '@/lib/api'
@@ -16,7 +16,7 @@ function timeAgo(dateStr: string): string {
 }
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
-type OrderStatus = 'pending' | 'active' | 'revision' | 'completed' | 'cancelled'
+type OrderStatus = 'pending' | 'active' | 'delivered' | 'revision' | 'completed' | 'cancelled'
 type PackageType = 'vod' | 'session' | 'drills' | 'team' | 'custom'
 
 interface Order {
@@ -32,6 +32,8 @@ interface Order {
   createdAt: string
   messages: number
   unread: boolean
+  scheduledAt: string
+  conversationId: string
 }
 
 interface Package {
@@ -68,6 +70,7 @@ const TYPE_LABELS: Record<PackageType, { label:string; color:string; bg:string }
 const STATUS_STYLES: Record<OrderStatus, { label:string; color:string; bg:string; border:string }> = {
   pending:   { label:'Pending',   color:'#F0AA1A', bg:'rgba(240,170,26,.12)', border:'rgba(240,170,26,.3)' },
   active:    { label:'Active',    color:'#4ade80', bg:'rgba(74,222,128,.12)', border:'rgba(74,222,128,.3)' },
+  delivered: { label:'Delivered', color:'#A78BFA', bg:'rgba(167,139,250,.12)', border:'rgba(167,139,250,.3)' },
   revision:  { label:'Revision',  color:'#60A5FA', bg:'rgba(96,165,250,.12)', border:'rgba(96,165,250,.3)' },
   completed: { label:'Completed', color:'#6B7280', bg:'rgba(107,114,128,.1)', border:'rgba(107,114,128,.2)' },
   cancelled: { label:'Cancelled', color:'#ef4444', bg:'rgba(239,68,68,.1)',   border:'rgba(239,68,68,.2)'  },
@@ -249,31 +252,40 @@ export default function CoachDashboard() {
   const [editingPkg, setEditingPkg]     = useState<Package|null|'new'>(null)
   const [customOffer, setCustomOffer]   = useState<Order|null>(null)
   const [orderFilter, setOrderFilter]   = useState<OrderStatus|'all'>('all')
+  const [actionLoading, setActionLoading] = useState<string>('')
+  const [acceptingOrder, setAcceptingOrder] = useState<Order|null>(null)
+  const [scheduledDate, setScheduledDate]   = useState('')
+  const [scheduledTime, setScheduledTime]   = useState('')
+  const [rejectReason, setRejectReason]     = useState('')
+  const [rejectingOrder, setRejectingOrder] = useState<Order|null>(null)
+  const [reviewDist, setReviewDist]         = useState<Record<number,number>>({})
+  const [editCoachModal, setEditCoachModal] = useState(false)
+  const [editBio, setEditBio]              = useState('')
+  const [editCustomReqs, setEditCustomReqs] = useState(false)
+  const [editGameSlugs, setEditGameSlugs]  = useState<string[]>([])
+  const [savingProfile, setSavingProfile]   = useState(false)
   const [COACH, setCOACH]              = useState<any>(null)
   const [ORDERS, setORDERS]            = useState<Order[]>([])
   const [PACKAGES, setPACKAGES]        = useState<Package[]>([])
   const [REVIEWS, setREVIEWS]          = useState<Review[]>([])
   const [games, setGames]              = useState<any[]>([])
   const [loading, setLoading]          = useState(true)
-  const fetched = useRef(false)
+  const [fetchKey, setFetchKey]        = useState(0)
 
   useEffect(() => {
-    if (fetched.current || !user) return
-    fetched.current = true
+    if (!user) return
+    setLoading(true)
     Promise.all([
       coachingApi.getDashboardOrders().catch(() => []),
-      coachingApi.getCoaches().catch(() => []),
+      coachingApi.getDashboardProfile().catch(() => null),
       gamesApi.getAll().catch(() => []),
-    ]).then(([ordersData, coachesData, gamesData]: any[]) => {
-      // Find own coach profile from coaches list
-      const allCoaches = Array.isArray(coachesData) ? coachesData : coachesData.coaches ?? coachesData.data ?? []
-      const me = allCoaches.find((c: any) => c.userId?.toString() === (user as any)._id || c.slug === user.slug)
-
+    ]).then(([ordersData, me, gamesData]: any[]) => {
       if (me) {
         const rating = me.reviewCount > 0 ? parseFloat((me.ratingSum / me.reviewCount).toFixed(1)) : (me.rating || 0)
         setCOACH({
           name: me.displayName || me.name || user.username,
           emoji: me.emoji || '🎯',
+          avatarUrl: me.avatarUrl || '',
           title: me.title || '',
           game: me.game || '',
           verified: me.isVerified ?? false,
@@ -285,6 +297,9 @@ export default function CoachDashboard() {
           completionRate: me.totalOrders > 0 ? Math.round((me.completedOrders / me.totalOrders) * 100) : 0,
           responseTime: me.responseTime || '—',
           slug: me.slug,
+          bio: me.bio || '',
+          allowCustomRequests: me.allowCustomRequests ?? false,
+          gameSlugs: me.gameSlugs || [],
         })
         // Packages
         setPACKAGES((me.packages || []).map((p: any) => ({
@@ -306,11 +321,14 @@ export default function CoachDashboard() {
               date: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '',
             })))
           }).catch(() => {})
+          coachingApi.getReviewDistribution(me.slug).then((dist: any) => {
+            setReviewDist(dist || {})
+          }).catch(() => {})
         }
       } else {
         // No coach profile yet — show empty state
         setCOACH({
-          name: user.username, emoji: '🎯', title: '', game: '',
+          name: user.username, emoji: '🎯', avatarUrl: (user as any).avatarUrl || '', title: '', game: '',
           verified: false, memberSince: '', totalEarned: 0, pendingPayout: 0,
           rating: 0, totalReviews: 0, completionRate: 0, responseTime: '—', slug: '',
         })
@@ -331,6 +349,8 @@ export default function CoachDashboard() {
         createdAt: o.createdAt ? timeAgo(o.createdAt) : '',
         messages: o.messages || 0,
         unread: o.unread ?? false,
+        scheduledAt: o.scheduledAt ? new Date(o.scheduledAt).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '',
+        conversationId: o.conversationId || '',
       })))
 
       // Games
@@ -339,7 +359,7 @@ export default function CoachDashboard() {
 
       setLoading(false)
     })
-  }, [user])
+  }, [user, fetchKey])
 
   if (loading || !COACH) {
     return (
@@ -349,7 +369,7 @@ export default function CoachDashboard() {
     )
   }
 
-  const activeOrders    = ORDERS.filter(o=>o.status==='active'||o.status==='pending'||o.status==='revision')
+  const activeOrders    = ORDERS.filter(o=>o.status==='active'||o.status==='pending'||o.status==='revision'||o.status==='delivered')
   const filteredOrders  = orderFilter==='all' ? ORDERS : ORDERS.filter(o=>o.status===orderFilter)
   const unreadCount     = ORDERS.filter(o=>o.unread).length
   const monthEarnings   = ORDERS.filter(o=>o.status==='completed').reduce((a,o)=>a+o.price,0)
@@ -363,17 +383,24 @@ export default function CoachDashboard() {
           <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
 
             {/* Avatar */}
-            <div style={{ width:56, height:56, borderRadius:12, background:'linear-gradient(135deg,#B22D2D,#7a1a1a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, flexShrink:0, border:'2px solid rgba(178,45,45,.4)' }}>
-              {COACH.emoji}
-            </div>
+            {COACH.avatarUrl ? (
+              <img src={COACH.avatarUrl} alt={COACH.name} style={{ width:56, height:56, borderRadius:12, objectFit:'cover', border:'2px solid rgba(178,45,45,.4)', flexShrink:0 }}/>
+            ) : (
+              <div style={{ width:56, height:56, borderRadius:12, background:'linear-gradient(135deg,#B22D2D,#7a1a1a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, flexShrink:0, border:'2px solid rgba(178,45,45,.4)' }}>
+                {COACH.emoji}
+              </div>
+            )}
 
             {/* Info */}
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
                 <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#fff', letterSpacing:.5 }}>{COACH.name}</span>
                 <span style={{ background:'rgba(178,45,45,.2)', border:'1px solid rgba(178,45,45,.4)', borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:'#ff6b6b', fontFamily:'Rajdhani, sans-serif', letterSpacing:.5 }}>✓ VERIFIED COACH</span>
+                <button onClick={() => { setEditBio(COACH.bio || ''); setEditCustomReqs(COACH.allowCustomRequests); setEditGameSlugs(COACH.gameSlugs || []); setEditCoachModal(true) }} style={{ background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', borderRadius:6, padding:'3px 10px', fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.5)', cursor:'pointer', letterSpacing:.3 }}>
+                  EDIT PROFILE
+                </button>
               </div>
-              <div style={{ fontFamily:'Barlow, sans-serif', fontSize:12, color:'rgba(255,255,255,.4)' }}>{COACH.title} · {COACH.game} · Member since {COACH.memberSince}</div>
+              <div style={{ fontFamily:'Barlow, sans-serif', fontSize:12, color:'rgba(255,255,255,.4)' }}>{[COACH.title, COACH.game, COACH.memberSince && `Member since ${COACH.memberSince}`].filter(Boolean).join(' · ')}</div>
             </div>
 
             {/* Quick stats */}
@@ -439,7 +466,7 @@ export default function CoachDashboard() {
           <div>
             {/* Filter pills */}
             <div style={{ display:'flex', gap:6, marginBottom:16, flexWrap:'wrap' }}>
-              {(['all','pending','active','revision','completed'] as const).map(f=>(
+              {(['all','pending','active','delivered','revision','completed'] as const).map(f=>(
                 <button key={f} onClick={()=>setOrderFilter(f)} style={{
                   background:orderFilter===f?'rgba(178,45,45,.2)':'rgba(255,255,255,.04)',
                   border:`1px solid ${orderFilter===f?'rgba(178,45,45,.5)':'rgba(255,255,255,.08)'}`,
@@ -479,6 +506,7 @@ export default function CoachDashboard() {
                       </div>
                       <div style={{ fontFamily:'Barlow, sans-serif', fontSize:11, color:'rgba(255,255,255,.4)' }}>
                         {order.package} · Due {order.deliveryDue} · {order.messages} messages · {order.createdAt}
+                        {order.scheduledAt && <> · 📅 {order.scheduledAt}</>}
                       </div>
                     </div>
 
@@ -486,15 +514,51 @@ export default function CoachDashboard() {
                     <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:20, color:'#4ade80', flexShrink:0 }}>${order.price}</div>
 
                     {/* Actions */}
-                    <div style={{ display:'flex', gap:8, flexShrink:0 }}>
+                    <div style={{ display:'flex', gap:6, flexShrink:0, flexWrap:'wrap' }}>
+                      {order.status==='pending'&&(
+                        <>
+                          <button disabled={actionLoading===order.id} onClick={()=>{ setAcceptingOrder(order); setScheduledDate(''); setScheduledTime('') }} style={{ background:'rgba(74,222,128,.12)', border:'1px solid rgba(74,222,128,.35)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#4ade80', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap' }}>
+                            Accept
+                          </button>
+                          <button disabled={actionLoading===order.id} onClick={()=>{ setRejectingOrder(order); setRejectReason('') }} style={{ background:'rgba(239,68,68,.1)', border:'1px solid rgba(239,68,68,.25)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#ef4444', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap' }}>
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      {(order.status==='active'||order.status==='revision')&&(
+                        <button disabled={actionLoading===order.id} onClick={()=>{
+                          setActionLoading(order.id)
+                          coachingApi.deliverOrder({ orderId: order.orderId || order.id }).then(()=>setFetchKey(k=>k+1)).catch(()=>{}).finally(()=>setActionLoading(''))
+                        }} style={{ background:'rgba(167,139,250,.12)', border:'1px solid rgba(167,139,250,.35)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#A78BFA', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap', opacity:actionLoading===order.id?0.5:1 }}>
+                          {actionLoading===order.id?'...':'Mark Delivered'}
+                        </button>
+                      )}
+                      {order.status==='delivered'&&(
+                        (order as any).coachConfirmed ? (
+                          <span style={{ fontSize:10, fontWeight:700, color:'#4ade80', fontFamily:'Rajdhani, sans-serif', whiteSpace:'nowrap' }}>Confirmed — waiting for buyer</span>
+                        ) : (
+                          <button disabled={actionLoading===order.id} onClick={()=>{
+                            setActionLoading(order.id)
+                            coachingApi.confirmCompletion({ orderId: order.orderId || order.id }).then(()=>setFetchKey(k=>k+1)).catch(()=>{}).finally(()=>setActionLoading(''))
+                          }} style={{ background:'rgba(74,222,128,.12)', border:'1px solid rgba(74,222,128,.35)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#4ade80', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap', opacity:actionLoading===order.id?0.5:1 }}>
+                            {actionLoading===order.id?'...':'Confirm Complete'}
+                          </button>
+                        )
+                      )}
                       {(order.status==='pending'||order.status==='active'||order.status==='revision')&&(
                         <button onClick={()=>setCustomOffer(order)} style={{ background:'rgba(240,170,26,.1)', border:'1px solid rgba(240,170,26,.3)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#F0AA1A', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap' }}>
                           Custom Offer
                         </button>
                       )}
-                      <Link href={`/messages/${order.id}`} style={{ background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)', borderRadius:6, padding:'6px 14px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,.7)', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, textDecoration:'none', whiteSpace:'nowrap' }}>
-                        Open →
-                      </Link>
+                      {order.conversationId ? (
+                        <Link href={`/mailbox?thread=${order.conversationId}`} style={{ background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)', borderRadius:6, padding:'6px 14px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,.7)', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, textDecoration:'none', whiteSpace:'nowrap' }}>
+                          Mailbox →
+                        </Link>
+                      ) : (
+                        <Link href="/mailbox" style={{ background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)', borderRadius:6, padding:'6px 14px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,.7)', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, textDecoration:'none', whiteSpace:'nowrap' }}>
+                          Open →
+                        </Link>
+                      )}
                     </div>
                   </div>
                 )
@@ -589,7 +653,9 @@ export default function CoachDashboard() {
               </div>
               <div style={{ flex:1 }}>
                 {[5,4,3,2,1].map(star=>{
-                  const pct = star===5?85:star===4?12:star===3?3:0
+                  const count = reviewDist[star] || 0
+                  const total = Object.values(reviewDist).reduce((a: number, b: number) => a + b, 0)
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0
                   return (
                     <div key={star} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
                       <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.4)', width:10, textAlign:'right' }}>{star}</span>
@@ -627,8 +693,151 @@ export default function CoachDashboard() {
       </div>
 
       {/* ── MODALS ── */}
-      {editingPkg!==null&&<PackageEditorModal pkg={editingPkg==='new'?null:editingPkg} onClose={()=>setEditingPkg(null)} onSave={()=>{ fetched.current=false; setLoading(true) }}/>}
+      {editingPkg!==null&&<PackageEditorModal pkg={editingPkg==='new'?null:editingPkg} onClose={()=>setEditingPkg(null)} onSave={()=>setFetchKey(k=>k+1)}/>}
       {customOffer!==null&&<CustomOfferModal order={customOffer} onClose={()=>setCustomOffer(null)}/>}
+
+      {/* Accept Order Modal */}
+      {acceptingOrder&&(
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}
+          onClick={e=>e.target===e.currentTarget&&setAcceptingOrder(null)}>
+          <div style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.1)', borderRadius:14, width:'100%', maxWidth:420, padding:28 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:20, color:'#fff' }}>Accept Order</span>
+              <button onClick={()=>setAcceptingOrder(null)} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer' }}>✕</button>
+            </div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,.4)', fontFamily:'Barlow, sans-serif', marginBottom:18 }}>
+              {acceptingOrder.buyerEmoji} {acceptingOrder.buyer} — {acceptingOrder.package} — ${acceptingOrder.price}
+            </div>
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:.8, marginBottom:5 }}>Scheduled Date</div>
+              <input type="date" value={scheduledDate} onChange={e=>setScheduledDate(e.target.value)}
+                style={{ width:'100%', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'9px 12px', color:'#fff', fontFamily:'Barlow, sans-serif', fontSize:13, outline:'none', boxSizing:'border-box', colorScheme:'dark' }}/>
+            </div>
+            <div style={{ marginBottom:22 }}>
+              <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:.8, marginBottom:5 }}>Scheduled Time</div>
+              <input type="time" value={scheduledTime} onChange={e=>setScheduledTime(e.target.value)}
+                style={{ width:'100%', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'9px 12px', color:'#fff', fontFamily:'Barlow, sans-serif', fontSize:13, outline:'none', boxSizing:'border-box', colorScheme:'dark' }}/>
+            </div>
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={()=>setAcceptingOrder(null)} style={{ flex:1, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'10px', color:'rgba(255,255,255,.5)', fontFamily:'Barlow Condensed, sans-serif', fontWeight:700, fontSize:13, letterSpacing:.5, cursor:'pointer' }}>Cancel</button>
+              <button disabled={actionLoading===acceptingOrder.id} onClick={()=>{
+                const orderId = acceptingOrder.orderId || acceptingOrder.id
+                const scheduled = scheduledDate && scheduledTime ? new Date(`${scheduledDate}T${scheduledTime}`).toISOString() : scheduledDate ? new Date(scheduledDate).toISOString() : undefined
+                setActionLoading(acceptingOrder.id)
+                coachingApi.acceptOrder({ orderId, scheduledAt: scheduled }).then(()=>{
+                  setAcceptingOrder(null)
+                  setFetchKey(k=>k+1)
+                }).catch(()=>{}).finally(()=>setActionLoading(''))
+              }} style={{ flex:2, background:'#4ade80', border:'none', borderRadius:8, padding:'10px', color:'#000', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:13, letterSpacing:.8, cursor:'pointer', opacity:actionLoading===acceptingOrder.id?0.6:1 }}>
+                {actionLoading===acceptingOrder.id ? 'ACCEPTING...' : 'ACCEPT ORDER'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Order Modal */}
+      {rejectingOrder&&(
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}
+          onClick={e=>e.target===e.currentTarget&&setRejectingOrder(null)}>
+          <div style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.1)', borderRadius:14, width:'100%', maxWidth:420, padding:28 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:20, color:'#fff' }}>Reject Order</span>
+              <button onClick={()=>setRejectingOrder(null)} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer' }}>✕</button>
+            </div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,.4)', fontFamily:'Barlow, sans-serif', marginBottom:18 }}>
+              {rejectingOrder.buyerEmoji} {rejectingOrder.buyer} — {rejectingOrder.package}
+            </div>
+            <div style={{ marginBottom:22 }}>
+              <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:.8, marginBottom:5 }}>Reason (optional)</div>
+              <textarea value={rejectReason} onChange={e=>setRejectReason(e.target.value)} rows={3} placeholder="Let the buyer know why..."
+                style={{ width:'100%', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'9px 12px', color:'#fff', fontFamily:'Barlow, sans-serif', fontSize:13, outline:'none', resize:'vertical', boxSizing:'border-box' }}/>
+            </div>
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={()=>setRejectingOrder(null)} style={{ flex:1, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'10px', color:'rgba(255,255,255,.5)', fontFamily:'Barlow Condensed, sans-serif', fontWeight:700, fontSize:13, letterSpacing:.5, cursor:'pointer' }}>Cancel</button>
+              <button disabled={actionLoading===rejectingOrder.id} onClick={()=>{
+                const orderId = rejectingOrder.orderId || rejectingOrder.id
+                setActionLoading(rejectingOrder.id)
+                coachingApi.rejectOrder({ orderId, reason: rejectReason || undefined }).then(()=>{
+                  setRejectingOrder(null)
+                  setFetchKey(k=>k+1)
+                }).catch(()=>{}).finally(()=>setActionLoading(''))
+              }} style={{ flex:2, background:'#ef4444', border:'none', borderRadius:8, padding:'10px', color:'#fff', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:13, letterSpacing:.8, cursor:'pointer', opacity:actionLoading===rejectingOrder.id?0.6:1 }}>
+                {actionLoading===rejectingOrder.id ? 'REJECTING...' : 'REJECT ORDER'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── EDIT COACH PROFILE MODAL ── */}
+      {editCoachModal && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}
+          onClick={e=>e.target===e.currentTarget&&setEditCoachModal(false)}>
+          <div style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.1)', borderRadius:14, width:'100%', maxWidth:500, padding:28 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:22 }}>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:20, color:'#fff', letterSpacing:.5 }}>Edit Coach Profile</span>
+              <button onClick={()=>setEditCoachModal(false)} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer', lineHeight:1 }}>✕</button>
+            </div>
+
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:.8, marginBottom:6 }}>Bio</div>
+              <textarea value={editBio} onChange={e=>setEditBio(e.target.value)} rows={6}
+                style={{ width:'100%', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'10px 12px', color:'#fff', fontFamily:'Barlow, sans-serif', fontSize:13, lineHeight:1.75, outline:'none', resize:'vertical', boxSizing:'border-box' }}/>
+            </div>
+
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:.8, marginBottom:6 }}>Games You Coach</div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                {games.map((g: any) => {
+                  const selected = editGameSlugs.includes(g.slug)
+                  return (
+                    <button key={g.slug} type="button" onClick={()=>{
+                      setEditGameSlugs(prev => selected ? prev.filter(s=>s!==g.slug) : [...prev, g.slug])
+                    }} style={{
+                      background: selected ? 'rgba(178,45,45,.25)' : 'rgba(255,255,255,.04)',
+                      border: `1px solid ${selected ? 'rgba(178,45,45,.5)' : 'rgba(255,255,255,.1)'}`,
+                      borderRadius: 6, padding: '6px 12px', cursor: 'pointer',
+                      fontFamily: 'Barlow, sans-serif', fontWeight: selected ? 700 : 500, fontSize: 12,
+                      color: selected ? '#ff8080' : 'rgba(255,255,255,.45)',
+                      transition: 'all .15s',
+                    }}>
+                      {g.name}
+                    </button>
+                  )
+                })}
+              </div>
+              {games.length === 0 && <div style={{ fontFamily:'Barlow, sans-serif', fontSize:11, color:'rgba(255,255,255,.25)' }}>No games available</div>}
+            </div>
+
+            <div style={{ marginBottom:22 }}>
+              <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
+                <input type="checkbox" checked={editCustomReqs} onChange={e=>setEditCustomReqs(e.target.checked)}
+                  style={{ width:16, height:16, accentColor:'#F0AA1A' }}/>
+                <div>
+                  <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:13, color:'#fff' }}>Enable Custom Requests</div>
+                  <div style={{ fontFamily:'Barlow, sans-serif', fontSize:11, color:'rgba(255,255,255,.35)', marginTop:2 }}>Allow users to submit custom coaching requests with their own budget and requirements.</div>
+                </div>
+              </label>
+            </div>
+
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={()=>setEditCoachModal(false)} style={{ flex:1, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'10px', color:'rgba(255,255,255,.5)', fontFamily:'Barlow Condensed, sans-serif', fontWeight:700, fontSize:13, letterSpacing:.5, cursor:'pointer' }}>
+                Cancel
+              </button>
+              <button disabled={savingProfile} onClick={()=>{
+                setSavingProfile(true)
+                coachingApi.updateCoachProfile({ bio: editBio, allowCustomRequests: editCustomReqs, gameSlugs: editGameSlugs }).then(()=>{
+                  setCOACH((prev: any) => ({ ...prev, bio: editBio, allowCustomRequests: editCustomReqs, gameSlugs: editGameSlugs }))
+                  setEditCoachModal(false)
+                }).catch(()=>{}).finally(()=>setSavingProfile(false))
+              }} style={{ flex:2, background:'#B22D2D', border:'none', borderRadius:8, padding:'10px', color:'#fff', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:13, letterSpacing:.8, cursor:'pointer', opacity:savingProfile?0.6:1 }}>
+                {savingProfile ? 'SAVING...' : 'SAVE CHANGES'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

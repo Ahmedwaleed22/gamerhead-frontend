@@ -27,9 +27,9 @@ export default function DataTable<T extends Record<string, any>>({
     <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, overflow: 'hidden' }}>
       {/* Header */}
       <div style={{
-        display: 'grid', gridTemplateColumns: gridCols, gap: 8,
-        padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,.06)',
-        fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+        display: 'grid', gridTemplateColumns: gridCols, gap: 10,
+        padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.06)',
+        fontSize: 11, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
         textTransform: 'uppercase', letterSpacing: .8,
       }}>
         {columns.map(c => <span key={c.key}>{c.label}</span>)}
@@ -37,16 +37,16 @@ export default function DataTable<T extends Record<string, any>>({
 
       {/* Rows */}
       {rows.length === 0 ? (
-        <div style={{ padding: '40px 16px', textAlign: 'center', color: '#4F5568', fontSize: 13, fontFamily: 'Rajdhani, sans-serif' }}>
+        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#4F5568', fontSize: 14, fontFamily: 'Rajdhani, sans-serif' }}>
           {emptyText}
         </div>
       ) : rows.map((row, i) => (
         <div
           key={row._id || row.id || i}
           style={{
-            display: 'grid', gridTemplateColumns: gridCols, gap: 8,
-            padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,.04)',
-            alignItems: 'center', fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif',
+            display: 'grid', gridTemplateColumns: gridCols, gap: 10,
+            padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.04)',
+            alignItems: 'center', fontSize: 13, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif',
           }}
         >
           {columns.map(c => (

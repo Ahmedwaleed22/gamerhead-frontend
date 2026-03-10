@@ -45,7 +45,7 @@ function safeInitials(name?: string | null): string {
 }
 
 function matchHref(m: any) {
-  if (m.type === 'Tournament') return `/tournaments/match/${m.id}`
+  if (m.type === 'Tournament' && m.tournamentSlug) return `/tournaments/${m.tournamentSlug}/matches/${m.id}`
   if (m.matchType === 'cash')  return `/matches/cash/${m.id}`
   return `/matches/xp/${m.id}`
 }
@@ -113,7 +113,11 @@ function MatchRow({ m, cols }: { m: any; cols: string }) {
     <Link href={matchHref(m)} style={{ display:'grid', gridTemplateColumns:cols, gap:12, padding:'12px 20px', alignItems:'center', textDecoration:'none', borderBottom:'1px solid rgba(255,255,255,0.04)', transition:'background 0.12s' }}
       onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.025)')}
       onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-      <div style={{ width:32, height:32, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>{m.icon}</div>
+      <div style={{ width:32, height:32, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, overflow:'hidden' }}>
+        {m.icon && (m.icon.startsWith('http') || m.icon.startsWith('/') || m.icon.startsWith('data:image'))
+          ? <img src={m.icon} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';(e.target as HTMLImageElement).parentElement!.textContent='🎮'}} />
+          : (m.icon || '🎮')}
+      </div>
       <div>
         <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:13, color:'#F0F0F8' }}>{m.game} · {m.mode}</div>
         <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#4A5568', marginTop:1 }}>{m.date}</div>
@@ -162,21 +166,36 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
   const RECENT       = ALL_MATCHES.slice(0,3)
 
   const ALL_LADDERS = U.ladderStandings || []
+  const ALL_GAME_STATS = U.gameStats || []
 
   const MOST_PLAYED = (() => {
     const map: Record<string,any> = {}
-    ALL_MATCHES.forEach((m:any) => {
-      if (!map[m.game]) map[m.game] = { icon:m.icon||'🎮', name:m.game, wins:0, loss:0, rank:0 }
-      m.result==='WIN' ? map[m.game].wins++ : map[m.game].loss++
+    // Seed from UserGameStats first (persisted, survives team deletion)
+    ALL_GAME_STATS.forEach((s:any) => {
+      const key = s.gameSlug || s.gameName
+      if (!key) return
+      map[key] = { icon:s.icon||'🎮', name:s.gameName||s.gameSlug, gameSlug:s.gameSlug||'', wins:s.wins||0, loss:s.losses||0, rank:s.gameRank||0 }
     })
-    // Attach best ladder rank per game
-    ALL_LADDERS.forEach((l:any) => {
-      const game = l.game
-      if (map[game] && l.rank > 0) {
-        if (!map[game].rank || l.rank < map[game].rank) map[game].rank = l.rank
-      }
-    })
-    return Object.values(map).slice(0,4)
+    // Overlay with match history data (more accurate counts if matches exist)
+    if (ALL_MATCHES.length > 0) {
+      const matchMap: Record<string,{ wins:number, loss:number, icon:string, name:string }> = {}
+      ALL_MATCHES.forEach((m:any) => {
+        const key = m.gameSlug || m.game
+        if (!matchMap[key]) matchMap[key] = { icon:m.icon||'🎮', name:m.game, wins:0, loss:0 }
+        m.result==='WIN' ? matchMap[key].wins++ : matchMap[key].loss++
+      })
+      Object.entries(matchMap).forEach(([key, data]) => {
+        if (map[key]) {
+          map[key].icon = data.icon
+          map[key].name = data.name
+          map[key].wins = data.wins
+          map[key].loss = data.loss
+        } else {
+          map[key] = { ...data, gameSlug:key, rank:0 }
+        }
+      })
+    }
+    return Object.values(map).sort((a:any,b:any) => (b.wins+b.loss) - (a.wins+a.loss)).slice(0,4)
   })()
 
   return (
@@ -188,11 +207,10 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
           <div style={S.cardHeader}><span style={S.headLabel}>Player Stats</span></div>
           {[
             { label:'Global Rank',      value: U.globalRank ? `#${U.globalRank}` : '—', color:'#E74C3C' },
-            { label:'Overall Winnings', value: U.winnings || '$0.00',     color:'#F39C12' },
+            { label:'Total Earnings', value: U.winnings || '$0.00',     color:'#F39C12' },
             { label:'Tournament Wins',  value: U.tournamentWins ?? 0,     color:'#27AE60' },
             { label:'Match Wins',       value: U.matchWins ?? 0,          color:'#F0F0F8' },
             { label:'Win Rate',         value: `${U.winRate ?? 0}%`,      color:'#F0F0F8' },
-            { label:'Disputes Won',     value: U.disputesWon ?? 0,        color:'#F0F0F8' },
           ].map((s,i,arr)=>(
             <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'13px 20px', borderBottom:i<arr.length-1?'1px solid rgba(255,255,255,0.04)':'none' }}>
               <span style={{ fontFamily:"'Barlow',sans-serif", fontSize:12, color:'#6B7280' }}>{s.label}</span>
@@ -207,7 +225,11 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
             ? <div style={{ padding:'20px', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:12, textAlign:'center' }}>No matches yet</div>
             : MOST_PLAYED.map((g:any,i:number,arr:any[])=>(
               <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 20px', borderBottom:i<arr.length-1?'1px solid rgba(255,255,255,0.04)':'none' }}>
-                <div style={{ width:28, height:28, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>{g.icon}</div>
+                <div style={{ width:28, height:28, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0, overflow:'hidden' }}>
+                  {g.icon && (g.icon.startsWith('http') || g.icon.startsWith('/') || g.icon.startsWith('data:image'))
+                    ? <img src={g.icon} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';(e.target as HTMLImageElement).parentElement!.textContent='🎮'}} />
+                    : (g.icon || '🎮')}
+                </div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:12, color:'#F0F0F8' }}>{g.name}</div>
                   <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#4A5568', marginTop:2 }}>
@@ -252,7 +274,11 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
               <Link key={i} href={matchHref(m)} style={{ display:'flex', alignItems:'center', gap:12, padding:'14px 20px', borderBottom:i<arr.length-1?'1px solid rgba(255,255,255,0.04)':'none', textDecoration:'none', transition:'background 0.12s' }}
                 onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.025)')}
                 onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-                <div style={{ width:44, height:44, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>{m.icon}</div>
+                <div style={{ width:44, height:44, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0, overflow:'hidden' }}>
+                  {m.icon && (m.icon.startsWith('http') || m.icon.startsWith('/') || m.icon.startsWith('data:image'))
+                    ? <img src={m.icon} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';(e.target as HTMLImageElement).parentElement!.textContent='🎮'}} />
+                    : (m.icon || '🎮')}
+                </div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:13, color:'#F0F0F8' }}>{m.game} · {m.mode}</div>
                   <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#4A5568', marginTop:2 }}>{m.type} · {m.date}</div>
@@ -283,12 +309,14 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
               <Link key={i} href={`/profile/${f.slug}`} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', borderBottom:i<arr.length-1?'1px solid rgba(255,255,255,0.04)':'none', textDecoration:'none', transition:'background 0.15s' }}
                 onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.02)')}
                 onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-                <div style={{ position:'relative', width:30, height:30, background:(f.color||'#E74C3C')+'1A', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:f.color||'#E74C3C' }}>{f.initials}</span>
+                <div style={{ position:'relative', width:30, height:30, background:(f.color||'#E74C3C')+'1A', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
+                  {f.avatarUrl && (f.avatarUrl.startsWith('http') || f.avatarUrl.startsWith('/') || f.avatarUrl.startsWith('data:image'))
+                    ? <img src={f.avatarUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                    : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:f.color||'#E74C3C' }}>{f.initials}</span>}
                   <div style={{ position:'absolute', bottom:-1, right:-1, width:8, height:8, background:f.statusColor||'#4A5568', border:'2px solid #0F0F1A', borderRadius:'50%' }} />
                 </div>
                 <div>
-                  <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:12, color:'#F0F0F8' }}>{f.name}</div>
+                  <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:12, color:f.color||'#F0F0F8' }}>{f.name}</div>
                   <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#4A5568', marginTop:1 }}>{f.statusLabel}</div>
                 </div>
               </Link>
@@ -309,7 +337,11 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
               const rc = t.role==='Leader'?'#F39C12':t.role==='Captain'?'#E74C3C':'#4A5568'
               return (
               <Link key={i} href={`/teams/${t.slug}`} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 16px', borderBottom:i<arr.length-1?'1px solid rgba(255,255,255,0.04)':'none', textDecoration:'none' }}>
-                <div style={{ width:30, height:30, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>{t.icon}</div>
+                <div style={{ width:30, height:30, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0, overflow:'hidden' }}>
+                  {t.logoUrl && (t.logoUrl.startsWith('http') || t.logoUrl.startsWith('/') || t.logoUrl.startsWith('data:image'))
+                    ? <img src={t.logoUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';(e.target as HTMLImageElement).parentElement!.textContent=t.icon||'🎮'}} />
+                    : (t.icon || '🎮')}
+                </div>
                 <div style={{ flex:1 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                     <span style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:12, color:'#F0F0F8' }}>{t.name}</span>
@@ -706,14 +738,14 @@ export default function ProfilePage() {
 
           {/* Avatar */}
           <div style={{ position:'relative', width:120, height:120, flexShrink:0 }}>
-            <div style={{ width:120, height:120, background:'linear-gradient(135deg,#1A1A2E 0%,#2D1B2E 100%)', border:'3px solid #C0392B', borderRadius:12, boxShadow:'0 0 30px rgba(192,57,43,0.3),0 8px 32px rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+            <div style={{ width:120, height:120, background:'linear-gradient(135deg,#1A1A2E 0%,#2D1B2E 100%)', border:`3px solid ${usernameColor}`, borderRadius:12, boxShadow:`0 0 30px ${usernameColor}4D,0 8px 32px rgba(0,0,0,0.6)`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
               {avatarUrl
                 ? <img src={avatarUrl} alt="avatar" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:48, color:'#E74C3C' }}>{initials}</span>
+                : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:48, color:usernameColor }}>{initials}</span>
               }
             </div>
             <div style={{ position:'absolute', top:8, right:8, width:10, height:10, background: isOwnProfile ? '#4ade80' : profile.presenceStatus === 'online' ? '#4ade80' : profile.presenceStatus === 'idle' ? '#F0AA1A' : '#4A5568', border:'2px solid #080810', borderRadius:'50%', boxShadow: isOwnProfile || profile.presenceStatus === 'online' ? '0 0 8px #4ade80' : profile.presenceStatus === 'idle' ? '0 0 8px #F0AA1A' : 'none' }} />
-            <div style={{ position:'absolute', bottom:-8, right:-8, width:32, height:32, background:'#C0392B', border:'2px solid #080810', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ position:'absolute', bottom:-8, right:-8, width:32, height:32, background:usernameColor, border:'2px solid #080810', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center' }}>
               <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:14, color:'#fff' }}>{level}</span>
             </div>
           </div>
@@ -722,7 +754,6 @@ export default function ProfilePage() {
           <div style={{ flex:1 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
               <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, color:usernameColor, letterSpacing:1, margin:0, lineHeight:1 }}>{username}</h1>
-              {profile.verified && <div style={{ background:'rgba(192,57,43,0.15)', border:'1px solid #C0392B', borderRadius:4, padding:'4px 9px' }}><span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1, textTransform:'uppercase', color:'#E74C3C' }}>✓ Verified</span></div>}
               {profile.premium  && <div style={{ background:'rgba(243,156,18,0.15)',  border:'1px solid #F39C12', borderRadius:4, padding:'4px 9px' }}><span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1, textTransform:'uppercase', color:'#F39C12' }}>★ Premium</span></div>}
               {profile.isCoach  && <div style={{ background:'rgba(96,165,250,0.12)',   border:'1px solid rgba(96,165,250,0.4)', borderRadius:4, padding:'4px 9px' }}><span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1, textTransform:'uppercase', color:'#60A5FA' }}>Coach</span></div>}
               {profile.role === 'admin' && <div style={{ background:'rgba(232,0,13,0.15)', border:'1px solid rgba(232,0,13,0.3)', borderRadius:4, padding:'4px 9px' }}><span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1, textTransform:'uppercase', color:'#e8000d' }}>Admin</span></div>}
@@ -1114,12 +1145,14 @@ export default function ProfilePage() {
                     <Link key={i} href={`/profile/${f.slug}`} style={{ ...S.card, display:'flex', alignItems:'center', gap:14, padding:'16px 20px', textDecoration:'none', transition:'border-color 0.15s' }}
                       onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.12)')}
                       onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.06)')}>
-                      <div style={{ position:'relative', width:48, height:48, background:(f.color||'#E74C3C')+'1A', border:`1.5px solid ${f.color||'#E74C3C'}44`, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:20, color:f.color||'#E74C3C' }}>{f.initials}</span>
+                      <div style={{ position:'relative', width:48, height:48, background:(f.color||'#E74C3C')+'1A', border:`1.5px solid ${f.color||'#E74C3C'}44`, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
+                        {f.avatarUrl && (f.avatarUrl.startsWith('http') || f.avatarUrl.startsWith('/') || f.avatarUrl.startsWith('data:image'))
+                          ? <img src={f.avatarUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                          : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:20, color:f.color||'#E74C3C' }}>{f.initials}</span>}
                         <div style={{ position:'absolute', bottom:-2, right:-2, width:12, height:12, background:f.statusColor||'#4A5568', border:'2px solid #0F0F1A', borderRadius:'50%' }} />
                       </div>
                       <div>
-                        <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:700, fontSize:14, color:'#F0F0F8' }}>{f.name}</div>
+                        <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:700, fontSize:14, color:f.color||'#F0F0F8' }}>{f.name}</div>
                         <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#4A5568', marginTop:2 }}>{f.statusLabel}</div>
                       </div>
                     </Link>
@@ -1149,7 +1182,11 @@ export default function ProfilePage() {
                         onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.12)')}
                         onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.06)')}>
                         <div style={{ height:80, background:t.banner?`url(${t.banner}) center/cover`:'linear-gradient(135deg,#1A1A2E,#0D0D1F)', position:'relative' }}>
-                          <div style={{ position:'absolute', bottom:-20, left:20, width:44, height:44, background:'#1A1A2E', border:'2px solid #0F0F1A', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>{t.icon}</div>
+                          <div style={{ position:'absolute', bottom:-20, left:20, width:44, height:44, background:'#1A1A2E', border:'2px solid #0F0F1A', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, overflow:'hidden' }}>
+                            {t.logoUrl && (t.logoUrl.startsWith('http') || t.logoUrl.startsWith('/') || t.logoUrl.startsWith('data:image'))
+                              ? <img src={t.logoUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';(e.target as HTMLImageElement).parentElement!.textContent=t.icon||'🎮'}} />
+                              : (t.icon || '🎮')}
+                          </div>
                         </div>
                         <div style={{ padding:'28px 20px 16px' }}>
                           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>

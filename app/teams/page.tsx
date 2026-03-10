@@ -110,7 +110,11 @@ function ManageTeamModal({ team, user, onClose, onUpdated }: { team: any; user: 
         {/* Header */}
         <div style={{ padding: '20px 24px', borderBottom: '1px solid #25252C', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 40, height: 40, background: '#25252C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{team.emoji || team.name?.charAt(0).toUpperCase() || 'T'}</div>
+            <div style={{ width: 40, height: 40, background: '#25252C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, overflow: 'hidden' }}>
+              {(team.logoUrl || team.bannerUrl) && ((team.logoUrl || team.bannerUrl).startsWith('http') || (team.logoUrl || team.bannerUrl).startsWith('/') || (team.logoUrl || team.bannerUrl).startsWith('data:image'))
+                ? <img src={team.logoUrl || team.bannerUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                : (team.emoji || team.name?.charAt(0).toUpperCase() || 'T')}
+            </div>
             <div>
               <div style={{ ...R, fontWeight: 700, fontSize: 16, color: '#fff' }}>{team.name}</div>
               <div style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Manage Team</div>
@@ -188,11 +192,13 @@ function ManageTeamModal({ team, user, onClose, onUpdated }: { team: any; user: 
               </div>
               {(team.roster || []).map((m: any, i: number) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#25252C', borderRadius: 10, padding: '11px 14px' }}>
-                  <div style={{ width: 34, height: 34, background: (m.color || '#E74C3C') + '22', border: `1.5px solid ${m.color || '#E74C3C'}55`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', ...R, fontWeight: 700, fontSize: 12, color: m.color || '#E74C3C' }}>
-                    {m.initials || m.username?.slice(0, 2).toUpperCase()}
+                  <div style={{ width: 34, height: 34, background: (m.color || '#E74C3C') + '22', border: `1.5px solid ${m.color || '#E74C3C'}55`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', ...R, fontWeight: 700, fontSize: 12, color: m.color || '#E74C3C', overflow: 'hidden' }}>
+                    {m.avatarUrl && (m.avatarUrl.startsWith('http') || m.avatarUrl.startsWith('/') || m.avatarUrl.startsWith('data:image'))
+                      ? <img src={m.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                      : (m.initials || m.username?.slice(0, 2).toUpperCase())}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff' }}>{m.username}</div>
+                    <div style={{ ...R, fontWeight: 700, fontSize: 13, color: m.color || '#fff' }}>{m.username}</div>
                     <div style={{ ...R, fontSize: 10, color: '#4A5568' }}>{m.role}</div>
                   </div>
                   {m.username !== user?.username && m.role !== 'Captain' && m.role !== 'Leader' && (
@@ -440,16 +446,25 @@ export default function MyTeamsPage() {
                     <div key={team._id} style={{ background: '#18181C', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.04)' }}>
                       {/* Team row */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 24px', cursor: 'pointer' }} onClick={() => setExpanded(isOpen ? null : team._id)}>
-                        <div style={{ width: 56, height: 56, background: '#25252C', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
-                          {team.emoji || team.name?.charAt(0).toUpperCase() || 'T'}
+                        <div style={{ width: 56, height: 56, background: '#25252C', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                          {(team.logoUrl || team.bannerUrl) && ((team.logoUrl || team.bannerUrl).startsWith('http') || (team.logoUrl || team.bannerUrl).startsWith('/') || (team.logoUrl || team.bannerUrl).startsWith('data:image'))
+                            ? <img src={team.logoUrl || team.bannerUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                            : (team.emoji || team.name?.charAt(0).toUpperCase() || 'T')}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
                             <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 20, color: '#fff' }}>{team.name}</div>
+                            <span style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 10, color: '#6B7280', fontFamily: 'monospace' }}>ID-{team._id?.toString().slice(-8).toUpperCase()}</span>
                             <span style={{ background: roleBg, border: `1px solid ${roleBdr}`, borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: roleColor, textTransform: 'uppercase', letterSpacing: 0.4 }}>{myRole}</span>
-                            <span style={{ background: isCash ? 'rgba(212,146,10,0.12)' : 'rgba(124,58,237,0.12)', border: `1px solid ${isCash ? 'rgba(212,146,10,0.3)' : 'rgba(124,58,237,0.3)'}`, borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: isCash ? '#F0AA1A' : '#A78BFA', letterSpacing: 0.4 }}>
-                              {isCash ? '$ Cash' : 'XP'}
-                            </span>
+                            {team.tournamentId ? (
+                              <span style={{ background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.3)', borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: '#f0c040', letterSpacing: 0.4 }}>
+                                🏆 Tournament
+                              </span>
+                            ) : (
+                              <span style={{ background: isCash ? 'rgba(212,146,10,0.12)' : 'rgba(124,58,237,0.12)', border: `1px solid ${isCash ? 'rgba(212,146,10,0.3)' : 'rgba(124,58,237,0.3)'}`, borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: isCash ? '#F0AA1A' : '#A78BFA', letterSpacing: 0.4 }}>
+                                {isCash ? '$ Cash' : 'XP'}
+                              </span>
+                            )}
                           </div>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <span style={{ background: gColor + '18', border: `1px solid ${gColor}44`, borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, color: gColor, fontWeight: 600 }}>{team.game}</span>
@@ -489,11 +504,13 @@ export default function MyTeamsPage() {
                               const mRoleColor = mRole === 'Leader' ? '#F39C12' : mRole === 'Captain' ? '#E74C3C' : '#6B7280'
                               return (
                                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < team.roster.length - 1 ? '1px solid #25252C' : 'none' }}>
-                                  <div style={{ width: 36, height: 36, background: mColor + '22', border: `1.5px solid ${mColor}55`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', ...R, fontWeight: 700, fontSize: 13, color: mColor }}>
-                                    {m.initials || m.username?.slice(0, 2).toUpperCase()}
+                                  <div style={{ width: 36, height: 36, background: mColor + '22', border: `1.5px solid ${mColor}55`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', ...R, fontWeight: 700, fontSize: 13, color: mColor, overflow: 'hidden' }}>
+                                    {m.avatarUrl && (m.avatarUrl.startsWith('http') || m.avatarUrl.startsWith('/') || m.avatarUrl.startsWith('data:image'))
+                                      ? <img src={m.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                                      : (m.initials || m.username?.slice(0, 2).toUpperCase())}
                                   </div>
                                   <div style={{ flex: 1 }}>
-                                    <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff' }}>{m.username}</div>
+                                    <div style={{ ...R, fontWeight: 700, fontSize: 13, color: m.color || '#fff' }}>{m.username}</div>
                                     <div style={{ ...R, fontSize: 11, color: '#4A5568' }}>Joined {m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : '—'}</div>
                                   </div>
                                   <span style={{ background: mRoleColor + '18', border: `1px solid ${mRoleColor}44`, borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 10, color: mRoleColor, textTransform: 'uppercase', letterSpacing: 0.4 }}>{mRole}</span>

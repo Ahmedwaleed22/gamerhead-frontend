@@ -22,38 +22,26 @@ interface Player {
   wins: number; losses: number; gameRank: number | null
   socials: { ttv?: string; tw?: string; yt?: string }
   avatarGrad: string; avatarBorder: string; isYou?: boolean; usernameColor?: string
+  avatarUrl?: string; xpDelta?: number
 }
 interface Team {
   name: string; slug: string; emoji: string; ladderRank: number; record: string; winPct: string
   wins: number; losses: number
   bannerGrad: string; teamBorder: string; players: Player[]; isHost?: boolean
+  logoUrl?: string; bannerUrl?: string
 }
 
-const TEAM_A: Team = {
-  name: 'Alpha Squad', slug: 'alpha-squad', emoji: '⚡', ladderRank: 14, record: '148W / 62L', winPct: '70.5%',
-  wins: 148, losses: 62,
+const EMPTY_TEAM_A: Team = {
+  name: 'Team A', slug: '', emoji: '🎮', ladderRank: 0, record: '0W / 0L', winPct: '0%',
+  wins: 0, losses: 0,
   bannerGrad: 'linear-gradient(135deg,#1C0606 0%,#320A0A 35%,#0E0E1C 100%)',
-  teamBorder: '#B82C2C', isHost: true,
-  players: [
-    { initials:'JS', name:'JSDesigner',  slug:'jsdesigner',  platform:'psn',  platformHandle:'JSDesign_PS5',   online:true,  premium:true, isCoach:false, rep:88, repLabel:'Elite',   repColor:'#F0AA1A', goldTrophies:5, silverTrophies:6, bronzeTrophies:3, wins:87,  losses:22, gameRank:12, socials:{ttv:'jsdesigner',tw:'jsdesigner_tv'}, avatarGrad:'linear-gradient(135deg,#13131E,#191926)', avatarBorder:'#F0AA1A', isYou:true },
-    { initials:'VX', name:'VortexX',     slug:'vortexx',     platform:'psn',  platformHandle:'VortexX_PSN',    online:true,  premium:true, isCoach:false, rep:76, repLabel:'Veteran', repColor:'#3CC8C8', goldTrophies:3, silverTrophies:4, bronzeTrophies:2, wins:64,  losses:31, gameRank:28, socials:{ttv:'vortexx_tv',yt:'vortexx'},        avatarGrad:'linear-gradient(135deg,#0D1A0D,#102010)', avatarBorder:'rgba(184,44,44,.4)' },
-    { initials:'RZ', name:'RaZor_99',    slug:'razor-99',    platform:'pc',   platformHandle:'RaZor99#Battle', online:true,  premium:false, isCoach:true,  rep:62, repLabel:'Skilled', repColor:'#4A9EFF', goldTrophies:1, silverTrophies:2, bronzeTrophies:2, wins:48,  losses:29, gameRank:41, socials:{tw:'razor99gg'},                       avatarGrad:'linear-gradient(135deg,#0D0D1A,#10102A)', avatarBorder:'rgba(184,44,44,.3)' },
-    { initials:'NK', name:'NightKing',   slug:'nightking',   platform:'xbox', platformHandle:'NightKing XBOX', online:false, premium:false, isCoach:false, rep:44, repLabel:'Regular', repColor:'#8890A4', goldTrophies:0, silverTrophies:1, bronzeTrophies:2, wins:33,  losses:28, gameRank:77, socials:{},                                    avatarGrad:'linear-gradient(135deg,#1A0D0D,#2A1010)', avatarBorder:'rgba(184,44,44,.3)' },
-    { initials:'CE', name:'CE_Blake',    slug:'ce-blake',    platform:'psn',  platformHandle:'CE_BlakePS',     online:true,  premium:false, isCoach:false, rep:55, repLabel:'Skilled', repColor:'#4A9EFF', goldTrophies:1, silverTrophies:1, bronzeTrophies:2, wins:39,  losses:27, gameRank:59, socials:{ttv:'ceblake',tw:'ceblake_gg',yt:'ceblake'}, avatarGrad:'linear-gradient(135deg,#0D1A1A,#102020)', avatarBorder:'rgba(184,44,44,.3)' },
-  ],
+  teamBorder: '#B82C2C', isHost: true, players: [],
 }
-const TEAM_B: Team = {
-  name: 'Bravo Unit', slug: 'bravo-unit', emoji: '🛡️', ladderRank: 22, record: '112W / 79L', winPct: '58.6%',
-  wins: 112, losses: 79,
+const EMPTY_TEAM_B: Team = {
+  name: 'Team B', slug: '', emoji: '🎮', ladderRank: 0, record: '0W / 0L', winPct: '0%',
+  wins: 0, losses: 0,
   bannerGrad: 'linear-gradient(135deg,#060C1C 0%,#0A1432 35%,#0E0E1C 100%)',
-  teamBorder: '#2A6CC4', isHost: false,
-  players: [
-    { initials:'GS', name:'GhostSniper', slug:'ghostsniper', platform:'psn',  platformHandle:'GhostSnpr_PS',    online:true,  premium:true, isCoach:false, rep:91, repLabel:'Legend',  repColor:'#F0AA1A', goldTrophies:8, silverTrophies:7, bronzeTrophies:6, wins:112, losses:18, gameRank:5,  socials:{ttv:'ghostsniper',tw:'ghostsniper_gg'}, avatarGrad:'linear-gradient(135deg,#1A0A2A,#251030)', avatarBorder:'rgba(184,44,44,.4)' },
-    { initials:'TK', name:'TacticalKev', slug:'tacticalkev', platform:'xbox', platformHandle:'TacKev_XBX',      online:true,  premium:true, isCoach:false, rep:79, repLabel:'Veteran', repColor:'#3CC8C8', goldTrophies:4, silverTrophies:4, bronzeTrophies:3, wins:73,  losses:24, gameRank:19, socials:{tw:'tacticalkev'},                     avatarGrad:'linear-gradient(135deg,#0A1A0A,#102010)', avatarBorder:'rgba(184,44,44,.3)' },
-    { initials:'NW', name:'NightWolfe',  slug:'nightwolfe',  platform:'pc',   platformHandle:'NightWolfe#4892', online:true,  premium:false, isCoach:false, rep:58, repLabel:'Skilled', repColor:'#4A9EFF', goldTrophies:1, silverTrophies:3, bronzeTrophies:2, wins:51,  losses:33, gameRank:33, socials:{ttv:'nightwolfe',yt:'nightwolfe_yt'},   avatarGrad:'linear-gradient(135deg,#0A0A1A,#101022)', avatarBorder:'rgba(184,44,44,.3)' },
-    { initials:'KX', name:'KingXavier',  slug:'kingxavier',  platform:'psn',  platformHandle:'KingXav_PSN',     online:true,  premium:false, isCoach:false, rep:51, repLabel:'Skilled', repColor:'#4A9EFF', goldTrophies:0, silverTrophies:2, bronzeTrophies:2, wins:42,  losses:31, gameRank:50, socials:{ttv:'kingxavier',tw:'kingxavier_tv',yt:'kingxavier'}, avatarGrad:'linear-gradient(135deg,#1A150A,#2A2010)', avatarBorder:'rgba(184,44,44,.3)' },
-    { initials:'SQ', name:'Squid_G',     slug:'squid-g',     platform:'psn',  platformHandle:'SquidG_PS',       online:false, premium:false, isCoach:false, rep:38, repLabel:'Regular', repColor:'#8890A4', goldTrophies:0, silverTrophies:0, bronzeTrophies:2, wins:28,  losses:22, gameRank:88, socials:{},                                    avatarGrad:'linear-gradient(135deg,#1A1A0A,#2A2A10)', avatarBorder:'rgba(184,44,44,.3)' },
-  ],
+  teamBorder: '#2A6CC4', isHost: false, players: [],
 }
 
 // ─── SHARED COMPONENTS ─────────────────────────────────
@@ -117,13 +105,20 @@ function PlayerRow({ player, side }: { player:Player; side:'left'|'right' }) {
       style={{ display:'flex', flexDirection:'column', padding:'10px 14px', margin:'2px 6px', borderRadius:8, background:hover?'rgba(255,255,255,.03)':'transparent', border:`1px solid ${hover?'rgba(255,255,255,.08)':'transparent'}`, transition:'all .15s', textDecoration:'none' }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, flexDirection:isR?'row-reverse':'row' }}>
         <span style={{ width:6,height:6,borderRadius:3,background:player.online?'#27AE60':'#4F5568',flexShrink:0 }} />
-        <div style={{ width:38,height:38,borderRadius:7,background:player.avatarGrad,border:`1.5px solid ${player.avatarBorder}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative' }}>
-          <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:14,color:'#fff' }}>{player.initials}</span>
+        <div style={{ width:38,height:38,borderRadius:7,background:player.avatarGrad,border:`1.5px solid ${player.avatarBorder}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative',overflow:'hidden' }}>
+          {player.avatarUrl && (player.avatarUrl.startsWith('http') || player.avatarUrl.startsWith('/') || player.avatarUrl.startsWith('data:image'))
+            ? <img src={player.avatarUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+            : <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:14,color:'#fff' }}>{player.initials}</span>}
           {player.isYou && <div style={{ position:'absolute',bottom:-6,left:'50%',transform:'translateX(-50%)',background:'rgba(240,170,26,.9)',borderRadius:3,padding:'1px 4px',fontSize:6,fontWeight:900,color:'#000',whiteSpace:'nowrap' }}>YOU</div>}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ display:'flex',alignItems:'center',gap:5,flexDirection:isR?'row-reverse':'row',flexWrap:'wrap' }}>
             <span style={{ fontFamily:'Rajdhani, sans-serif',fontWeight:700,fontSize:13,color:hover?ACCENT:(player.usernameColor||'#fff'),whiteSpace:'nowrap',transition:'color .15s' }}>{player.name}</span>
+            {player.xpDelta !== undefined && player.xpDelta !== 0 && (
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:800,fontSize:11,color:player.xpDelta>0?'#4ade80':'#ef4444',whiteSpace:'nowrap' }}>
+                {player.xpDelta > 0 ? `+${player.xpDelta}` : player.xpDelta} XP
+              </span>
+            )}
             {player.premium && <span style={{ background:'rgba(243,156,18,0.15)',border:'1px solid rgba(243,156,18,0.4)',borderRadius:3,padding:'1px 5px',fontSize:7,fontWeight:700,color:'#F39C12',fontFamily:'Rajdhani, sans-serif',lineHeight:'14px',letterSpacing:0.4 }}>★ Premium</span>}
             {player.isCoach && <span style={{ background:'rgba(90,159,212,.2)',border:'1px solid rgba(90,159,212,.3)',borderRadius:3,padding:'1px 5px',fontSize:7,fontWeight:700,color:'#5A9FD4',fontFamily:'Rajdhani, sans-serif',lineHeight:'14px' }}>COACH</span>}
             <PlatformPill platform={player.platform} handle={player.platformHandle} />
@@ -163,9 +158,12 @@ function TeamBanner({ team, side }: { team:Team; side:'left'|'right' }) {
   return (
     <div style={{ position:'relative',height:100,overflow:'hidden' }}>
       <div style={{ position:'absolute',inset:0,background:team.bannerGrad }} />
+      {team.bannerUrl && <img src={team.bannerUrl} alt="" style={{ position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:.45 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />}
       <div style={{ position:'absolute',inset:0,background:'linear-gradient(180deg,transparent 0%,rgba(15,15,24,.96) 100%)' }} />
       <div style={{ position:'absolute',inset:0,display:'flex',alignItems:'flex-end',padding:'0 16px 10px',flexDirection:isR?'row-reverse':'row',gap:12 }}>
-        <div style={{ width:54,height:54,background:'#13131E',border:`2px solid ${team.teamBorder}`,boxShadow:`0 0 14px ${team.teamBorder}66`,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0 }}>{team.emoji}</div>
+        <div style={{ width:54,height:54,background:'#13131E',border:`2px solid ${team.teamBorder}`,boxShadow:`0 0 14px ${team.teamBorder}66`,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0,overflow:'hidden' }}>
+          {team.logoUrl ? <img src={team.logoUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';e.currentTarget.parentElement!.textContent=team.emoji}} /> : team.emoji}
+        </div>
         <div style={{ flex:1,textAlign:isR?'right':'left' }}>
           <div style={{ display:'flex',alignItems:'center',gap:8,justifyContent:isR?'flex-end':'flex-start',flexWrap:'wrap' }}>
             <Link href={`/teams/${team.slug}`} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
@@ -259,63 +257,6 @@ function ReportScoreModal({ bestOf, onSubmit, onClose }: { bestOf: string; onSub
   )
 }
 
-function CreateTicketModal({ matchId, onClose }: { matchId: string; onClose: () => void }) {
-  const [category, setCategory] = useState('Score Dispute')
-  const [description, setDescription] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [done, setDone] = useState(false)
-
-  const submit = async () => {
-    if (!description.trim()) return
-    setSubmitting(true)
-    try {
-      await supportApi.create({ matchId, category, description: description.trim() })
-      setDone(true)
-    } catch (e) { console.error(e) }
-    setSubmitting(false)
-  }
-
-  return (
-    <div style={{ position:'fixed',inset:0,zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.7)' }} onClick={onClose}>
-      <div onClick={e=>e.stopPropagation()} style={{ background:'#13131E',border:'1px solid rgba(255,255,255,.1)',borderRadius:10,padding:24,width:380 }}>
-        {done ? (
-          <>
-            <div style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:18,color:'#4ade80',marginBottom:8 }}>Ticket Submitted</div>
-            <div style={{ fontSize:11,color:'#8890A4',marginBottom:16,fontFamily:'Rajdhani, sans-serif' }}>Our support team will review your ticket shortly.</div>
-            <button onClick={onClose} style={{ width:'100%',padding:'8px',background:ACCENT,border:'none',borderRadius:6,fontSize:11,fontWeight:700,color:'#000',cursor:'pointer',fontFamily:'Rajdhani, sans-serif' }}>Close</button>
-          </>
-        ) : (
-          <>
-            <div style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:18,color:'#fff',marginBottom:4 }}>Create a Ticket</div>
-            <div style={{ fontSize:11,color:'#8890A4',marginBottom:16,fontFamily:'Rajdhani, sans-serif' }}>Submit a support ticket for this match.</div>
-            <div style={{ marginBottom:12 }}>
-              <div style={{ fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:.8,color:'#4F5568',fontFamily:'Rajdhani, sans-serif',marginBottom:4 }}>Match ID</div>
-              <div style={{ padding:'6px 10px',background:'#0B0B12',border:'1px solid rgba(255,255,255,.07)',borderRadius:5,fontSize:12,color:'#8890A4',fontFamily:'Rajdhani, sans-serif' }}>#{matchId}</div>
-            </div>
-            <div style={{ marginBottom:12 }}>
-              <div style={{ fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:.8,color:'#4F5568',fontFamily:'Rajdhani, sans-serif',marginBottom:4 }}>Category</div>
-              <select value={category} onChange={e=>setCategory(e.target.value)} style={{ width:'100%',padding:'6px 10px',background:'#0B0B12',border:'1px solid rgba(255,255,255,.07)',borderRadius:5,fontSize:11,color:'#fff',fontFamily:'Rajdhani, sans-serif',outline:'none' }}>
-                <option>Score Dispute</option>
-                <option>Player Conduct</option>
-                <option>Technical Issue</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div style={{ marginBottom:16 }}>
-              <div style={{ fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:.8,color:'#4F5568',fontFamily:'Rajdhani, sans-serif',marginBottom:4 }}>Description</div>
-              <textarea value={description} onChange={e=>setDescription(e.target.value)} rows={4} placeholder="Describe your issue..." style={{ width:'100%',padding:'6px 10px',background:'#0B0B12',border:'1px solid rgba(255,255,255,.07)',borderRadius:5,fontSize:11,color:'#fff',fontFamily:'Rajdhani, sans-serif',outline:'none',resize:'vertical' }} />
-            </div>
-            <div style={{ display:'flex',gap:8 }}>
-              <button onClick={onClose} style={{ flex:1,padding:'8px',background:'#191926',border:'1px solid rgba(255,255,255,.07)',borderRadius:6,fontSize:11,fontWeight:700,color:'#8890A4',cursor:'pointer',fontFamily:'Rajdhani, sans-serif' }}>Cancel</button>
-              <button onClick={submit} disabled={submitting || !description.trim()} style={{ flex:1,padding:'8px',background:ACCENT,border:'none',borderRadius:6,fontSize:11,fontWeight:700,color:'#000',cursor:'pointer',fontFamily:'Rajdhani, sans-serif',opacity:submitting||!description.trim()?0.5:1 }}>{submitting ? 'Submitting...' : 'Submit Ticket'}</button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // ─── HELPERS ──────────────────────────────────────────
 function buildTeam(match: any, side: 'A' | 'B', fallback: Team): Team {
   if (!match) return fallback
@@ -340,6 +281,8 @@ function buildTeam(match: any, side: 'A' | 'B', fallback: Team): Team {
     bannerGrad: side === 'A' ? 'linear-gradient(135deg,#1C0606 0%,#320A0A 35%,#0E0E1C 100%)' : 'linear-gradient(135deg,#060C1C 0%,#0A1432 35%,#0E0E1C 100%)',
     teamBorder: side === 'A' ? '#B82C2C' : '#2A6CC4',
     isHost:     side === 'A',
+    logoUrl:    teamStats?.logoUrl || '',
+    bannerUrl:  teamStats?.bannerUrl || '',
     players:    players.length > 0 ? players.map((p: any) => {
       const gt = (p.gamertags || [])[0]
       const platform = gt?.platform === 'xbox' ? 'xbox' : gt?.platform === 'pc' ? 'pc' : 'psn'
@@ -376,8 +319,9 @@ function buildTeam(match: any, side: 'A' | 'B', fallback: Team): Team {
         avatarBorder:   side === 'A' ? 'rgba(184,44,44,.4)' : 'rgba(42,108,196,.4)',
         isYou:          false,
         usernameColor:  p.usernameColor || p.color || '',
+        avatarUrl:      p.avatarUrl || '',
       }
-    }) : fallback.players,
+    }) : [],
   }
 }
 
@@ -396,8 +340,8 @@ export default function CashMatchPage() {
 
   const REAL_MATCH_ID = match?.matchId || matchId || ''
 
-  const teamA = buildTeam(match, 'A', TEAM_A)
-  const teamB = buildTeam(match, 'B', TEAM_B)
+  const teamA = buildTeam(match, 'A', EMPTY_TEAM_A)
+  const teamB = buildTeam(match, 'B', EMPTY_TEAM_B)
 
   // Mark current user's player card
   if (user && match) {
@@ -407,6 +351,14 @@ export default function CashMatchPage() {
     }))
     teamA.players = markYou(teamA.players)
     teamB.players = markYou(teamB.players)
+  }
+  // Assign per-player XP deltas for completed non-tournament matches
+  if (match?.status === 'completed' && match.winnerId && !match.tournamentId) {
+    const teamAWon = match.winnerId === match.teamAId
+    const xpWin = match.xpWin || 0
+    const xpLoss = match.xpLoss || 0
+    teamA.players = teamA.players.map(p => ({ ...p, xpDelta: teamAWon ? xpWin : -xpLoss }))
+    teamB.players = teamB.players.map(p => ({ ...p, xpDelta: teamAWon ? -xpLoss : xpWin }))
   }
 
   // Determine which team the current user is on
@@ -443,12 +395,16 @@ export default function CashMatchPage() {
   const ladderName     = match?.ladderName || match?.ladder || ''
   const formatStr      = match?.format || 'Squad'
 
+  // Ready-up state
+  const myTeamReady = userSide === 'A' ? match?.readyStatus?.teamAReady : userSide === 'B' ? match?.readyStatus?.teamBReady : false
+  const bothReady = match?.readyStatus?.teamAReady && match?.readyStatus?.teamBReady
+
   const [timer,   setTimer]   = useState(166)
   const [chatMsg, setChatMsg] = useState('')
   const [msgs, setMsgs] = useState<any[]>([])
   const [showReportModal, setShowReportModal] = useState(false)
-  const [showTicketModal, setShowTicketModal] = useState(false)
   const [readyLoading, setReadyLoading] = useState(false)
+  const [staffRequested, setStaffRequested] = useState(false)
 
   useEffect(() => {
     if (match?.chat?.length) {
@@ -462,7 +418,7 @@ export default function CashMatchPage() {
       })))
     } else {
       setMsgs([
-        { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:`Match #${REAL_MATCH_ID} created. ${entryDisplay}/player wager · ${potDisplay} total pot.`, type:'system' },
+        { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:`Match ${REAL_MATCH_ID} created. ${entryDisplay}/player wager · ${potDisplay} total pot.`, type:'system' },
       ])
     }
   }, [match])
@@ -477,9 +433,10 @@ export default function CashMatchPage() {
   }, [REAL_MATCH_ID, matchStatus])
 
   useEffect(() => {
+    if (bothReady || ['live','completed','cancelled','disputed'].includes(matchStatus)) return
     const t = setInterval(() => setTimer(s => s > 0 ? s - 1 : 0), 1000)
     return () => clearInterval(t)
-  }, [])
+  }, [bothReady, matchStatus])
 
   const fmt = (s: number) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`
   const send = () => {
@@ -527,15 +484,10 @@ export default function CashMatchPage() {
     })
   }
 
-  // Ready-up state
-  const myTeamReady = userSide === 'A' ? match?.readyStatus?.teamAReady : userSide === 'B' ? match?.readyStatus?.teamBReady : false
-  const bothReady = match?.readyStatus?.teamAReady && match?.readyStatus?.teamBReady
-
   return (
     <div style={{ background:'#0B0B12', minHeight:'100vh' }}>
 
       {showReportModal && <ReportScoreModal bestOf={bestOf} onSubmit={handleReportScore} onClose={()=>setShowReportModal(false)} />}
-      {showTicketModal && <CreateTicketModal matchId={REAL_MATCH_ID} onClose={()=>setShowTicketModal(false)} />}
 
       {/* ── Page Header ── */}
       <div style={{ maxWidth:1200, width:'100%', margin:'20px auto 0', padding:'0 16px', boxSizing:'border-box' }}>
@@ -550,9 +502,6 @@ export default function CashMatchPage() {
               <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#fff', lineHeight:1 }}>
                 {teamA.name} <span style={{ color:'#4F5568', fontSize:16, fontWeight:400 }}>vs</span> {teamB.name}
               </div>
-              <div style={{ fontSize:11, color:'#4F5568', marginTop:3, fontFamily:'Rajdhani, sans-serif' }}>
-                {gameName} · {ladderName || `${formatStr} Cash Ladder`} · {bestOf === 'BO1' ? 'Best of 1' : bestOf === 'BO3' ? 'Best of 3' : bestOf}
-              </div>
             </div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -564,15 +513,17 @@ export default function CashMatchPage() {
             {/* Match ID */}
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)', borderRadius:6, padding:'5px 12px' }}>
               <span style={{ fontSize:9, color:'#4F5568', fontFamily:'Rajdhani, sans-serif', fontWeight:700, letterSpacing:1, textTransform:'uppercase' }}>Match</span>
-              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:14, color:'#fff', letterSpacing:1 }}>#{REAL_MATCH_ID}</span>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:14, color:'#fff', letterSpacing:1 }}>{REAL_MATCH_ID}</span>
               <span style={{ background: matchStatus==='completed'?'rgba(74,222,128,.15)':matchStatus==='disputed'?'rgba(239,68,68,.15)':matchStatus==='cancelled'?'rgba(136,144,164,.15)':'rgba(184,44,44,.2)', border:`1px solid ${matchStatus==='completed'?'rgba(74,222,128,.35)':matchStatus==='disputed'?'rgba(239,68,68,.35)':matchStatus==='cancelled'?'rgba(136,144,164,.35)':'rgba(184,44,44,.4)'}`, borderRadius:3, padding:'1px 6px', fontSize:9, fontWeight:700, color:matchStatus==='completed'?'#4ade80':matchStatus==='disputed'?'#ef4444':matchStatus==='cancelled'?'#8890A4':'#ff6b6b', fontFamily:'Rajdhani, sans-serif', letterSpacing:.4 }}>{matchStatus.toUpperCase()}</span>
             </div>
-            {/* Timer */}
-            <div style={{ display:'flex', alignItems:'center', gap:8, background:'#13131E', border:'1px solid rgba(255,255,255,.07)', borderRadius:6, padding:'5px 12px' }}>
-              <span style={{ fontSize:10, color:'#4F5568', fontFamily:'Rajdhani, sans-serif', fontWeight:600 }}>Accept in</span>
-              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:18, color:timer<60?'#ef4444':ACCENT, lineHeight:1 }}>{fmt(timer)}</span>
-              <span style={{ width:6, height:6, borderRadius:3, background:timer<60?'#ef4444':ACCENT, display:'inline-block', animation:'tm-pulse 1.2s infinite' }} />
-            </div>
+            {/* Timer — only show during pending/active, hide when both ready */}
+            {!bothReady && ['pending','live','accepted'].includes(matchStatus) && (
+              <div style={{ display:'flex', alignItems:'center', gap:8, background:'#13131E', border:'1px solid rgba(255,255,255,.07)', borderRadius:6, padding:'5px 12px' }}>
+                <span style={{ fontSize:10, color:'#4F5568', fontFamily:'Rajdhani, sans-serif', fontWeight:600 }}>Accept in</span>
+                <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:18, color:timer<60?'#ef4444':ACCENT, lineHeight:1 }}>{fmt(timer)}</span>
+                <span style={{ width:6, height:6, borderRadius:3, background:timer<60?'#ef4444':ACCENT, display:'inline-block', animation:'tm-pulse 1.2s infinite' }} />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -623,7 +574,7 @@ export default function CashMatchPage() {
             <SectLabel>Match Details</SectLabel>
             <div style={{ padding:'4px 16px 12px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4px 12px' }}>
               {[
-                { label:'Match ID',  val:`#${REAL_MATCH_ID}`, color:'#DDE0EA' },
+                { label:'Match ID',  val: REAL_MATCH_ID, color:'#DDE0EA' },
                 { label:'Type',      val:'Wager',             color:ACCENT   },
                 { label:'Game',      val:gameName,             color:'#DDE0EA' },
                 { label:'Ladder',    val:ladderName || `${formatStr} Cash`,  color:'#DDE0EA' },
@@ -657,9 +608,6 @@ export default function CashMatchPage() {
                   </div>
                 )
               })}
-              <div style={{ marginTop:8, background:'rgba(255,255,255,.024)', border:'1px solid rgba(255,255,255,.055)', borderRadius:4, padding:'7px 10px', fontSize:9, color:'#8890A4', lineHeight:1.5 }}>
-                <strong style={{ color:'#4F5568' }}>{bestOf} Rule:</strong> Highest-ranked team hosts. Host picks side, not mode. No host advantage.
-              </div>
             </div>
 
             <div style={{ borderTop:'1px solid rgba(255,255,255,.055)' }}>
@@ -709,8 +657,20 @@ export default function CashMatchPage() {
               <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
               {(() => {
                 const isActive = ['live','accepted','pending'].includes(matchStatus)
+                const handleRequestStaff = () => {
+                  if (staffRequested) return
+                  setStaffRequested(true)
+                  supportApi.requestStaff({
+                    category: 'wager',
+                    contextId: REAL_MATCH_ID,
+                    contextLabel: `Cash Match: ${teamA.name} vs ${teamB.name}`,
+                    message: `Staff requested for cash match ${REAL_MATCH_ID}`,
+                  }).then(() => {
+                    setMsgs(p => [...p, { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:'Staff has been notified. A team member will join shortly.', type:'system' }])
+                  }).catch(() => setStaffRequested(false))
+                }
                 const buttons = [
-                  { label:'Create a Ticket', color:'#8890A4', onClick: () => setShowTicketModal(true), show: true },
+                  { label: staffRequested ? 'Staff Requested' : 'Request Staff', color: staffRequested ? '#4ade80' : '#F0AA1A', onClick: handleRequestStaff, show: isActive },
                   { label:'Report Match',    color:'#ef4444', onClick: () => setShowReportModal(true), show: isActive },
                   { label:'Cancel',          color:'#8890A4', onClick: handleCancel, show: isActive },
                 ]

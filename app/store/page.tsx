@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { storeApi } from '@/lib/api'
+import { storeApi, walletApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { sendActivity } from '@/lib/socket'
 
 // ─── UPDATED CATEGORIES (no Profile Badges, no Cash, no Accessories, no Gift Cards) ──
-const categories = ['Credits', 'Premium Membership']
+const categories = ['Tickets', 'Premium Membership']
 
 interface StoreItem { id: string; name: string; price: number; image: string; category: string; badge?: string }
 interface CartItem  extends StoreItem { qty: number }
 
-type PayMethod    = 'paypal' | 'card'
+type PayMethod    = 'wallet' | 'paypal' | 'card'
 type CheckoutStep = 'cart' | 'payment' | 'processing' | 'success' | 'fail'
 
 // storeItems are now fetched from the API inside StorePage
@@ -27,11 +27,11 @@ const heroSlides = [
     cat:     'Premium Membership',
   },
   {
-    title:   'Buy Credits',
-    sub:     'Load up on Empire Credits and use them across tournaments and wagers.',
+    title:   'Buy Tickets',
+    sub:     'Load up on Tickets and use them across tournaments and wagers.',
     image:   '/store/hero-credits.jpg',
     accent:  '#F0C040',
-    cat:     'Credits',
+    cat:     'Tickets',
   },
 ]
 
@@ -183,7 +183,7 @@ function ItemCard({
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function StorePage() {
-  const { user } = useAuth()
+  const { user, refresh } = useAuth()
   const [storeItems, setStoreItems] = useState<StoreItem[]>([])
   const [activeCategory, setActiveCategory] = useState('All')
   const [cart, setCart]           = useState<CartItem[]>([])
@@ -191,7 +191,7 @@ export default function StorePage() {
   const [heroSlide, setHeroSlide] = useState(0)
   const [showModal, setShowModal] = useState(false)
   const [step, setStep]           = useState<CheckoutStep>('cart')
-  const [payMethod, setPayMethod] = useState<PayMethod>('paypal')
+  const [payMethod, setPayMethod] = useState<PayMethod>('wallet')
   const [coupon, setCoupon]       = useState('')
   const [couponApplied, setCouponApplied] = useState(false)
   const [couponError, setCouponError]     = useState('')
@@ -200,8 +200,13 @@ export default function StorePage() {
   const [cardExp,  setCardExp]  = useState('')
   const [cardCVV,  setCardCVV]  = useState('')
   const [flashId,  setFlashId]  = useState<string | null>(null)
+  const [walletBalance, setWalletBalance] = useState(0) // cents
 
   useEffect(() => { sendActivity('Browsing Store') }, [])
+
+  useEffect(() => {
+    if (user) walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
+  }, [user])
 
   useEffect(() => {
     const t = setInterval(() => setHeroSlide(s => (s + 1) % heroSlides.length), 4200)
@@ -260,10 +265,15 @@ export default function StorePage() {
     setStep('processing')
     try {
       await storeApi.checkout({
-        items: cart.map(c => ({ itemId: c.id, quantity: c.qty })),
-        coupon: couponApplied ? coupon : undefined,
+        items: cart.map(c => ({ id: c.id, name: c.name, price: c.price, category: c.category, image: c.image, qty: c.qty })),
+        paymentMethod: payMethod,
+        couponCode: couponApplied ? coupon : undefined,
       })
       setStep('success')
+      setCart([])
+      // Refresh user data (premium status, credits) and wallet balance
+      refresh().catch(() => {})
+      walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
     } catch (err: any) {
       console.error('Checkout failed:', err)
       setStep('fail')
@@ -353,7 +363,7 @@ export default function StorePage() {
               <button className="store-btn-solid"   onClick={() => openModal('payment')}>Checkout</button>
             </div>
 
-            {/* Quick links — Deposit Cash → /wallet, no Buy Credits, no emojis, Premium Membership */}
+            {/* Quick links — Deposit Cash → /wallet, no Buy Tickets, no emojis, Premium Membership */}
             <div className="store-quick-links">
               <Link href="/wallet" className="store-quick-link">Deposit Cash</Link>
               <button className="store-quick-link" onClick={() => setActiveCategory('Premium Membership')} style={{ background:'none', border:'none', cursor:'pointer', textAlign:'left', width:'100%' }}>
@@ -558,8 +568,9 @@ export default function StorePage() {
                     <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.7, color:'var(--text-dim)', marginBottom:12 }}>Payment Method</div>
                     <div style={{ display:'flex', gap:12 }}>
                       {([
-                        { key:'paypal' as PayMethod, label:'PayPal',         icon:'pp', sub:'Securely redirect to PayPal' },
-                        { key:'card'   as PayMethod, label:'Credit / Debit', icon:'card', sub:'Visa, Mastercard, Amex, Discover' },
+                        { key:'wallet' as PayMethod, label:'Wallet Balance', icon:'wallet', sub:`$${(walletBalance / 100).toFixed(2)} available` },
+                        { key:'paypal' as PayMethod, label:'PayPal',         icon:'pp',     sub:'Securely redirect to PayPal' },
+                        { key:'card'   as PayMethod, label:'Credit / Debit', icon:'card',   sub:'Visa, Mastercard, Amex, Discover' },
                       ]).map(m => (
                         <button key={m.key} onClick={() => setPayMethod(m.key)} style={{
                           flex:1, padding:'18px 16px', textAlign:'left',
@@ -570,13 +581,31 @@ export default function StorePage() {
                           {payMethod===m.key && (
                             <div style={{ position:'absolute', top:10, right:10, width:18, height:18, borderRadius:'50%', background:'var(--red)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#fff', fontWeight:900 }}>✓</div>
                           )}
-                          <div style={{ marginBottom:8 }}>{m.icon === 'pp' ? <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#5b9bd5" strokeWidth="2"/><text x="12" y="16" textAnchor="middle" fill="#5b9bd5" fontSize="12" fontWeight="900" fontFamily="Arial">P</text></svg> : <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="3" stroke="#9CA3AF" strokeWidth="2"/><path d="M1 10h22" stroke="#9CA3AF" strokeWidth="2"/></svg>}</div>
+                          <div style={{ marginBottom:8 }}>{m.icon === 'wallet' ? <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="15" rx="3" stroke="#4ade80" strokeWidth="2"/><path d="M2 9h20" stroke="#4ade80" strokeWidth="2"/><circle cx="17" cy="14" r="1.5" fill="#4ade80"/></svg> : m.icon === 'pp' ? <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#5b9bd5" strokeWidth="2"/><text x="12" y="16" textAnchor="middle" fill="#5b9bd5" fontSize="12" fontWeight="900" fontFamily="Arial">P</text></svg> : <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="3" stroke="#9CA3AF" strokeWidth="2"/><path d="M1 10h22" stroke="#9CA3AF" strokeWidth="2"/></svg>}</div>
                           <div style={{ fontSize:13, fontWeight:700, color: payMethod===m.key ? '#fff' : 'var(--text-muted)', marginBottom:4 }}>{m.label}</div>
                           <div style={{ fontSize:10, color:'var(--text-dim)', lineHeight:1.4 }}>{m.sub}</div>
                         </button>
                       ))}
                     </div>
                   </div>
+
+                  {payMethod === 'wallet' && (
+                    <div style={{ background: walletBalance >= Math.round(total * 100) ? 'rgba(74,222,128,0.08)' : 'rgba(239,68,68,0.08)', border:`1px solid ${walletBalance >= Math.round(total * 100) ? 'rgba(74,222,128,0.25)' : 'rgba(239,68,68,0.25)'}`, borderRadius:9, padding:'16px' }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <span style={{ fontSize:12, color:'var(--text-muted)' }}>Wallet Balance</span>
+                        <span style={{ fontSize:18, fontWeight:900, fontFamily:'Barlow Condensed, sans-serif', color: walletBalance >= Math.round(total * 100) ? '#4ade80' : '#ef4444' }}>${(walletBalance / 100).toFixed(2)}</span>
+                      </div>
+                      {walletBalance >= Math.round(total * 100) ? (
+                        <div style={{ fontSize:12, color:'var(--text-dim)' }}>
+                          Balance after purchase: <span style={{ color:'#fff', fontWeight:700 }}>${((walletBalance - Math.round(total * 100)) / 100).toFixed(2)}</span>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize:12, color:'#ef4444' }}>
+                          Insufficient balance. <Link href="/wallet" style={{ color:'#F0AA1A', textDecoration:'underline' }}>Add funds</Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {payMethod === 'paypal' && (
                     <div style={{ background:'rgba(0,68,153,0.09)', border:'1px solid rgba(0,68,153,0.28)', borderRadius:9, padding:'16px', textAlign:'center' }}>
@@ -626,8 +655,13 @@ export default function StorePage() {
                     <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:28, fontWeight:900, color:'#f0c040' }}>${total.toFixed(2)}</span>
                   </div>
 
-                  <button className="btn-primary" style={{ width:'100%', justifyContent:'center', padding:'14px', fontSize:14 }} onClick={handleCheckout}>
-                    {payMethod === 'paypal' ? 'Continue to PayPal' : 'Complete Purchase'}
+                  <button
+                    className="btn-primary"
+                    style={{ width:'100%', justifyContent:'center', padding:'14px', fontSize:14, opacity: payMethod === 'wallet' && walletBalance < Math.round(total * 100) ? 0.4 : 1 }}
+                    onClick={handleCheckout}
+                    disabled={payMethod === 'wallet' && walletBalance < Math.round(total * 100)}
+                  >
+                    {payMethod === 'wallet' ? 'Pay with Wallet' : payMethod === 'paypal' ? 'Continue to PayPal' : 'Complete Purchase'}
                   </button>
 
                   <p style={{ fontSize:10, color:'var(--text-dim)', textAlign:'center', lineHeight:1.6 }}>

@@ -77,8 +77,8 @@ const faqData = [
     body: `To create a team, go to the Teams page and click "Create Team", or visit a specific game page, select a ladder, and click "Create Team" from there.\n\nTo join an existing team, the team's Leader or Captain must send you an invite. You can only be on one team per game at a time.`,
   },
   {
-    title: 'What are Credits and how do I use them?',
-    body: `Credits are GamerHead's platform currency. You can use Credits to:\n- Change your display name (5 Credits)\n- Purchase 2XP Tokens (2 Credits each)\n- Change your username color (1 Credit, free for Premium)\n- Enter certain tournaments\n\nCredits can be purchased from the Store or earned through promotions and events.`,
+    title: 'What are Tickets and how do I use them?',
+    body: `Tickets are GamerHead's platform currency. You can use Tickets to:\n- Change your display name (5 Tickets)\n- Purchase 2XP Tokens (2 Tickets each)\n- Change your username color (1 Ticket, free for Premium)\n- Enter certain tournaments\n\nTickets can be purchased from the Store or earned through promotions and events.`,
   },
   {
     title: 'How do disputes work?',
@@ -90,7 +90,7 @@ const faqData = [
   },
   {
     title: 'What is Premium and what perks do I get?',
-    body: `Premium is GamerHead's subscription tier that unlocks exclusive perks including:\n- Free name changes (normally 5 Credits)\n- Free username color changes (normally 1 Credit)\n- Priority support\n- Exclusive profile badge\n- Access to Premium-only tournaments\n\nVisit the Premium page for pricing and full details.`,
+    body: `Premium is GamerHead's subscription tier that unlocks exclusive perks including:\n- Free name changes (normally 5 Tickets)\n- Free username color changes (normally 1 Ticket)\n- Priority support\n- Exclusive profile badge\n- Access to Premium-only tournaments\n\nVisit the Premium page for pricing and full details.`,
   },
   {
     title: 'How do I report a player or team?',

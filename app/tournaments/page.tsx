@@ -5,22 +5,41 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { tournamentsApi } from '@/lib/api'
 
-/* ── Game banner images + accent colors ───────────────────
-   Drop real images into /public/banners/ and the src paths
-   below will resolve automatically. The onError fallback
-   hides the img tag gracefully if the file is missing.     */
+/* ── Game banner images + accent colors ─────────────────── */
 const GAME_ASSETS: Record<string, { banner: string; accent: string }> = {
-  'Call of Duty':  { banner: '/banners/call-of-duty.jpg',  accent: '#4A9EFF' },
-  'FIFA / EA FC':  { banner: '/banners/ea-fc.jpg',         accent: '#3DD68C' },
-  'Fortnite':      { banner: '/banners/fortnite.jpg',      accent: '#C84FFF' },
-  'Warzone':       { banner: '/banners/warzone.jpg',       accent: '#E8A020' },
-  'Rocket League': { banner: '/banners/rocket-league.jpg', accent: '#FF4D6D' },
-  'Apex Legends':  { banner: '/banners/apex-legends.jpg',  accent: '#DA3C21' },
-  'Valorant':      { banner: '/banners/valorant.jpg',      accent: '#FF4655' },
-  'Madden NFL':    { banner: '/banners/madden.jpg',        accent: '#00A859' },
+  'Call of Duty':    { banner: '/games/call-of-duty.png',  accent: '#4A9EFF' },
+  'FIFA / EA FC':    { banner: '/games/fc26.png',          accent: '#3DD68C' },
+  'Fortnite':        { banner: '/games/fortnite.png',      accent: '#C84FFF' },
+  'Warzone':         { banner: '/games/warzone.png',       accent: '#E8A020' },
+  'Rocket League':   { banner: '/games/rocketleague.png',  accent: '#FF4D6D' },
+  'Apex Legends':    { banner: '/games/apex-legends.png',  accent: '#DA3C21' },
+  'Valorant':        { banner: '/games/valorant.png',      accent: '#FF4655' },
+  'Madden NFL':      { banner: '/games/madden26.png',      accent: '#00A859' },
+  'NBA 2K':          { banner: '/games/nba26.png',         accent: '#F97316' },
+  'UFC / EA Sports': { banner: '/games/ufc.png',           accent: '#DC2626' },
+}
+
+// Fuzzy match: "Call of Duty Black Ops 7" → "Call of Duty"
+function resolveGameAssets(gameName: string): { banner: string; accent: string } {
+  if (GAME_ASSETS[gameName]) return GAME_ASSETS[gameName]
+  const lower = gameName.toLowerCase()
+  for (const [key, val] of Object.entries(GAME_ASSETS)) {
+    if (lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) return val
+  }
+  return { banner: '', accent: FALLBACK_ACCENT }
 }
 
 const FALLBACK_ACCENT = '#E8000D'
+
+function fmtDateTime(dateStr: string, timeStr: string): string {
+  if (!dateStr) return ''
+  try {
+    const d = new Date(`${dateStr}T${timeStr || '00:00'}`)
+    if (isNaN(d.getTime())) return `${dateStr} · ${timeStr || ''}`
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+      ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  } catch { return `${dateStr} · ${timeStr || ''}` }
+}
 
 interface Tournament {
   id: string
@@ -38,13 +57,13 @@ interface Tournament {
 
 function mapTournament(t: any): Tournament {
   return {
-    id:       t.id ?? t._id ?? t.slug ?? '',
-    time:     t.time ?? (t.startDate ? `${t.startDate} · ${t.startTime ?? ''}` : ''),
+    id:       t.slug ?? t.id ?? t._id ?? '',
+    time:     t.time ?? (t.startDate ? fmtDateTime(t.startDate, t.startTime ?? '') : ''),
     name:     t.name ?? '',
     region:   t.region ?? '',
     mode:     t.mode ?? t.format ?? '',
     slots:    t.slots ?? t.maxTeams ?? 0,
-    filled:   t.filled ?? (t.maxTeams && t.teams ? Math.round((t.teams / t.maxTeams) * 100) : 0),
+    filled:   t.filled ?? (t.maxTeams && (t.registeredCount || t.teams) ? Math.round(((t.registeredCount || t.teams) / t.maxTeams) * 100) : 0),
     prize:    t.prize ?? (t.prizePool != null ? `$${Number(t.prizePool).toLocaleString()}` : '$0'),
     game:     t.game ?? '',
     platform: t.platform ?? '',
@@ -136,7 +155,7 @@ export default function TournamentsPage() {
         gap: 14,
       }}>
         {visible.map(t => {
-          const { banner, accent } = GAME_ASSETS[t.game] ?? { banner: '', accent: FALLBACK_ACCENT }
+          const { banner, accent } = resolveGameAssets(t.game)
           const pct = Math.min(t.filled, 100)
           const barColor = pct >= 90 ? '#E8000D' : pct >= 65 ? '#F0AA1A' : accent
 

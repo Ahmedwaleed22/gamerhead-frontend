@@ -364,7 +364,7 @@ export default function CreateTournamentPage() {
             <Field label="Max Teams/Slots">
               <Input value={maxTeams} onChange={setMaxTeams} type="number" />
             </Field>
-            <Field label="Entry Cost (Credits)">
+            <Field label="Entry Cost (Tickets)">
               <Input value={entryCredits} onChange={setEntryCredits} type="number" />
             </Field>
           </Row>
@@ -408,7 +408,7 @@ export default function CreateTournamentPage() {
               <Field label="Amount ($)">
                 <Input value={p.amount} onChange={v => updatePrize(i, 'amount', v)} type="number" placeholder="500" />
               </Field>
-              <Field label="Credits Bonus">
+              <Field label="Tickets Bonus">
                 <Input value={p.creditsBonus} onChange={v => updatePrize(i, 'creditsBonus', v)} type="number" placeholder="0" />
               </Field>
               <Field label="Color" flex={0.5}>

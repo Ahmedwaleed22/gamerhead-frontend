@@ -77,8 +77,9 @@ export default function AdminUserDetail() {
   }
 
   const handleWalletAdjust = async () => {
-    const amount = parseInt(walletForm.amount)
-    if (!amount || !walletForm.description) return
+    const raw = parseFloat(walletForm.amount)
+    if (!raw || !walletForm.description) return
+    const amount = walletForm.currency === 'cash' ? Math.round(raw * 100) : Math.round(raw)
     try {
       await adminApi.walletAdjust(id, { currency: walletForm.currency, amount, description: walletForm.description })
       setWalletModal(false)
@@ -239,13 +240,13 @@ export default function AdminUserDetail() {
             <div>
               <div style={labelStyle}>Currency</div>
               <select value={walletForm.currency} onChange={e => setWalletForm(p => ({ ...p, currency: e.target.value as any }))} style={inputStyle}>
-                <option value="credits">Credits</option>
-                <option value="cash">Cash (cents)</option>
+                <option value="credits">Tickets</option>
+                <option value="cash">Cash (USD)</option>
               </select>
             </div>
             <div>
-              <div style={labelStyle}>Amount (positive to add, negative to deduct)</div>
-              <input type="number" value={walletForm.amount} onChange={e => setWalletForm(p => ({ ...p, amount: e.target.value }))} style={inputStyle} placeholder="e.g. 500 or -100" />
+              <div style={labelStyle}>Amount (positive to add, negative to deduct){walletForm.currency === 'cash' ? ' — in dollars' : ''}</div>
+              <input type="number" step={walletForm.currency === 'cash' ? '0.01' : '1'} value={walletForm.amount} onChange={e => setWalletForm(p => ({ ...p, amount: e.target.value }))} style={inputStyle} placeholder={walletForm.currency === 'cash' ? 'e.g. 5.00 or -2.50' : 'e.g. 500 or -100'} />
             </div>
             <div>
               <div style={labelStyle}>Description</div>
@@ -259,15 +260,35 @@ export default function AdminUserDetail() {
       {roleModal && (
         <Modal title="Change Role" subtitle={displayName} onClose={() => setRoleModal(false)}>
           <div style={{ marginBottom: 14 }}>
-            <div style={labelStyle}>Role</div>
+            <div style={labelStyle}>Base Role</div>
             <select value={newRole} onChange={e => setNewRole(e.target.value)} style={inputStyle}>
               <option value="member">Member</option>
-              <option value="premium">Premium</option>
-              <option value="coach">Coach</option>
               <option value="admin">Admin</option>
             </select>
           </div>
-          <ActionBtn label="SET ROLE" color="#a855f7" size="lg" onClick={handleSetRole} />
+          <div style={{ marginBottom: 14 }}>
+            <div style={labelStyle}>Additional Roles</div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+              {[
+                { key: 'premium', label: 'Premium', active: user.isPremium, color: '#f59e0b' },
+                { key: 'coach', label: 'Coach', active: user.isCoach, color: '#a855f7' },
+              ].map(r => (
+                <label key={r.key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '8px 14px', background: user[`is${r.key.charAt(0).toUpperCase() + r.key.slice(1)}`] ? `${r.color}15` : '#0d0d14', border: `1px solid ${user[`is${r.key.charAt(0).toUpperCase() + r.key.slice(1)}`] ? r.color : 'rgba(255,255,255,.09)'}`, borderRadius: 6 }}>
+                  <input type="checkbox" defaultChecked={r.key === 'premium' ? user.isPremium : user.isCoach} id={`role-${r.key}`} style={{ accentColor: r.color }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif', color: r.color }}>{r.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <ActionBtn label="SAVE ROLES" color="#a855f7" size="lg" onClick={async () => {
+            try {
+              const isPremium = (document.getElementById('role-premium') as HTMLInputElement)?.checked
+              const isCoach = (document.getElementById('role-coach') as HTMLInputElement)?.checked
+              await adminApi.setRole(id, { role: newRole, isPremium, isCoach })
+              setRoleModal(false)
+              load()
+            } catch {}
+          }} />
         </Modal>
       )}
 
@@ -395,7 +416,7 @@ function WalletTab({ user, transactions }: { user: any; transactions: any[] }) {
       {/* Balances */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
         {[
-          ['Credits', user.credits?.toLocaleString()],
+          ['Tickets', user.credits?.toLocaleString()],
           ['Cash', `$${((user.cashBalance || 0) / 100).toFixed(2)}`],
           ['Held', `$${((user.heldBalance || 0) / 100).toFixed(2)}`],
           ['Pending Payout', `$${((user.pendingPayout || 0) / 100).toFixed(2)}`],

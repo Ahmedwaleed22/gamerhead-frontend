@@ -100,7 +100,7 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 function Avatar({ src, size = 38, style }: { src: string; size?: number; style?: React.CSSProperties }) {
-  if (src && (src.startsWith('http') || src.startsWith('/'))) {
+  if (src && (src.startsWith('http') || src.startsWith('/') || src.startsWith('data:image'))) {
     return <img src={src} alt="" style={{ width: size, height: size, borderRadius: 8, objectFit: 'cover', ...style }} />
   }
   return <span style={{ fontSize: size * 0.55, ...style }}>{src || '👤'}</span>
@@ -620,10 +620,11 @@ export default function ThreadPage() {
                   {/* Divider */}
                   <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />
 
-                  {/* Earned badges (rotating) */}
-                  {post.user.badges && post.user.badges.length > 0 && (
-                    <RotatingBadges badges={post.user.badges} />
-                  )}
+                  {/* Earned badges (rotating) — forum badges only */}
+                  {(() => {
+                    const forumBadges = (post.user.badges || []).filter((b: any) => b.category === 'forum')
+                    return forumBadges.length > 0 ? <RotatingBadges badges={forumBadges} /> : null
+                  })()}
 
                   {/* Platform tags */}
                   {post.user.tags && post.user.tags.length > 0 && (
@@ -786,6 +787,13 @@ export default function ThreadPage() {
             </div>
 
             {/* ── REPLY BOX ── */}
+            {thread.status === 'locked' && user?.role !== 'admin' ? (
+              <div id="reply-box" style={{ background: 'var(--bg-2)', border: '1px solid rgba(240,192,64,0.2)', borderRadius: 10, padding: '20px', textAlign: 'center' }}>
+                <span style={{ fontSize: 20, marginBottom: 6, display: 'block' }}>🔒</span>
+                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 14, fontWeight: 800, textTransform: 'uppercase', color: '#f0c040', letterSpacing: 0.5 }}>Thread Locked</div>
+                <div style={{ fontSize: 11, color: '#4F5568', marginTop: 4 }}>This thread has been locked. No new replies can be posted.</div>
+              </div>
+            ) : (
             <div id="reply-box" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
               <div style={{ padding: '13px 18px', background: 'var(--bg-3)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 16 }}>✏️</span>
@@ -897,6 +905,7 @@ export default function ThreadPage() {
                 </div>
               </div>
             </div>
+            )}
           </div>
 
           {/* ── SIDEBAR ── */}

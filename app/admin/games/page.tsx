@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { adminApi } from '@/lib/api'
+import { adminApi, matchesApi } from '@/lib/api'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
 
@@ -19,7 +19,10 @@ export default function AdminGamesPage() {
   const [loading, setLoading] = useState(true)
   const [createModal, setCreateModal] = useState(false)
   const [editModal, setEditModal] = useState<any>(null)
-  const [form, setForm] = useState({ name: '', slug: '', description: '', bannerUrl: '', accentColor: '#e8000d', platforms: '', genre: '', crossplay: false, gameIdLabel: '', isActive: true, modes: '', modeMapMatrix: '' })
+  const [form, setForm] = useState({ name: '', slug: '', description: '', bannerUrl: '', accentColor: '#e8000d', platformType: 'crossplay' as 'crossplay' | 'console' | 'pc', genre: '', gameIdLabel: '', isActive: true, modes: '', modeMapMatrix: {} as Record<string, string[]>, rules: '', teamSizes: {} as Record<string, number[]> })
+  const [migrateSlug, setMigrateSlug] = useState('')
+  const [migrateName, setMigrateName] = useState('')
+  const [migrateResult, setMigrateResult] = useState<string | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -29,16 +32,34 @@ export default function AdminGamesPage() {
 
   useEffect(() => { load() }, [])
 
+  const emptyForm = { name: '', slug: '', description: '', bannerUrl: '', accentColor: '#e8000d', platformType: 'crossplay' as 'crossplay' | 'console' | 'pc', genre: '', gameIdLabel: '', isActive: true, modes: '', modeMapMatrix: {} as Record<string, string[]>, rules: '', teamSizes: { Squad: [4] } as Record<string, number[]> }
+
+  const platformMap: Record<string, { platforms: string[]; crossplay: boolean }> = {
+    crossplay: { platforms: ['PC', 'Xbox', 'PS'], crossplay: true },
+    console:   { platforms: ['Xbox', 'PS'],       crossplay: false },
+    pc:        { platforms: ['PC'],               crossplay: false },
+  }
+
+  const buildPayload = () => {
+    const { platformType, modes, ...rest } = form as any
+    const pConfig = platformMap[platformType] || platformMap.crossplay
+    return {
+      ...rest,
+      platforms: pConfig.platforms,
+      crossplay: pConfig.crossplay,
+      platformType,
+      modes: Object.keys(form.modeMapMatrix),
+      modeMapMatrix: form.modeMapMatrix,
+      teamSizes: form.teamSizes,
+      rules: form.rules.split('\n').map((s: string) => s.trim()).filter(Boolean),
+    }
+  }
+
   const handleCreate = async () => {
     try {
-      await adminApi.createGame({
-        ...form,
-        platforms: form.platforms.split(',').map(s => s.trim()).filter(Boolean),
-        modes: form.modes.split(',').map(s => s.trim()).filter(Boolean),
-        modeMapMatrix: form.modeMapMatrix ? JSON.parse(form.modeMapMatrix) : {},
-      })
+      await adminApi.createGame(buildPayload())
       setCreateModal(false)
-      setForm({ name: '', slug: '', description: '', bannerUrl: '', accentColor: '#e8000d', platforms: '', genre: '', crossplay: false, gameIdLabel: '', isActive: true, modes: '', modeMapMatrix: '' })
+      setForm(emptyForm)
       load()
     } catch { }
   }
@@ -46,32 +67,53 @@ export default function AdminGamesPage() {
   const handleEdit = async () => {
     if (!editModal) return
     try {
-      await adminApi.updateGame(editModal._id, {
-        ...form,
-        platforms: form.platforms.split(',').map(s => s.trim()).filter(Boolean),
-        modes: form.modes.split(',').map(s => s.trim()).filter(Boolean),
-        modeMapMatrix: form.modeMapMatrix ? JSON.parse(form.modeMapMatrix) : {},
-      })
+      await adminApi.updateGame(editModal._id, buildPayload())
       setEditModal(null)
-      setForm({ name: '', slug: '', description: '', bannerUrl: '', accentColor: '#e8000d', platforms: '', genre: '', crossplay: false, gameIdLabel: '', isActive: true, modes: '', modeMapMatrix: '' })
+      setForm(emptyForm)
       load()
     } catch { }
   }
 
+  const DEFAULT_RULES = [
+    'All matches must be played under fair conditions.',
+    'Results must be submitted within 15 minutes with screenshot proof.',
+    'Exploits or cheating result in an immediate ban.',
+    'Disputes must be submitted through the support ticket system.',
+  ]
+
   const openEditModal = (game: any) => {
+    // Derive platformType from existing data
+    const plats = (game.platforms || []).map((p: string) => p.toLowerCase())
+    let platformType: 'crossplay' | 'console' | 'pc' = 'crossplay'
+    if (game.platformType) platformType = game.platformType
+    else if (plats.includes('pc') && (plats.includes('xbox') || plats.includes('ps'))) platformType = 'crossplay'
+    else if (plats.includes('pc') && !plats.includes('xbox') && !plats.includes('ps')) platformType = 'pc'
+    else if (!plats.includes('pc') && (plats.includes('xbox') || plats.includes('ps'))) platformType = 'console'
+
+    const existingRules = game.rules || []
+
     setForm({
       name: game.name || '',
       slug: game.slug || '',
       description: game.description || '',
       bannerUrl: game.bannerUrl || '',
       accentColor: game.accentColor || '#e8000d',
-      platforms: (game.platforms || []).join(', '),
+      platformType,
       genre: game.genre || '',
-      crossplay: game.crossplay || false,
       gameIdLabel: game.gameIdLabel || '',
       isActive: game.isActive ?? true,
       modes: (game.modes || []).join(', '),
-      modeMapMatrix: game.modeMapMatrix ? JSON.stringify(game.modeMapMatrix, null, 2) : '',
+      modeMapMatrix: game.modeMapMatrix && typeof game.modeMapMatrix === 'object' ? { ...game.modeMapMatrix } : {},
+      rules: existingRules.length > 0 ? existingRules.join('\n') : DEFAULT_RULES.join('\n'),
+      teamSizes: (() => {
+        const raw = game.teamSizes && typeof game.teamSizes === 'object' ? game.teamSizes : { Squad: 4 }
+        // Backwards compat: convert old number values to arrays
+        const ts: Record<string, number[]> = {}
+        for (const [k, v] of Object.entries(raw)) {
+          ts[k] = Array.isArray(v) ? v as number[] : [v as number]
+        }
+        return ts
+      })(),
     })
     setEditModal(game)
   }
@@ -88,18 +130,225 @@ export default function AdminGamesPage() {
     try { await adminApi.deleteGame(id); load() } catch { }
   }
 
-  const GameForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
+  const formFields = (onSubmit: () => void, submitLabel: string) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {[['Name', 'name'], ['Slug', 'slug'], ['Description', 'description'], ['Banner URL', 'bannerUrl'], ['Genre', 'genre'], ['Game ID Label', 'gameIdLabel']].map(([l, k]) => (
+      {[['Name', 'name'], ['Slug', 'slug'], ['Description', 'description'], ['Banner URL', 'bannerUrl']].map(([l, k]) => (
         <div key={k as string}><div style={labelStyle}>{l}</div><input value={(form as any)[k as string]} onChange={e => setForm(p => ({ ...p, [k as string]: e.target.value }))} style={inputStyle} /></div>
       ))}
       <div><div style={labelStyle}>Accent Color</div><input type="color" value={form.accentColor} onChange={e => setForm(p => ({ ...p, accentColor: e.target.value }))} style={{ ...inputStyle, height: 32, padding: 2 }} /></div>
-      <div><div style={labelStyle}>Platforms (comma separated)</div><input value={form.platforms} onChange={e => setForm(p => ({ ...p, platforms: e.target.value }))} style={inputStyle} placeholder="PS5, Xbox, PC" /></div>
-      <div><div style={labelStyle}>Modes (comma separated)</div><input value={form.modes} onChange={e => setForm(p => ({ ...p, modes: e.target.value }))} style={inputStyle} placeholder="Search & Destroy, Hardpoint" /></div>
-      <div><div style={labelStyle}>Mode-Map Matrix (JSON)</div><textarea value={form.modeMapMatrix} onChange={e => setForm(p => ({ ...p, modeMapMatrix: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder='{"Search & Destroy": ["Raid", "Skidrow"]}' /></div>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>
-        <input type="checkbox" checked={form.crossplay} onChange={e => setForm(p => ({ ...p, crossplay: e.target.checked }))} /> Crossplay
-      </label>
+      <div><div style={labelStyle}>Genre</div>
+        <select value={form.genre} onChange={e => setForm(p => ({ ...p, genre: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
+          <option value="">Select genre...</option>
+          {['FPS', 'Sports', 'Battle Royale', 'Fighting', 'Racing', 'MOBA', 'Strategy', 'Other'].map(g => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
+      </div>
+      <div><div style={labelStyle}>Game ID Label</div>
+        <select value={form.gameIdLabel} onChange={e => setForm(p => ({ ...p, gameIdLabel: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
+          <option value="">Select gamertag type...</option>
+          {[
+            { value: 'activisionId', label: 'Activision ID' },
+            { value: 'psnId',        label: 'PSN ID' },
+            { value: 'xboxGamertag', label: 'Xbox Gamertag' },
+            { value: 'riotId',       label: 'Riot ID' },
+            { value: 'steamId',      label: 'Steam ID' },
+            { value: 'epicId',       label: 'Epic ID' },
+            { value: 'eaId',         label: 'EA ID' },
+          ].map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+      <div><div style={labelStyle}>Platform</div>
+        <select value={form.platformType} onChange={e => setForm(p => ({ ...p, platformType: e.target.value as any }))} style={{ ...inputStyle, cursor: 'pointer' }}>
+          <option value="crossplay">Crossplay (PC / Xbox / PS)</option>
+          <option value="console">Console Only (Xbox / PS)</option>
+          <option value="pc">PC Only</option>
+        </select>
+      </div>
+
+      {/* ── Team Sizes ── */}
+      <div>
+        <div style={labelStyle}>Team Sizes (Ladder Types)</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+          {/* Solo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0d0d14', border: '1px solid rgba(255,255,255,.06)', borderRadius: 6, padding: '6px 10px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', flex: 1 }}>
+              <input type="checkbox" checked={'Solo' in form.teamSizes} onChange={e => {
+                setForm(p => {
+                  const ts = { ...p.teamSizes }
+                  if (e.target.checked) ts.Solo = [1]
+                  else delete ts.Solo
+                  return { ...p, teamSizes: ts }
+                })
+              }} />
+              <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, fontSize: 11, color: 'Solo' in form.teamSizes ? '#DDE0EA' : '#4F5568' }}>Solo (1v1)</span>
+            </label>
+          </div>
+          {/* Duo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0d0d14', border: '1px solid rgba(255,255,255,.06)', borderRadius: 6, padding: '6px 10px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', flex: 1 }}>
+              <input type="checkbox" checked={'Duo' in form.teamSizes} onChange={e => {
+                setForm(p => {
+                  const ts = { ...p.teamSizes }
+                  if (e.target.checked) ts.Duo = [2]
+                  else delete ts.Duo
+                  return { ...p, teamSizes: ts }
+                })
+              }} />
+              <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, fontSize: 11, color: 'Duo' in form.teamSizes ? '#DDE0EA' : '#4F5568' }}>Duo (2v2)</span>
+            </label>
+          </div>
+          {/* Squad — multi-select sizes */}
+          <div style={{ background: '#0d0d14', border: '1px solid rgba(255,255,255,.06)', borderRadius: 6, padding: '6px 10px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+              <input type="checkbox" checked={'Squad' in form.teamSizes} onChange={e => {
+                setForm(p => {
+                  const ts = { ...p.teamSizes }
+                  if (e.target.checked) ts.Squad = [4]
+                  else delete ts.Squad
+                  return { ...p, teamSizes: ts }
+                })
+              }} />
+              <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, fontSize: 11, color: 'Squad' in form.teamSizes ? '#DDE0EA' : '#4F5568' }}>Squad</span>
+            </label>
+            {'Squad' in form.teamSizes && (
+              <div style={{ display: 'flex', gap: 6, marginTop: 6, marginLeft: 22 }}>
+                {[3, 4, 5, 6].map(n => {
+                  const squadSizes = form.teamSizes.Squad || []
+                  const checked = squadSizes.includes(n)
+                  return (
+                    <label key={n} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={checked} onChange={e => {
+                        setForm(p => {
+                          const cur = [...(p.teamSizes.Squad || [])]
+                          const next = e.target.checked ? [...cur, n].sort() : cur.filter(x => x !== n)
+                          if (next.length === 0) {
+                            const ts = { ...p.teamSizes }
+                            delete ts.Squad
+                            return { ...p, teamSizes: ts }
+                          }
+                          return { ...p, teamSizes: { ...p.teamSizes, Squad: next } }
+                        })
+                      }} />
+                      <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, fontSize: 10, color: checked ? '#DDE0EA' : '#4F5568' }}>{n}v{n}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 9, color: '#4F5568', marginTop: 4 }}>Select which team sizes this game supports. Squad can have multiple valid sizes.</div>
+      </div>
+
+      {/* ── Mode-Map Builder ── */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <div style={labelStyle}>Modes &amp; Maps</div>
+          <button type="button" onClick={() => {
+            const name = prompt('Mode name (e.g. Search & Destroy)')
+            if (!name?.trim()) return
+            setForm(p => ({ ...p, modeMapMatrix: { ...p.modeMapMatrix, [name.trim()]: [] } }))
+          }} style={{ background: '#22c55e', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 700, color: '#fff', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>+ Add Mode</button>
+        </div>
+        {Object.keys(form.modeMapMatrix).length === 0 && (
+          <div style={{ fontSize: 10, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', padding: '8px 0' }}>No modes added yet. Click &quot;+ Add Mode&quot; to get started.</div>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {Object.entries(form.modeMapMatrix).map(([mode, maps]) => (
+            <div key={mode} style={{ background: '#0d0d14', border: '1px solid rgba(255,255,255,.06)', borderRadius: 8, padding: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: 13, color: '#fff' }}>{mode}</span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button type="button" onClick={() => {
+                    const name = prompt('Rename mode:', mode)
+                    if (!name?.trim() || name.trim() === mode) return
+                    setForm(p => {
+                      const m = { ...p.modeMapMatrix }
+                      m[name.trim()] = m[mode]
+                      delete m[mode]
+                      return { ...p, modeMapMatrix: m }
+                    })
+                  }} style={{ background: '#3b82f6', border: 'none', borderRadius: 3, padding: '2px 7px', fontSize: 8, fontWeight: 700, color: '#fff', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>RENAME</button>
+                  <button type="button" onClick={() => {
+                    setForm(p => {
+                      const m = { ...p.modeMapMatrix }
+                      delete m[mode]
+                      return { ...p, modeMapMatrix: m }
+                    })
+                  }} style={{ background: '#e8000d', border: 'none', borderRadius: 3, padding: '2px 7px', fontSize: 8, fontWeight: 700, color: '#fff', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>REMOVE</button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+                {(maps || []).map((map, mi) => (
+                  <span key={mi} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 4, padding: '3px 8px', fontSize: 10, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>
+                    {map}
+                    <button type="button" onClick={() => {
+                      setForm(p => {
+                        const m = { ...p.modeMapMatrix }
+                        m[mode] = m[mode].filter((_: string, i: number) => i !== mi)
+                        return { ...p, modeMapMatrix: m }
+                      })
+                    }} style={{ background: 'none', border: 'none', color: '#e8000d', fontSize: 11, cursor: 'pointer', padding: 0, lineHeight: 1, fontWeight: 700 }}>×</button>
+                  </span>
+                ))}
+              </div>
+              <button type="button" onClick={() => {
+                const name = prompt(`Add map to "${mode}":`)
+                if (!name?.trim()) return
+                setForm(p => {
+                  const m = { ...p.modeMapMatrix }
+                  m[mode] = [...(m[mode] || []), name.trim()]
+                  return { ...p, modeMapMatrix: m }
+                })
+              }} style={{ background: 'rgba(255,255,255,.05)', border: '1px dashed rgba(255,255,255,.12)', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 600, color: '#9CA3AF', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer', width: '100%' }}>+ Add Map</button>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* ── Rules Builder ── */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <div style={labelStyle}>Game / Tournament Rules</div>
+          <button type="button" onClick={() => setForm(p => ({ ...p, rules: p.rules ? p.rules + '\n' : '\n' }))} style={{ background: '#22c55e', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 700, color: '#fff', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>+ Add Rule</button>
+        </div>
+        {(() => {
+          const rulesArr = form.rules.split('\n').filter((_, i, a) => i < a.length || a[i] !== '')
+          const parsed = form.rules ? form.rules.split('\n') : []
+          if (parsed.length === 0) return (
+            <div style={{ fontSize: 10, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', padding: '8px 0' }}>No rules added yet.</div>
+          )
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {parsed.map((rule, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 11, color: '#4F5568', flexShrink: 0, width: 18, textAlign: 'right' }}>{i + 1}.</span>
+                  <input value={rule} onChange={e => {
+                    const arr = form.rules.split('\n')
+                    arr[i] = e.target.value
+                    setForm(p => ({ ...p, rules: arr.join('\n') }))
+                  }} style={{ ...inputStyle, flex: 1 }} placeholder="Enter rule..." />
+                  <button type="button" onClick={() => {
+                    const arr = form.rules.split('\n')
+                    if (i > 0) { [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]]; setForm(p => ({ ...p, rules: arr.join('\n') })) }
+                  }} style={{ background: 'none', border: 'none', color: i > 0 ? '#9CA3AF' : '#25252C', fontSize: 13, cursor: i > 0 ? 'pointer' : 'default', padding: '0 2px', lineHeight: 1 }}>▲</button>
+                  <button type="button" onClick={() => {
+                    const arr = form.rules.split('\n')
+                    if (i < arr.length - 1) { [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]]; setForm(p => ({ ...p, rules: arr.join('\n') })) }
+                  }} style={{ background: 'none', border: 'none', color: i < parsed.length - 1 ? '#9CA3AF' : '#25252C', fontSize: 13, cursor: i < parsed.length - 1 ? 'pointer' : 'default', padding: '0 2px', lineHeight: 1 }}>▼</button>
+                  <button type="button" onClick={() => {
+                    const arr = form.rules.split('\n')
+                    arr.splice(i, 1)
+                    setForm(p => ({ ...p, rules: arr.join('\n') }))
+                  }} style={{ background: 'none', border: 'none', color: '#e8000d', fontSize: 14, cursor: 'pointer', padding: '0 2px', lineHeight: 1, fontWeight: 700 }}>×</button>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
+      </div>
       <ActionBtn label={submitLabel} color="#22c55e" onClick={onSubmit} />
     </div>
   )
@@ -108,7 +357,10 @@ export default function AdminGamesPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Games</h1>
-        <ActionBtn label="+ ADD GAME" color="#22c55e" onClick={() => setCreateModal(true)} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <ActionBtn label="RECALC RANKS" color="#f59e0b" onClick={async () => { try { const r = await matchesApi.recalculateRanks(); alert(`Recalculated ${r.processed} entries`) } catch { alert('Failed') } }} />
+          <ActionBtn label="+ ADD GAME" color="#22c55e" onClick={() => setCreateModal(true)} />
+        </div>
       </div>
 
       {loading ? (
@@ -127,7 +379,7 @@ export default function AdminGamesPage() {
                   {!game.isActive && <span style={{ fontSize: 8, fontWeight: 700, color: '#e8000d', fontFamily: 'Rajdhani, sans-serif' }}>DISABLED</span>}
                 </div>
                 <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginBottom: 8 }}>
-                  {game.platforms?.join(', ')} · {game.genre} {game.crossplay ? '· Crossplay' : ''}
+                  {game.platformType === 'pc' ? 'PC Only' : game.platformType === 'console' ? 'Console Only' : game.crossplay ? 'Crossplay' : (game.platforms || []).join(', ')} · {game.genre}
                 </div>
                 <div style={{ fontSize: 9, color: '#8890A4', fontFamily: 'Rajdhani, sans-serif', marginBottom: 8 }}>
                   Modes: {game.modes?.join(', ') || '—'}
@@ -145,13 +397,30 @@ export default function AdminGamesPage() {
 
       {createModal && (
         <Modal title="Add Game" onClose={() => setCreateModal(false)} width={500}>
-          <GameForm onSubmit={handleCreate} submitLabel="CREATE GAME" />
+          {formFields(handleCreate, 'CREATE GAME')}
         </Modal>
       )}
 
       {editModal && (
-        <Modal title="Edit Game" subtitle={editModal.name} onClose={() => setEditModal(null)} width={500}>
-          <GameForm onSubmit={handleEdit} submitLabel="SAVE CHANGES" />
+        <Modal title="Edit Game" subtitle={editModal.name} onClose={() => { setEditModal(null); setMigrateSlug(''); setMigrateName(''); setMigrateResult(null) }} width={500}>
+          {formFields(handleEdit, 'SAVE CHANGES')}
+          <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 8 }}>
+            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#3b82f6', marginBottom: 6, letterSpacing: 0.5 }}>Migrate Old Slug</div>
+            <div style={{ fontSize: 10, color: '#4F5568', marginBottom: 8, fontFamily: 'Barlow, sans-serif' }}>If this game was renamed, enter the old slug and name to migrate all matches, teams, ladders, stats, and user profiles.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <input value={migrateSlug} onChange={e => setMigrateSlug(e.target.value)} placeholder="Old slug (e.g. call-of-duty)" style={{ padding: '6px 10px', background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4, color: '#fff', fontSize: 11, fontFamily: 'Barlow, sans-serif' }} />
+              <input value={migrateName} onChange={e => setMigrateName(e.target.value)} placeholder="Old name (e.g. Call of Duty)" style={{ padding: '6px 10px', background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4, color: '#fff', fontSize: 11, fontFamily: 'Barlow, sans-serif' }} />
+              <button onClick={async () => {
+                if (!migrateSlug.trim()) return
+                try {
+                  const res = await adminApi.migrateGameSlug(editModal._id, migrateSlug.trim(), migrateName.trim() || undefined)
+                  setMigrateResult(`Migrated ${res.updated} records`)
+                  setMigrateSlug(''); setMigrateName('')
+                } catch (err: any) { console.error('Migration error:', err); setMigrateResult(`Migration failed: ${err?.message || err}`) }
+              }} style={{ padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', textTransform: 'uppercase' }}>Migrate</button>
+            </div>
+            {migrateResult && <div style={{ marginTop: 6, fontSize: 10, color: '#4ade80', fontFamily: 'Barlow, sans-serif' }}>{migrateResult}</div>}
+          </div>
         </Modal>
       )}
     </div>

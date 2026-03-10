@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { walletApi, teamsApi, invitesApi, badgesApi, levelRewardsApi, supportApi } from '@/lib/api'
+import { walletApi, teamsApi, invitesApi, badgesApi, levelRewardsApi, supportApi, storeApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
 import CrateOpening from './components/CrateOpening'
 
@@ -11,10 +11,7 @@ const RARITY_COLORS: Record<string, string> = {
   Common: '#9CA3AF', Rare: '#3498DB', Epic: '#9B59B6', Legendary: '#F39C12',
 }
 
-const SIG_HISTORY = [
-  { buyer: 'Joao Pedro Santos', date: '26/04/2022', value: '$45.00' },
-  { buyer: 'Joao Pedro Santos', date: '22/04/2022', value: '$45.00' },
-]
+// Subscription history is now fetched from API (premium store orders)
 
 const DEFAULT_TICKET_STATS = [
   { label: 'Open Tickets',        value: 0, color: '#E74C3C' },
@@ -79,11 +76,12 @@ export default function DashboardPage() {
   const [crateAnim, setCrateAnim]       = useState<{ items: any[]; wonItem: any; label: string } | null>(null)
   const [claiming, setClaiming]         = useState<string | null>(null)
   const [ticketStats, setTicketStats]   = useState(DEFAULT_TICKET_STATS)
+  const [subHistory, setSubHistory]     = useState<any[]>([])
 
   useEffect(() => {
     walletApi.getBalance().then(setBalance).catch(() => {})
     walletApi.getTransactions({ limit: 4 }).then((res: any) => {
-      const list = res?.transactions || res?.data || res
+      const list = res?.items || res?.transactions || res?.data || res
       setTxHistory(Array.isArray(list) ? list : [])
     }).catch(() => {})
     teamsApi.getMine().then((res: any) => setTeams(Array.isArray(res) ? res : res.teams || [])).catch(() => {})
@@ -101,6 +99,14 @@ export default function DashboardPage() {
         { label: 'Tickets in Progress', value: tickets.filter((t: any) => t.status === 'claimed').length, color: '#F39C12' },
         { label: 'Tickets Completed',   value: tickets.filter((t: any) => t.status === 'closed').length,  color: '#4ade80' },
       ])
+    }).catch(() => {})
+    // Fetch store orders for subscription history (premium purchases)
+    storeApi.getOrders().then((res: any) => {
+      const all = Array.isArray(res) ? res : res.items || res.orders || []
+      const premiumOrders = all.filter((o: any) =>
+        o.status === 'delivered' && o.items?.some((i: any) => (i.category || '').toLowerCase().includes('premium'))
+      )
+      setSubHistory(premiumOrders)
     }).catch(() => {})
   }, [])
 
@@ -154,16 +160,21 @@ export default function DashboardPage() {
               {/* Profile Card */}
               <CardWrap>
                 <div style={{ height: 130, background: 'linear-gradient(135deg,#150a12 0%,#2a0d1a 55%,#1a1a2e 100%)', position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(178,45,45,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(178,45,45,0.07) 1px,transparent 1px)', backgroundSize: '26px 26px' }} />
-                  <div style={{ position: 'absolute', right: 14, bottom: -18, fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 130, color: 'rgba(178,45,45,0.06)', lineHeight: 1, userSelect: 'none', pointerEvents: 'none' }}>{initials}</div>
+                  {user.bannerUrl && (user.bannerUrl.startsWith('http') || user.bannerUrl.startsWith('/') || user.bannerUrl.startsWith('data:image'))
+                    ? <img src={user.bannerUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    : <>
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(178,45,45,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(178,45,45,0.07) 1px,transparent 1px)', backgroundSize: '26px 26px' }} />
+                        <div style={{ position: 'absolute', right: 14, bottom: -18, fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 130, color: 'rgba(178,45,45,0.06)', lineHeight: 1, userSelect: 'none', pointerEvents: 'none' }}>{initials}</div>
+                      </>
+                  }
                 </div>
                 <div style={{ padding: '0 20px 18px' }}>
-                  <div style={{ position: 'relative', width: 80, height: 80, marginTop: -40, background: accentColor, border: '3px solid #18181C', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 24px ${accentColor}73` }}>
-                    <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 30, color: '#fff' }}>{initials}</span>
+                  <div style={{ position: 'relative', width: 80, height: 80, marginTop: -40, background: accentColor, border: '3px solid #18181C', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 24px ${accentColor}73`, overflow: 'hidden' }}>
+                    {user.avatarUrl && (user.avatarUrl.startsWith('http') || user.avatarUrl.startsWith('/') || user.avatarUrl.startsWith('data:image'))
+                      ? <img src={user.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = 'none'; el.nextElementSibling && ((el.nextElementSibling as HTMLElement).style.display = '') }} />
+                      : null}
+                    <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 30, color: '#fff', display: user.avatarUrl ? 'none' : '' }}>{initials}</span>
                     <div style={{ position: 'absolute', top: 6, right: 6, width: 10, height: 10, background: '#27AE60', border: '2px solid #18181C', borderRadius: '50%' }} />
-                    <div style={{ position: 'absolute', bottom: -8, right: -8, width: 26, height: 26, background: accentColor, border: '2px solid #18181C', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ ...R, fontWeight: 700, fontSize: 11, color: '#fff' }}>{user.level}</span>
-                    </div>
                   </div>
                   <div style={{ marginTop: 14 }}>
                     <div style={{ ...R, fontWeight: 700, fontSize: 17, color: accentColor }}>{user.username}</div>
@@ -183,7 +194,7 @@ export default function DashboardPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', padding: '14px 20px 18px' }}>
                   {[
                     { label: 'My Teams',    value: `${teams.length} teams` },
-                    { label: 'Global Rank', value: '#—'                      },
+                    { label: 'Global Rank', value: (user as any).globalRank ? `#${(user as any).globalRank}` : '#—' },
                     { label: 'Premium',     value: user.isPremium ? '★ Active' : 'None' },
                   ].map((s, i) => (
                     <div key={i} style={{ borderRight: i < 2 ? '1px solid #25252C' : 'none', paddingRight: i < 2 ? 12 : 0, paddingLeft: i > 0 ? 12 : 0 }}>
@@ -232,16 +243,21 @@ export default function DashboardPage() {
                   <div style={{ height: 1, background: '#25252C', marginBottom: 16 }} />
                   <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', marginBottom: 12 }}>Subscription History</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px 80px', gap: 6 }}>
-                    {['Buyer','Date','Value'].map((h, i) => (
+                    {['Plan','Date','Value'].map((h, i) => (
                       <span key={i} style={{ ...R, fontWeight: 700, fontSize: 10, color: '#6B7280', letterSpacing: 0.5, textTransform: 'uppercase' }}>{h}</span>
                     ))}
-                    {SIG_HISTORY.map((s, i) => (
-                      <div key={i} style={{ display: 'contents' }}>
-                        <span style={{ ...R, fontSize: 12, color: '#9CA3AF', padding: '6px 0', borderTop: '1px solid #25252C' }}>{s.buyer}</span>
-                        <span style={{ ...R, fontSize: 12, color: '#9CA3AF', padding: '6px 0', borderTop: '1px solid #25252C' }}>{s.date}</span>
-                        <span style={{ ...R, fontWeight: 600, fontSize: 12, color: '#fff', padding: '6px 0', borderTop: '1px solid #25252C' }}>{s.value}</span>
-                      </div>
-                    ))}
+                    {subHistory.length === 0 ? (
+                      <div style={{ gridColumn: '1 / -1', ...R, fontSize: 12, color: '#4A5568', padding: '10px 0', textAlign: 'center' }}>No subscription purchases yet</div>
+                    ) : subHistory.slice(0, 5).map((o: any, i: number) => {
+                      const premiumItem = o.items?.find((it: any) => (it.category || '').toLowerCase().includes('premium'))
+                      return (
+                        <div key={o._id || i} style={{ display: 'contents' }}>
+                          <span style={{ ...R, fontSize: 12, color: '#9CA3AF', padding: '6px 0', borderTop: '1px solid #25252C' }}>{premiumItem?.name || 'Premium'}</span>
+                          <span style={{ ...R, fontSize: 12, color: '#9CA3AF', padding: '6px 0', borderTop: '1px solid #25252C' }}>{o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US') : '—'}</span>
+                          <span style={{ ...R, fontWeight: 600, fontSize: 12, color: '#fff', padding: '6px 0', borderTop: '1px solid #25252C' }}>${(o.total || 0).toFixed(2)}</span>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               </CardWrap>
@@ -266,7 +282,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* ── ROW 2: Invites+Teams · Achievements · Credits ── */}
+            {/* ── ROW 2: Invites+Teams · Achievements · Tickets ── */}
             <div style={{ display: 'grid', gridTemplateColumns: '310px 1fr 270px', gap: 20 }}>
 
               {/* Invites / Teams tabs */}
@@ -355,9 +371,9 @@ export default function DashboardPage() {
                 </div>
               </CardWrap>
 
-              {/* Credits */}
+              {/* Tickets */}
               <CardWrap>
-                <SectionLabel title="Credits / Balances" action={<Link href="/wallet" style={{ ...R, fontSize: 11, color: '#9CA3AF', textDecoration: 'none' }}>View all →</Link>} />
+                <SectionLabel title="Tickets / Balances" action={<Link href="/wallet" style={{ ...R, fontSize: 11, color: '#9CA3AF', textDecoration: 'none' }}>View all →</Link>} />
                 <div style={{ padding: '0 18px 18px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 52px 50px', gap: 8, paddingBottom: 8, borderBottom: '1px solid #25252C' }}>
                     {['Transaction','Type','Amt'].map((h, i) => (
@@ -368,8 +384,9 @@ export default function DashboardPage() {
                     <div style={{ padding: '24px 0', textAlign: 'center', ...R, fontSize: 12, color: '#4A5568' }}>No transactions yet</div>
                   ) : (
                     txHistory.slice(0, 4).map((c: any, i: number) => {
-                      const isPositive = c.type === 'deposit' || c.type === 'match_win' || c.type === 'prize_claim' || (c.amount > 0)
-                      const amt = c.amount != null ? (isPositive ? `+${c.amount}` : `${c.amount}`) : ''
+                      const isPositive = c.amount > 0 || ['deposit','match_win','match_refund','prize_claim','coaching_payment','reward','refund'].includes(c.type)
+                      const isCash = c.currency === 'cash'
+                      const amt = c.amount != null ? (isCash ? `${isPositive ? '+' : ''}$${(Math.abs(c.amount) / 100).toFixed(2)}` : `${isPositive ? '+' : ''}${c.amount}`) : ''
                       return (
                         <div key={c._id || i} style={{ display: 'grid', gridTemplateColumns: '1fr 52px 50px', gap: 8, padding: '10px 0', borderBottom: '1px solid #25252C' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

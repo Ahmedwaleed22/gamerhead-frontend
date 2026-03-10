@@ -69,7 +69,7 @@ function Cell({ colKey, player }: { colKey: ColKey; player: any }) {
       return (
         <td style={{ ...base, fontSize: 12 }}>
           <Link
-            href={`/games/${player.game.toLowerCase().replace(/ \/ /g, '-').replace(/ /g, '-')}`}
+            href={`/games/${player.gameSlug || player.game.toLowerCase().replace(/ \/ /g, '-').replace(/ /g, '-')}`}
             style={{ color: '#60A5FA', textDecoration: 'none' }}
             onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
             onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}

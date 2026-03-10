@@ -147,9 +147,10 @@ export default function TeamProfilePage() {
             <div style={{ flex: 1, minWidth: 260 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
                 <h1 style={{ ...BC, fontWeight: 900, fontSize: 36, color: '#fff', margin: 0, lineHeight: 1 }}>{team.name}</h1>
-                <span style={{ background: `${cfg.accent}18`, border: `1px solid ${cfg.accent}30`, borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: cfg.accent, letterSpacing: 0.5, textTransform: 'uppercase' }}>{cfg.badge}</span>
+                {!team.tournamentId && <span style={{ background: `${cfg.accent}18`, border: `1px solid ${cfg.accent}30`, borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: cfg.accent, letterSpacing: 0.5, textTransform: 'uppercase' }}>{cfg.badge}</span>}
                 {team.isPremiumTeam && <span style={{ background: 'rgba(240,170,26,0.09)', border: '1px solid rgba(240,170,26,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#F0AA1A', letterSpacing: 0.5, textTransform: 'uppercase' }}>&#9733; Premium</span>}
                 {team.isRecruiting && <span style={{ background: 'rgba(74,222,128,0.09)', border: '1px solid rgba(74,222,128,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#4ade80', letterSpacing: 0.5, textTransform: 'uppercase' }}>Recruiting</span>}
+                {team.tournamentId && <span style={{ background: 'rgba(240,192,64,0.09)', border: '1px solid rgba(240,192,64,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#f0c040', letterSpacing: 0.5, textTransform: 'uppercase' }}>🏆 Tournament</span>}
               </div>
 
               {/* Game + Ladder + Format tags */}
@@ -158,10 +159,12 @@ export default function TeamProfilePage() {
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 11h4V7H6v4zm8 0h4V7h-4v4zM2 19h20V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14zm4-2a1 1 0 110-2 1 1 0 010 2zm12 0a1 1 0 110-2 1 1 0 010 2zm-4 2h-4l-1 3h6l-1-3z" fill="#cbd5e1"/></svg>
                   <span style={{ ...R, fontSize: 12, color: '#cbd5e1', fontWeight: 600 }}>{team.game}</span>
                 </Link>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '5px 11px' }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 2l6 6 6-6M4 10l8 8 8-8" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  <span style={{ ...R, fontSize: 12, color: '#cbd5e1', fontWeight: 600 }}>{team.ladder}</span>
-                </div>
+                {!team.tournamentId && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '5px 11px' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 2l6 6 6-6M4 10l8 8 8-8" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <span style={{ ...R, fontSize: 12, color: '#cbd5e1', fontWeight: 600 }}>{team.ladder}</span>
+                  </div>
+                )}
                 {team.format && team.format !== team.ladder && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '5px 11px' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="4" fill="#cbd5e1"/><path d="M2 21c0-4.418 4.477-8 10-8s10 3.582 10 8" fill="#cbd5e1"/><circle cx="5" cy="10" r="2.5" fill="#cbd5e1" opacity="0.5"/><circle cx="19" cy="10" r="2.5" fill="#cbd5e1" opacity="0.5"/></svg>
@@ -216,12 +219,12 @@ export default function TeamProfilePage() {
               </div>
             ))}
 
-            {/* Trophies */}
+            {/* Trophies — sum of all members' per-game trophies */}
             <div style={{ padding: '12px 20px', marginLeft: 'auto', display: 'flex', gap: 20, flexShrink: 0, alignItems: 'center' }}>
               {[
-                { c: '#F0C040', n: team.trophiesGold   || 0, l: 'Gold'   },
-                { c: '#C0C0C0', n: team.trophiesSilver || 0, l: 'Silver' },
-                { c: '#CD7F32', n: team.trophiesBronze || 0, l: 'Bronze' },
+                { c: '#F0C040', n: roster.reduce((s: number, r: any) => s + (r.goldTrophies || 0), 0),   l: 'Gold'   },
+                { c: '#C0C0C0', n: roster.reduce((s: number, r: any) => s + (r.silverTrophies || 0), 0), l: 'Silver' },
+                { c: '#CD7F32', n: roster.reduce((s: number, r: any) => s + (r.bronzeTrophies || 0), 0), l: 'Bronze' },
               ].map((t, i) => (
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -279,8 +282,10 @@ export default function TeamProfilePage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
 
                       {/* Avatar */}
-                      <div style={{ width: 46, height: 46, background: pColor + '22', border: `2px solid ${pColor}55`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', ...BC, fontWeight: 900, fontSize: 16, color: pColor, flexShrink: 0 }}>
-                        {p.initials || p.username?.slice(0, 2).toUpperCase()}
+                      <div style={{ width: 46, height: 46, background: pColor + '22', border: `2px solid ${pColor}55`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', ...BC, fontWeight: 900, fontSize: 16, color: pColor, flexShrink: 0, overflow: 'hidden' }}>
+                        {p.avatarUrl && (p.avatarUrl.startsWith('http') || p.avatarUrl.startsWith('/') || p.avatarUrl.startsWith('data:image'))
+                          ? <img src={p.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                          : (p.initials || p.username?.slice(0, 2).toUpperCase())}
                       </div>
 
                       {/* Name + Badges + Rep */}
@@ -450,7 +455,7 @@ export default function TeamProfilePage() {
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 12 }}><path d="M6 2l6 6 6-6M4 10l8 8 8-8" stroke="#4A5568" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 <div style={{ ...BC, fontWeight: 900, fontSize: 18, color: '#fff', marginBottom: 6 }}>No matches yet</div>
                 <div style={{ ...R, fontSize: 13, color: '#4A5568', marginBottom: 20 }}>Match results will appear here once your team starts competing.</div>
-                {isMyTeam && canManage && (
+                {isMyTeam && canManage && !team.tournamentId && (
                   <button onClick={() => setShowPostMatch(true)} style={{ background: '#B22D2D', border: 'none', borderRadius: 8, padding: '10px 24px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer' }}>Post Your First Match</button>
                 )}
               </div>
@@ -460,24 +465,54 @@ export default function TeamProfilePage() {
                   const isWin   = m.result === 'win'
                   const isDraw  = m.result === 'draw'
                   const rColor  = isWin ? '#4ade80' : isDraw ? '#9CA3AF' : '#E74C3C'
-                  const rBg     = isWin ? 'rgba(74,222,128,0.1)' : isDraw ? 'rgba(156,163,175,0.1)' : 'rgba(231,76,60,0.1)'
+                  const rBg     = isWin ? 'rgba(74,222,128,0.08)' : isDraw ? 'rgba(156,163,175,0.08)' : 'rgba(231,76,60,0.08)'
                   const matchUrl = m.matchType === 'cash' ? `/matches/cash/${m.matchId}` : `/matches/xp/${m.matchId}`
+                  const gameImg = m.gameImage || ''
+                  const oppLogo = m.opponentLogo || gameImg
+                  const teamLogo = team.logoUrl || team.bannerUrl || gameImg
                   return (
-                    <Link key={i} href={matchUrl} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 24px', borderBottom: i < matches.length - 1 ? '1px solid #25252C' : 'none', textDecoration: 'none', transition: 'background 0.12s' }}
+                    <Link key={i} href={matchUrl} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 24px', borderBottom: i < matches.length - 1 ? '1px solid #25252C' : 'none', textDecoration: 'none', transition: 'background 0.12s' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.025)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <div style={{ width: 48, height: 48, background: rBg, border: `1.5px solid ${rColor}44`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ ...BC, fontWeight: 900, fontSize: 16, color: rColor }}>{m.result?.toUpperCase()}</span>
+
+                      {/* Game picture */}
+                      <div style={{ width: 44, height: 44, background: '#1A1A2E', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                        {gameImg
+                          ? <img src={gameImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                          : <span style={{ fontSize: 18 }}>🎮</span>}
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ ...R, fontWeight: 700, fontSize: 14, color: '#fff' }}>vs. {m.opponentName || 'Unknown'}</div>
-                        <div style={{ ...R, fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>
-                          {m.game} · {m.ladder}
-                          {(m.scoreUs !== undefined) ? ` · ${m.scoreUs}–${m.scoreThem}` : ''}
-                          {m.cashAmount ? ` · ${m.result === 'win' ? '+' : '-'}$${(m.cashAmount / 100).toFixed(2)}` : ''}
+
+                      {/* Teams: Our team vs Opponent with pfps */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {/* Our team pfp */}
+                          <div style={{ width: 22, height: 22, background: '#25252C', borderRadius: 5, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {teamLogo ? <img src={teamLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : <span style={{ fontSize: 10 }}>{team.emoji || '🎮'}</span>}
+                          </div>
+                          <span style={{ ...BC, fontWeight: 800, fontSize: 14, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.name}</span>
+                          <span style={{ ...R, fontSize: 12, color: '#4A5568', flexShrink: 0 }}>vs</span>
+                          {/* Opponent pfp */}
+                          <div style={{ width: 22, height: 22, background: '#25252C', borderRadius: 5, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {oppLogo ? <img src={oppLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : <span style={{ fontSize: 10 }}>🎮</span>}
+                          </div>
+                          <span style={{ ...BC, fontWeight: 800, fontSize: 14, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.opponentName || 'Unknown'}</span>
                         </div>
                       </div>
-                      <div style={{ ...R, fontSize: 11, color: '#4A5568' }}>{m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '—'}</div>
+
+                      {/* W/L badge + score + XP */}
+                      <div style={{ background: rBg, border: `1.5px solid ${rColor}33`, borderRadius: 8, padding: '6px 14px', flexShrink: 0, textAlign: 'center', minWidth: 60 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                          <span style={{ ...BC, fontWeight: 900, fontSize: 18, color: rColor, letterSpacing: 1, lineHeight: 1 }}>{m.result?.toUpperCase()}</span>
+                          {(m.scoreUs !== undefined) && <span style={{ ...BC, fontWeight: 900, fontSize: 18, color: '#fff', lineHeight: 1 }}>{m.result === 'win' ? `${Math.max(m.scoreUs,m.scoreThem)}–${Math.min(m.scoreUs,m.scoreThem)}` : `${Math.min(m.scoreUs,m.scoreThem)}–${Math.max(m.scoreUs,m.scoreThem)}`}</span>}
+                        </div>
+                        {m.xpDelta !== 0 && (
+                          <div style={{ ...BC, fontWeight: 800, fontSize: 11, color: m.xpDelta > 0 ? '#4ade80' : '#ef4444', marginTop: 2, lineHeight: 1 }}>
+                            {m.xpDelta > 0 ? `+${m.xpDelta}` : m.xpDelta} XP
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ ...R, fontSize: 11, color: '#4A5568', flexShrink: 0, minWidth: 70, textAlign: 'right' }}>{m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '—'}</div>
                     </Link>
                   )
                 })}
@@ -489,18 +524,30 @@ export default function TeamProfilePage() {
         {/* RIGHT SIDEBAR */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-          {/* View Game Page */}
-          <Link href={`/games/${team.gameSlug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#18181C', borderRadius: 12, padding: '16px 20px', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.04)', transition: 'border-color .15s' }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = cfg.accent + '44')}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)')}>
-            <div style={{ width: 44, height: 44, background: cfg.dim, border: `1px solid ${cfg.bdr}`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 11h4V7H6v4zm8 0h4V7h-4v4zM2 19h20V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14zm4-2a1 1 0 110-2 1 1 0 010 2zm12 0a1 1 0 110-2 1 1 0 010 2zm-4 2h-4l-1 3h6l-1-3z" fill={cfg.accent}/></svg>
-            </div>
-            <div>
-              <div style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#fff' }}>{team.game}</div>
-              <div style={{ ...R, fontSize: 11, color: cfg.accent, marginTop: 1 }}>View Game Page →</div>
-            </div>
-          </Link>
+          {/* View Game Page or Tournament Page */}
+          {team.tournamentId ? (
+            <Link href={`/tournaments/${team.tournamentSlug || team.tournamentId}`} style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#18181C', borderRadius: 12, padding: '16px 20px', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.04)', transition: 'border-color .15s' }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#f0c04044')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)')}>
+              <div style={{ width: 44, height: 44, background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.3)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 20 }}>🏆</div>
+              <div>
+                <div style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#fff' }}>{team.tournamentName || 'Tournament'}</div>
+                <div style={{ ...R, fontSize: 11, color: '#f0c040', marginTop: 1 }}>View Tournament Page →</div>
+              </div>
+            </Link>
+          ) : (
+            <Link href={`/games/${team.gameSlug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#18181C', borderRadius: 12, padding: '16px 20px', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.04)', transition: 'border-color .15s' }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = cfg.accent + '44')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)')}>
+              <div style={{ width: 44, height: 44, background: cfg.dim, border: `1px solid ${cfg.bdr}`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 11h4V7H6v4zm8 0h4V7h-4v4zM2 19h20V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14zm4-2a1 1 0 110-2 1 1 0 010 2zm12 0a1 1 0 110-2 1 1 0 010 2zm-4 2h-4l-1 3h6l-1-3z" fill={cfg.accent}/></svg>
+              </div>
+              <div>
+                <div style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#fff' }}>{team.game}</div>
+                <div style={{ ...R, fontSize: 11, color: cfg.accent, marginTop: 1 }}>View Game Page →</div>
+              </div>
+            </Link>
+          )}
 
           {/* Post Match + Manage Team (Leader/Captain) / Leave Team (Member) */}
           {isMyTeam && (
@@ -508,13 +555,20 @@ export default function TeamProfilePage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {canManage ? (
                   <>
-                    <button onClick={() => setShowPostMatch(true)}
-                      style={{ background: '#B22D2D', border: 'none', borderRadius: 10, padding: '12px 20px', ...BC, fontWeight: 900, fontSize: 15, color: '#fff', cursor: 'pointer', boxShadow: '0 0 20px rgba(178,45,45,0.3)', letterSpacing: 0.5, width: '100%' }}>
-                      Post Match
-                    </button>
+                    {!team.tournamentId && (
+                      <button onClick={() => setShowPostMatch(true)}
+                        style={{ background: '#B22D2D', border: 'none', borderRadius: 10, padding: '12px 20px', ...BC, fontWeight: 900, fontSize: 15, color: '#fff', cursor: 'pointer', boxShadow: '0 0 20px rgba(178,45,45,0.3)', letterSpacing: 0.5, width: '100%' }}>
+                        Post Match
+                      </button>
+                    )}
                     <Link href="/teams" style={{ display: 'block', background: '#202023', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '11px 20px', ...BC, fontWeight: 700, fontSize: 14, color: '#9CA3AF', textDecoration: 'none', textAlign: 'center', letterSpacing: 0.3 }}>
                       Manage Team
                     </Link>
+                    {team.tournamentId && (
+                      <Link href={`/tournaments/${team.tournamentSlug || team.tournamentId}?tab=bracket`} style={{ display: 'block', background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.2)', borderRadius: 10, padding: '11px 20px', ...BC, fontWeight: 700, fontSize: 14, color: '#f0c040', textDecoration: 'none', textAlign: 'center', letterSpacing: 0.3 }}>
+                        🏆 View Bracket
+                      </Link>
+                    )}
                   </>
                 ) : (
                   <button onClick={async () => {

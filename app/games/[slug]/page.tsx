@@ -120,12 +120,20 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
   const router = useRouter()
   const [teamName, setTeamName] = useState('')
   const [agreed, setAgreed] = useState(false)
-  const [logoPreview, setLogoPreview] = useState<string | null>(null)
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(game.bannerUrl || null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(game.bannerUrl || null)
   const { mutate: createTeam, loading, error } = useMutation((dto: any) => teamsApi.create(dto))
 
-  const maxMemberMap: Record<string, number> = { Solo: 1, Duo: 2, Trio: 3, Squad: 5 }
-  const maxMembers = maxMemberMap[ladder.teamSize] || 5
+  // Use game's teamSizes config for player count, with sensible fallbacks
+  // teamSizes can be Record<string, number[]> (new) or Record<string, number> (old)
+  const gameTeamSizes = game.teamSizes && typeof game.teamSizes === 'object' ? game.teamSizes : {}
+  const rawVal = gameTeamSizes[ladder.teamSize]
+  const fallbackMap: Record<string, number> = { Solo: 1, Duo: 2, Trio: 3, Squad: 4 }
+  // If array, use max value; if number, use directly; else fallback
+  const playersPerMatch = Array.isArray(rawVal) ? Math.max(...rawVal) : (rawVal || fallbackMap[ladder.teamSize] || 4)
+  // Allow extra roster members: Solo=1, Duo=up to 4, Squad=up to 12
+  const rosterMap: Record<string, number> = { Solo: 1, Duo: 4, Squad: 12 }
+  const maxMembers = rosterMap[ladder.teamSize] || playersPerMatch
   const disabled = !teamName.trim() || !agreed || loading
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') {
@@ -204,13 +212,13 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
               Upload
               <input type="file" accept="image/*" onChange={e => handleFileSelect(e, 'logo')} style={{ display: 'none' }} />
             </label>
-            {logoPreview && (
-              <button onClick={() => setLogoPreview(null)} style={{
+            {logoPreview && logoPreview !== (game.bannerUrl || '') && (
+              <button onClick={() => setLogoPreview(game.bannerUrl || null)} style={{
                 background: 'rgba(231,76,60,0.08)', border: '1px solid rgba(231,76,60,0.2)',
                 borderRadius: 6, padding: '7px 12px',
                 fontFamily: 'Roboto, sans-serif', fontWeight: 600, fontSize: 11,
                 color: '#E74C3C', cursor: 'pointer',
-              }}>Remove</button>
+              }}>Reset</button>
             )}
           </div>
         </div>
@@ -228,7 +236,7 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
           overflow: 'hidden',
         }}>
           {bannerPreview
-            ? <img src={bannerPreview} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <img src={bannerPreview} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
             : <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 11, color: '#4A5568' }}>No banner</span>}
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
@@ -241,13 +249,13 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
             Upload Banner
             <input type="file" accept="image/*" onChange={e => handleFileSelect(e, 'banner')} style={{ display: 'none' }} />
           </label>
-          {bannerPreview && (
-            <button onClick={() => setBannerPreview(null)} style={{
+          {bannerPreview && bannerPreview !== (game.bannerUrl || '') && (
+            <button onClick={() => setBannerPreview(game.bannerUrl || null)} style={{
               background: 'rgba(231,76,60,0.08)', border: '1px solid rgba(231,76,60,0.2)',
               borderRadius: 6, padding: '7px 12px',
               fontFamily: 'Roboto, sans-serif', fontWeight: 600, fontSize: 11,
               color: '#E74C3C', cursor: 'pointer',
-            }}>Remove</button>
+            }}>Reset</button>
           )}
         </div>
         <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 10, color: '#4A5568', marginTop: 4 }}>1200x300px recommended, max 2MB</div>
@@ -269,8 +277,21 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
 
 // ─── OVERVIEW TAB ─────────────────────────────────────────────────────────────
 function OverviewTab({ game, xpLadders, cashLadders }: { game: any; xpLadders: any[]; cashLadders: any[] }) {
+  const { user } = useAuth()
   const [selectedLadder, setSelectedLadder] = useState<any>(null)
   const [showCreateTeam, setShowCreateTeam] = useState(false)
+
+  // Fetch user's teams to check if they already have one for this ladder
+  const { data: myTeams } = useApi(
+    () => user ? teamsApi.getMine() : Promise.resolve([]),
+    [(user as any)?._id || user?.id],
+  )
+  const myGameTeams = (Array.isArray(myTeams) ? myTeams : []).filter((t: any) => t.game === game.name && !t.isDisbanded)
+
+  // Find user's existing team for the selected ladder
+  const existingTeam = selectedLadder ? myGameTeams.find((t: any) =>
+    t.matchType === selectedLadder.type && t.ladder === selectedLadder.teamSize
+  ) : null
 
   function teamSizeLabel(ts: string) {
     if (ts === 'Solo') return '1v1'
@@ -309,9 +330,15 @@ function OverviewTab({ game, xpLadders, cashLadders }: { game: any; xpLadders: a
               <div className="ladder-expand-name">{selectedLadder.name}</div>
               <div className="ladder-expand-sub">Season ends {selectedLadder.seasonEndDisplay}</div>
             </div>
-            <button className="btn-primary" style={{ padding: '9px 20px', fontSize: 13 }} onClick={() => setShowCreateTeam(true)}>
-              + Create Team
-            </button>
+            {existingTeam ? (
+              <Link href={`/teams/${existingTeam.slug}`} className="btn-primary" style={{ padding: '9px 20px', fontSize: 13, textDecoration: 'none' }}>
+                View Team
+              </Link>
+            ) : (
+              <button className="btn-primary" style={{ padding: '9px 20px', fontSize: 13 }} onClick={() => setShowCreateTeam(true)}>
+                + Create Team
+              </button>
+            )}
           </div>
           <div className="ladder-details-grid">
             {[
@@ -494,7 +521,8 @@ export default function GameProfilePage() {
               <h1 className="game-banner-title">{game.name}</h1>
               <div className="game-banner-meta">
                 <div className="game-platform-tags">
-                  {(game.platforms || []).map((p: string, i: number) => <span key={i} className="game-platform-tag">{p}</span>)}
+                  {(game.platformType === 'pc' ? ['PC'] : game.platformType === 'console' ? ['Xbox', 'PS'] : (game.platforms || ['PC', 'Xbox', 'PS'])).map((p: string, i: number) => <span key={i} className="game-platform-tag">{p}</span>)}
+                  {game.platformType === 'crossplay' || game.crossplay ? <span className="game-platform-tag" style={{ background: 'rgba(74,222,128,0.12)', color: '#4ade80', borderColor: 'rgba(74,222,128,0.25)' }}>Cross-play</span> : null}
                 </div>
               </div>
               <div className="game-banner-stats">
@@ -547,12 +575,14 @@ export default function GameProfilePage() {
                   <h2 className="section-title"><span>{game.name}</span> — Game Rules</h2>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
-                  {['General Match Rules', 'Wager Match Rules', 'Reporting Results', 'Dispute Process'].map((rule, i) => (
+                  {game.rules?.length > 0 ? game.rules.map((rule: string, i: number) => (
                     <div key={i} className="accordion-item-custom open">
-                      <div className="accordion-header-custom" style={{ cursor: 'default', color: 'var(--red)' }}><span>{rule}</span></div>
-                      <div className="accordion-body-custom">All matches must be played under fair conditions. Results must be submitted within 15 minutes with screenshot proof. Exploits or cheating result in an immediate ban.</div>
+                      <div className="accordion-header-custom" style={{ cursor: 'default', color: 'var(--red)' }}><span>Rule {i + 1}</span></div>
+                      <div className="accordion-body-custom">{rule}</div>
                     </div>
-                  ))}
+                  )) : (
+                    <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 13, color: '#4A5568', textAlign: 'center', padding: '40px 0' }}>No rules have been set for this game yet.</div>
+                  )}
                 </div>
               </div>
             )}

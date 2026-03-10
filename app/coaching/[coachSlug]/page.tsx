@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { coachingApi } from '@/lib/api'
+import { coachingApi, walletApi } from '@/lib/api'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type PackageType = 'vod' | 'session' | 'drills' | 'team' | 'custom'
@@ -72,7 +72,15 @@ function HireModal({ pkg, coach, onClose }: { pkg: Package; coach: any; onClose:
   const [step, setStep]       = useState<1|2>(1)
   const [sending, setSending] = useState(false)
   const [message, setMessage] = useState(`Hi ${coach.name}! I'm interested in your "${pkg.title}" package ($${pkg.price}). Looking forward to working with you.`)
+  const [balance, setBalance] = useState<number|null>(null)
+  const [hireError, setHireError] = useState('')
   const tp = TYPE_LABELS[pkg.type]
+  const priceCents = pkg.price * 100
+  const hasFunds = balance !== null && balance >= priceCents
+
+  useEffect(() => {
+    walletApi.getBalance().then((b: any) => setBalance(b.cashBalance ?? b.cash ?? 0)).catch(() => setBalance(0))
+  }, [])
 
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}
@@ -124,14 +132,29 @@ function HireModal({ pkg, coach, onClose }: { pkg: Package; coach: any; onClose:
               <div style={{ fontSize:10, color:'rgba(255,255,255,.2)', fontFamily:'Barlow, sans-serif', marginTop:4 }}>This opens a mailbox thread. The coach will review and confirm — no charge until both sides agree.</div>
             </div>
 
-            <button disabled={sending} onClick={()=>{
+            {/* Wallet balance */}
+            <div style={{ background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)', borderRadius:8, padding:'10px 14px', marginBottom:10, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,.4)', fontFamily:'Barlow, sans-serif' }}>Your wallet balance</span>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:14, color: hasFunds ? '#4ade80' : '#ef4444' }}>
+                {balance !== null ? `$${(balance / 100).toFixed(2)}` : '...'}
+              </span>
+            </div>
+            {!hasFunds && balance !== null && (
+              <div style={{ fontSize:11, color:'#ef4444', marginBottom:10, fontFamily:'Barlow, sans-serif' }}>
+                Insufficient funds. <Link href="/wallet" style={{ color:'#60A5FA' }}>Add funds →</Link>
+              </div>
+            )}
+            {hireError && <div style={{ fontSize:11, color:'#ef4444', marginBottom:10, fontFamily:'Barlow, sans-serif' }}>{hireError}</div>}
+
+            <button disabled={sending || !hasFunds} onClick={()=>{
               setSending(true)
+              setHireError('')
               coachingApi.hire({ packageId: pkg.id, message, coachSlug: coach.slug ?? coach.name })
                 .then(()=>setStep(2))
-                .catch(()=>setStep(2))
+                .catch((err: any)=>{ setHireError(err?.message || 'Failed to send request'); })
                 .finally(()=>setSending(false))
-            }} style={{ width:'100%', background:'#B22D2D', border:'none', borderRadius:8, padding:'12px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:14, letterSpacing:.8, color:'#fff', cursor:'pointer', opacity: sending ? 0.6 : 1 }}>
-              {sending ? 'SENDING...' : 'SEND REQUEST →'}
+            }} style={{ width:'100%', background: hasFunds ? '#B22D2D' : '#444', border:'none', borderRadius:8, padding:'12px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:14, letterSpacing:.8, color:'#fff', cursor: hasFunds ? 'pointer' : 'not-allowed', opacity: sending ? 0.6 : 1 }}>
+              {sending ? 'SENDING...' : `SEND REQUEST — $${pkg.price}`}
             </button>
           </>
         )}
@@ -156,7 +179,111 @@ function HireModal({ pkg, coach, onClose }: { pkg: Package; coach: any; onClose:
               <button onClick={onClose} style={{ flex:1, background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)', borderRadius:8, padding:'10px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:700, fontSize:12, letterSpacing:.5, color:'rgba(255,255,255,.5)', cursor:'pointer' }}>
                 Close
               </button>
-              <Link href="/messages" style={{ flex:2, background:'#B22D2D', border:'none', borderRadius:8, padding:'10px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, letterSpacing:.8, color:'#fff', cursor:'pointer', textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Link href="/mailbox" style={{ flex:2, background:'#B22D2D', border:'none', borderRadius:8, padding:'10px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, letterSpacing:.8, color:'#fff', cursor:'pointer', textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                VIEW MAILBOX →
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── CUSTOM REQUEST MODAL ────────────────────────────────────────────────────
+function CustomRequestModal({ coach, onClose }: { coach: any; onClose:()=>void }) {
+  const [step, setStep]     = useState<1|2>(1)
+  const [sending, setSending] = useState(false)
+  const [desc, setDesc]     = useState('')
+  const [budget, setBudget] = useState('')
+  const [timeline, setTimeline] = useState('')
+  const [error, setError]   = useState('')
+  const [balance, setBalance] = useState<number|null>(null)
+
+  useEffect(() => {
+    walletApi.getBalance().then((b: any) => setBalance(b.cashBalance ?? b.cash ?? 0)).catch(() => setBalance(0))
+  }, [])
+
+  const budgetNum = Number(budget) || 0
+  const budgetCents = budgetNum * 100
+  const hasFunds = balance !== null && balance >= budgetCents
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.1)', borderRadius:16, width:'100%', maxWidth:500, padding:28, boxShadow:'0 24px 60px rgba(0,0,0,.6)' }}>
+
+        {step===1&&(
+          <>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#F0AA1A', letterSpacing:.5 }}>✨ Custom Request</span>
+              <button onClick={onClose} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer', lineHeight:1 }}>✕</button>
+            </div>
+
+            <div style={{ fontSize:12, color:'rgba(255,255,255,.4)', fontFamily:'Barlow, sans-serif', marginBottom:18, lineHeight:1.6 }}>
+              Describe what you're looking for and <strong style={{ color:'#fff' }}>{coach.name}</strong> will create a tailored package for you.
+            </div>
+
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:.8, marginBottom:6 }}>What do you need? *</div>
+              <textarea value={desc} onChange={e=>setDesc(e.target.value)} rows={4} placeholder="Describe your goals, skill level, what areas you want to improve..."
+                style={{ width:'100%', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'10px 12px', color:'#fff', fontFamily:'Barlow, sans-serif', fontSize:12, outline:'none', resize:'vertical', boxSizing:'border-box', lineHeight:1.6 }}/>
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:18 }}>
+              <div>
+                <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:.8, marginBottom:6 }}>Your Budget (USD) *</div>
+                <input type="number" value={budget} onChange={e=>setBudget(e.target.value)} placeholder="e.g. 75"
+                  style={{ width:'100%', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'9px 12px', color:'#fff', fontFamily:'Barlow, sans-serif', fontSize:12, outline:'none', boxSizing:'border-box' }}/>
+              </div>
+              <div>
+                <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:.8, marginBottom:6 }}>Timeline (days)</div>
+                <input type="number" value={timeline} onChange={e=>setTimeline(e.target.value)} placeholder="e.g. 5"
+                  style={{ width:'100%', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'9px 12px', color:'#fff', fontFamily:'Barlow, sans-serif', fontSize:12, outline:'none', boxSizing:'border-box' }}/>
+              </div>
+            </div>
+
+            {/* Wallet balance */}
+            <div style={{ background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)', borderRadius:8, padding:'10px 14px', marginBottom:10, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,.4)', fontFamily:'Barlow, sans-serif' }}>Your wallet balance</span>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:14, color: hasFunds ? '#4ade80' : '#ef4444' }}>
+                {balance !== null ? `$${(balance / 100).toFixed(2)}` : '...'}
+              </span>
+            </div>
+            {budgetNum > 0 && !hasFunds && balance !== null && (
+              <div style={{ fontSize:11, color:'#ef4444', marginBottom:10, fontFamily:'Barlow, sans-serif' }}>
+                Insufficient funds for this budget. <Link href="/wallet" style={{ color:'#60A5FA' }}>Add funds →</Link>
+              </div>
+            )}
+            {error && <div style={{ fontSize:11, color:'#ef4444', marginBottom:10, fontFamily:'Barlow, sans-serif' }}>{error}</div>}
+
+            <div style={{ fontSize:10, color:'rgba(255,255,255,.2)', fontFamily:'Barlow, sans-serif', marginBottom:14 }}>
+              Your budget will be held in escrow. The coach will review your request and create a custom offer. No charge until you approve.
+            </div>
+
+            <button disabled={sending || !desc.trim() || !budgetNum || !hasFunds} onClick={()=>{
+              setSending(true)
+              setError('')
+              coachingApi.hire({ packageId: '__custom__', message: `[CUSTOM REQUEST]\n\nBudget: $${budget}\nTimeline: ${timeline || 'Flexible'} days\n\n${desc}`, coachSlug: coach.slug })
+                .then(()=>setStep(2))
+                .catch((err: any)=>{ setError(err?.message || 'Failed to send request') })
+                .finally(()=>setSending(false))
+            }} style={{ width:'100%', background: hasFunds && desc.trim() && budgetNum ? '#F0AA1A' : '#444', border:'none', borderRadius:8, padding:'12px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:14, letterSpacing:.8, color:'#000', cursor: hasFunds && desc.trim() && budgetNum ? 'pointer' : 'not-allowed', opacity: sending ? 0.6 : 1 }}>
+              {sending ? 'SENDING...' : 'SUBMIT CUSTOM REQUEST'}
+            </button>
+          </>
+        )}
+
+        {step===2&&(
+          <div style={{ textAlign:'center', padding:'12px 0' }}>
+            <div style={{ fontSize:48, marginBottom:16 }}>✨</div>
+            <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:24, color:'#fff', marginBottom:8, letterSpacing:.5 }}>Request Sent!</div>
+            <p style={{ fontFamily:'Barlow, sans-serif', fontSize:13, color:'rgba(255,255,255,.45)', lineHeight:1.7, marginBottom:24, maxWidth:340, margin:'0 auto 24px' }}>
+              <strong style={{ color:'#fff' }}>{coach.name}</strong> will review your request and create a custom offer tailored to your needs. You'll be notified when it's ready.
+            </p>
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={onClose} style={{ flex:1, background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)', borderRadius:8, padding:'10px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:700, fontSize:12, letterSpacing:.5, color:'rgba(255,255,255,.5)', cursor:'pointer' }}>Close</button>
+              <Link href="/mailbox" style={{ flex:2, background:'#F0AA1A', border:'none', borderRadius:8, padding:'10px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, letterSpacing:.8, color:'#000', cursor:'pointer', textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'center' }}>
                 VIEW MAILBOX →
               </Link>
             </div>
@@ -171,13 +298,16 @@ function HireModal({ pkg, coach, onClose }: { pkg: Package; coach: any; onClose:
 export default function CoachPackagePage() {
   const params       = useParams()
   const slug         = params.coachSlug as string
+  const { user }     = useAuth()
   const [coach, setCoach]     = useState<any>(null)
   const [packages, setPackages] = useState<Package[]>([])
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [hiring, setHiring]   = useState<Package|null>(null)
+  const [customReq, setCustomReq] = useState(false)
   const [tab, setTab]         = useState<'packages'|'reviews'>('packages')
   const [showFullBio, setShowFullBio] = useState(false)
+  const [reviewDist, setReviewDist] = useState<Record<number,number>>({})
 
   useEffect(() => {
     if (!slug) return
@@ -193,6 +323,7 @@ export default function CoachPackagePage() {
       setCoach({
         name:           c.displayName || c.name,
         emoji:          c.emoji,
+        avatarUrl:      c.avatarUrl || '',
         title:          c.title,
         game:           c.game,
         gameEmoji:      c.gameEmoji,
@@ -210,6 +341,7 @@ export default function CoachPackagePage() {
         specialties:    c.specialties ?? [],
         socials:        c.socials ?? {},
         slug:           c.slug,
+        allowCustomRequests: c.allowCustomRequests ?? false,
       })
       setPackages((c.packages ?? []).map((p: any) => ({
         id:           p.id,
@@ -234,6 +366,9 @@ export default function CoachPackagePage() {
         date:       r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : (r.date || ''),
         helpful:    r.helpfulCount ?? r.helpful ?? 0,
       })))
+      coachingApi.getReviewDistribution(slug).then((dist: any) => {
+        if (!cancelled) setReviewDist(dist || {})
+      }).catch(() => {})
     }).catch(() => {}).finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [slug])
@@ -249,6 +384,7 @@ export default function CoachPackagePage() {
   const COACH = coach
   const PACKAGES = packages
   const REVIEWS = reviews
+  const isOwnProfile = !!(user && COACH.slug && (user as any).slug === COACH.slug)
 
   const bioLines   = COACH.bio.split('\n\n')
   const displayBio = showFullBio ? COACH.bio : bioLines[0]
@@ -265,9 +401,13 @@ export default function CoachPackagePage() {
             <div style={{ display:'flex', gap:18, alignItems:'flex-start' }}>
               {/* Avatar */}
               <div style={{ position:'relative', flexShrink:0 }}>
-                <div style={{ width:72, height:72, borderRadius:16, background:'linear-gradient(135deg,#B22D2D,#7a1a1a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:34, border:'2px solid rgba(178,45,45,.35)' }}>
-                  {COACH.emoji}
-                </div>
+                {COACH.avatarUrl ? (
+                  <img src={COACH.avatarUrl} alt={COACH.name} style={{ width:72, height:72, borderRadius:16, objectFit:'cover', border:'2px solid rgba(178,45,45,.35)' }}/>
+                ) : (
+                  <div style={{ width:72, height:72, borderRadius:16, background:'linear-gradient(135deg,#B22D2D,#7a1a1a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:34, border:'2px solid rgba(178,45,45,.35)' }}>
+                    {COACH.emoji}
+                  </div>
+                )}
                 {/* Online dot */}
                 <div style={{ position:'absolute', bottom:3, right:3, width:12, height:12, borderRadius:'50%', background:COACH.online?'#4ade80':'#6B7280', border:'2px solid #0C0C11' }}/>
               </div>
@@ -283,7 +423,7 @@ export default function CoachPackagePage() {
                 </div>
 
                 <div style={{ fontFamily:'Barlow, sans-serif', fontSize:13, color:'rgba(255,255,255,.45)', marginBottom:10 }}>
-                  {COACH.title} · <Link href={`/games/${COACH.gameSlug}`} style={{ color:'rgba(255,255,255,.45)', textDecoration:'none' }}>{COACH.gameEmoji} {COACH.game}</Link>
+                  {COACH.title}{COACH.title && COACH.game ? ' · ' : ''}{COACH.game && <Link href={`/games/${COACH.gameSlug}`} style={{ color:'rgba(255,255,255,.45)', textDecoration:'none' }}>{COACH.gameEmoji} {COACH.game}</Link>}
                 </div>
 
                 {/* Quick stats row */}
@@ -327,7 +467,9 @@ export default function CoachPackagePage() {
           <div>
             {/* Bio */}
             <div style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.07)', borderRadius:12, padding:'20px 22px', marginBottom:20 }}>
-              <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:.8, marginBottom:10 }}>About</div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:.8 }}>About</div>
+              </div>
               <p style={{ fontFamily:'Barlow, sans-serif', fontSize:13, color:'rgba(255,255,255,.55)', lineHeight:1.75, margin:'0 0 10px', whiteSpace:'pre-line' }}>{displayBio}</p>
               {!showFullBio&&<button onClick={()=>setShowFullBio(true)} style={{ background:'none', border:'none', fontSize:11, fontWeight:700, color:'rgba(255,255,255,.3)', fontFamily:'Rajdhani, sans-serif', cursor:'pointer', padding:0, letterSpacing:.3 }}>Read more ▾</button>}
 
@@ -405,37 +547,41 @@ export default function CoachPackagePage() {
                             <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:28, color:'#4ade80', lineHeight:1 }}>${pkg.price}</div>
                             <div style={{ fontFamily:'Barlow, sans-serif', fontSize:10, color:'rgba(255,255,255,.25)', marginTop:2 }}>per order</div>
                           </div>
-                          <button
-                            onClick={()=>setHiring(pkg)}
-                            style={{
-                              background: pkg.popular ? '#B22D2D' : 'rgba(255,255,255,.07)',
-                              border: pkg.popular ? 'none' : '1px solid rgba(255,255,255,.14)',
-                              borderRadius:8, padding:'9px 20px',
-                              fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12,
-                              letterSpacing:.8, color: pkg.popular ? '#fff' : 'rgba(255,255,255,.7)',
-                              cursor:'pointer', whiteSpace:'nowrap', transition:'all .15s',
-                            }}
-                            onMouseEnter={e=>{if(!pkg.popular){e.currentTarget.style.background='rgba(255,255,255,.12)';e.currentTarget.style.color='#fff'}}}
-                            onMouseLeave={e=>{if(!pkg.popular){e.currentTarget.style.background='rgba(255,255,255,.07)';e.currentTarget.style.color='rgba(255,255,255,.7)'}}}
-                          >
-                            HIRE NOW →
-                          </button>
+                          {!isOwnProfile && (
+                            <button
+                              onClick={()=>setHiring(pkg)}
+                              style={{
+                                background: pkg.popular ? '#B22D2D' : 'rgba(255,255,255,.07)',
+                                border: pkg.popular ? 'none' : '1px solid rgba(255,255,255,.14)',
+                                borderRadius:8, padding:'9px 20px',
+                                fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12,
+                                letterSpacing:.8, color: pkg.popular ? '#fff' : 'rgba(255,255,255,.7)',
+                                cursor:'pointer', whiteSpace:'nowrap', transition:'all .15s',
+                              }}
+                              onMouseEnter={e=>{if(!pkg.popular){e.currentTarget.style.background='rgba(255,255,255,.12)';e.currentTarget.style.color='#fff'}}}
+                              onMouseLeave={e=>{if(!pkg.popular){e.currentTarget.style.background='rgba(255,255,255,.07)';e.currentTarget.style.color='rgba(255,255,255,.7)'}}}
+                            >
+                              HIRE NOW →
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
                   )
                 })}
 
-                {/* Custom order CTA */}
-                <div style={{ background:'rgba(240,170,26,.05)', border:'1px dashed rgba(240,170,26,.25)', borderRadius:12, padding:'18px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap' }}>
-                  <div>
-                    <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:16, color:'#F0AA1A', letterSpacing:.4, marginBottom:4 }}>✨ Need Something Custom?</div>
-                    <div style={{ fontFamily:'Barlow, sans-serif', fontSize:12, color:'rgba(255,255,255,.4)' }}>Message the coach directly — they can create a tailored package for your specific needs.</div>
+                {/* Custom request CTA — only if coach allows it */}
+                {COACH.allowCustomRequests && !isOwnProfile && (
+                  <div style={{ background:'rgba(240,170,26,.05)', border:'1px dashed rgba(240,170,26,.25)', borderRadius:12, padding:'18px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap' }}>
+                    <div>
+                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:16, color:'#F0AA1A', letterSpacing:.4, marginBottom:4 }}>✨ I Want Something Custom</div>
+                      <div style={{ fontFamily:'Barlow, sans-serif', fontSize:12, color:'rgba(255,255,255,.4)' }}>Describe what you need and the coach will create a tailored package for you.</div>
+                    </div>
+                    <button onClick={() => setCustomReq(true)} style={{ background:'rgba(240,170,26,.15)', border:'1px solid rgba(240,170,26,.35)', borderRadius:8, padding:'8px 18px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, letterSpacing:.6, color:'#F0AA1A', cursor:'pointer', whiteSpace:'nowrap' }}>
+                      REQUEST CUSTOM →
+                    </button>
                   </div>
-                  <Link href={`/messages/new?coach=${COACH.name}`} style={{ background:'rgba(240,170,26,.15)', border:'1px solid rgba(240,170,26,.35)', borderRadius:8, padding:'8px 18px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, letterSpacing:.6, color:'#F0AA1A', textDecoration:'none', whiteSpace:'nowrap' }}>
-                    SEND MESSAGE →
-                  </Link>
-                </div>
+                )}
               </div>
             )}
 
@@ -451,7 +597,9 @@ export default function CoachPackagePage() {
                   </div>
                   <div style={{ flex:1 }}>
                     {[5,4,3,2,1].map(star=>{
-                      const pct = star===5?85:star===4?12:star===3?3:0
+                      const count = reviewDist[star] || 0
+                      const total = Object.values(reviewDist).reduce((a: number, b: number) => a + b, 0)
+                      const pct = total > 0 ? Math.round((count / total) * 100) : 0
                       return (
                         <div key={star} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
                           <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.35)', width:10, textAlign:'right' }}>{star}</span>
@@ -505,10 +653,10 @@ export default function CoachPackagePage() {
                 {PACKAGES.map(pkg=>{
                   const tp = TYPE_LABELS[pkg.type]
                   return (
-                    <button key={pkg.id} onClick={()=>setHiring(pkg)}
-                      style={{ background:'rgba(255,255,255,.04)', border:`1px solid ${pkg.popular?'rgba(178,45,45,.3)':'rgba(255,255,255,.08)'}`, borderRadius:8, padding:'10px 12px', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', transition:'all .15s', textAlign:'left' }}
-                      onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,.08)'; e.currentTarget.style.borderColor=tp.color+'55'}}
-                      onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,.04)'; e.currentTarget.style.borderColor=pkg.popular?'rgba(178,45,45,.3)':'rgba(255,255,255,.08)'}}
+                    <button key={pkg.id} onClick={()=>{ if (!isOwnProfile) setHiring(pkg) }}
+                      style={{ background:'rgba(255,255,255,.04)', border:`1px solid ${pkg.popular?'rgba(178,45,45,.3)':'rgba(255,255,255,.08)'}`, borderRadius:8, padding:'10px 12px', display:'flex', alignItems:'center', justifyContent:'space-between', cursor: isOwnProfile ? 'default' : 'pointer', transition:'all .15s', textAlign:'left' }}
+                      onMouseEnter={e=>{if(!isOwnProfile){e.currentTarget.style.background='rgba(255,255,255,.08)'; e.currentTarget.style.borderColor=tp.color+'55'}}}
+                      onMouseLeave={e=>{if(!isOwnProfile){e.currentTarget.style.background='rgba(255,255,255,.04)'; e.currentTarget.style.borderColor=pkg.popular?'rgba(178,45,45,.3)':'rgba(255,255,255,.08)'}}}
                     >
                       <div>
                         <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:2 }}>
@@ -524,12 +672,11 @@ export default function CoachPackagePage() {
                 })}
               </div>
 
-              <button onClick={()=>setHiring(PACKAGES[1])} style={{ width:'100%', background:'#B22D2D', border:'none', borderRadius:8, padding:'12px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:14, letterSpacing:.8, color:'#fff', cursor:'pointer', marginBottom:10 }}>
-                HIRE COACH →
-              </button>
-              <Link href={`/messages/new?coach=${COACH.name}`} style={{ display:'block', width:'100%', background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', borderRadius:8, padding:'10px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:700, fontSize:12, letterSpacing:.6, color:'rgba(255,255,255,.5)', textDecoration:'none', textAlign:'center', boxSizing:'border-box' }}>
-                SEND MESSAGE
-              </Link>
+              {!isOwnProfile && (
+                <Link href={`/mailbox?to=${COACH.slug}`} style={{ display:'block', width:'100%', background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', borderRadius:8, padding:'10px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:700, fontSize:12, letterSpacing:.6, color:'rgba(255,255,255,.5)', textDecoration:'none', textAlign:'center', boxSizing:'border-box' }}>
+                  SEND MESSAGE
+                </Link>
+              )}
             </div>
 
             {/* Trust indicators */}
@@ -556,6 +703,7 @@ export default function CoachPackagePage() {
 
       {/* ── HIRE MODAL ── */}
       {hiring&&<HireModal pkg={hiring} coach={COACH} onClose={()=>setHiring(null)}/>}
+      {customReq&&<CustomRequestModal coach={COACH} onClose={()=>setCustomReq(false)}/>}
     </div>
   )
 }

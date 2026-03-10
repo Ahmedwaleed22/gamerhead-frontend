@@ -51,7 +51,7 @@ function timeAgo(dateStr: string): string {
 }
 
 function Avatar({ src, size = 36, style }: { src: string; size?: number; style?: React.CSSProperties }) {
-  if (src && (src.startsWith('http') || src.startsWith('/'))) {
+  if (src && (src.startsWith('http') || src.startsWith('/') || src.startsWith('data:image'))) {
     return <img src={src} alt="" style={{ width: size, height: size, borderRadius: 8, objectFit: 'cover', ...style }} />
   }
   return <span style={{ fontSize: size * 0.55, lineHeight: 1, ...style }}>{src || '👤'}</span>
@@ -116,6 +116,11 @@ export default function ForumBoardPage() {
   const [newTags, setNewTags] = useState('')
   const [creating, setCreating] = useState(false)
 
+  // Derive user role for permission checks
+  const userRole = user?.role === 'admin' ? 'admin' : (user as any)?.isCoach ? 'coach' : (user as any)?.isPremium ? 'premium' : user ? 'member' : null
+  const postRoles = board?.postRoles || []
+  const canPost = postRoles.length === 0 || (userRole && postRoles.includes(userRole))
+
   useEffect(() => {
     if (!slug) return
 
@@ -140,6 +145,8 @@ export default function ForumBoardPage() {
           slug: b.slug || '',
           threads: b.threads ?? b.threadCount ?? 0,
         })),
+        postRoles: data.postRoles || [],
+        viewRoles: data.viewRoles || [],
       })
     }).catch(() => {})
 
@@ -305,7 +312,7 @@ export default function ForumBoardPage() {
                 </div>
               </div>
             </div>
-            <button className="btn-primary" style={{ fontSize: 12, padding: '9px 20px' }} onClick={() => setShowNewThread(true)}>✏️ New Thread</button>
+            {canPost && <button className="btn-primary" style={{ fontSize: 12, padding: '9px 20px' }} onClick={() => setShowNewThread(true)}>✏️ New Thread</button>}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '10px 0 0' }}>
@@ -513,11 +520,17 @@ export default function ForumBoardPage() {
               ))}
             </div>
 
-            <div style={{ background: 'linear-gradient(135deg, rgba(232,0,13,0.1), rgba(13,13,20,0.8))', border: '1px solid rgba(232,0,13,0.2)', borderRadius: 10, padding: '16px' }}>
-              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 16, fontWeight: 800, textTransform: 'uppercase', color: '#fff', marginBottom: 6 }}>Start a Discussion</div>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 12px' }}>Share your Warzone loadouts, strategies, clips, and more with the community.</p>
-              <button className="btn-primary" style={{ width: '100%', fontSize: 12, padding: '9px', justifyContent: 'center' }} onClick={() => setShowNewThread(true)}>✏️ New Thread</button>
-            </div>
+            {canPost ? (
+              <div style={{ background: 'linear-gradient(135deg, rgba(232,0,13,0.1), rgba(13,13,20,0.8))', border: '1px solid rgba(232,0,13,0.2)', borderRadius: 10, padding: '16px' }}>
+                <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 16, fontWeight: 800, textTransform: 'uppercase', color: '#fff', marginBottom: 6 }}>Start a Discussion</div>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 12px' }}>Share your thoughts, strategies, clips, and more with the community.</p>
+                <button className="btn-primary" style={{ width: '100%', fontSize: 12, padding: '9px', justifyContent: 'center' }} onClick={() => setShowNewThread(true)}>✏️ New Thread</button>
+              </div>
+            ) : postRoles.length > 0 && (
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Only {postRoles.join(' / ')} can post threads here</div>
+              </div>
+            )}
           </div>
 
         </div>

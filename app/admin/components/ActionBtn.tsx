@@ -9,9 +9,9 @@ interface ActionBtnProps {
 }
 
 const SIZES = {
-  sm: { padding: '3px 8px', fontSize: 9, borderRadius: 4 },
-  md: { padding: '6px 14px', fontSize: 11, borderRadius: 5 },
-  lg: { padding: '9px 20px', fontSize: 13, borderRadius: 6 },
+  sm: { padding: '5px 12px', fontSize: 11, borderRadius: 5 },
+  md: { padding: '8px 16px', fontSize: 12, borderRadius: 6 },
+  lg: { padding: '11px 22px', fontSize: 14, borderRadius: 6 },
 }
 
 export default function ActionBtn({ label, color = '#8890A4', onClick, disabled, size = 'sm' }: ActionBtnProps) {

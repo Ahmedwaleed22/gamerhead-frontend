@@ -57,8 +57,7 @@ async function request<T = any>(
 
   if (!res.ok) {
     const message =
-      data?.message ||
-      (Array.isArray(data?.message) ? data.message.join(', ') : null) ||
+      (Array.isArray(data?.message) ? data.message.join(', ') : data?.message) ||
       `Request failed with status ${res.status}`
     throw new ApiError(res.status, message, data)
   }
@@ -109,6 +108,7 @@ export const usersApi = {
   checkNameAvailability: (name: string)    => api.get<{ available: boolean; reason?: string }>(`/users/me/check-name?name=${encodeURIComponent(name)}`),
   changeNameColor:   (color: string)         => api.post('/users/me/name-color', { color }),
   redeem2xp:         ()                      => api.post('/users/me/redeem-2xp'),
+  activate2xp:       ()                      => api.post('/users/me/activate-2xp'),
   sendFriendRequest:  (targetId: string)      => api.post(`/users/me/friend-request/${targetId}`),
   getFriendRequests:  ()                      => api.get('/users/me/friend-requests'),
   acceptFriend:       (requesterId: string)   => api.post(`/users/me/accept-friend/${requesterId}`),
@@ -179,6 +179,7 @@ export const matchesApi = {
   cancelListing:  (matchId: string, teamId: string) => api.post(`/matches/${matchId}/cancel`, { teamId }),
   readyUp:        (matchId: string, teamId: string) => api.post(`/matches/${matchId}/ready`, { teamId }),
   requestCancel:  (matchId: string, teamId: string) => api.post(`/matches/${matchId}/cancel-request`, { teamId }),
+  recalculateRanks: ()                              => api.post('/matches/recalculate-ranks'),
 }
 
 // TOURNAMENTS
@@ -257,10 +258,24 @@ export const coachingApi = {
   hire:               (body: any)                   => api.post('/coaching/hire', body),
   getMyOrders:        ()                            => api.get('/coaching/my-orders'),
   submitReview:       (body: any)                   => api.post('/coaching/review', body),
+  getDashboardProfile: ()                            => api.get('/coaching/dashboard/profile'),
   getDashboardOrders: (status?: string)             => api.get(`/coaching/dashboard/orders${status ? `?status=${status}` : ''}`),
   sendCustomOffer:    (body: any)                   => api.post('/coaching/dashboard/custom-offer', body),
   addPackage:         (body: any)                   => api.post('/coaching/dashboard/packages', body),
   updatePackage:      (id: string, body: any)       => api.post(`/coaching/dashboard/packages/${id}`, body),
+  // Order lifecycle — coach
+  acceptOrder:        (body: any)                   => api.post('/coaching/dashboard/orders/accept', body),
+  rejectOrder:        (body: any)                   => api.post('/coaching/dashboard/orders/reject', body),
+  deliverOrder:       (body: any)                   => api.post('/coaching/dashboard/orders/deliver', body),
+  confirmCompletion:  (body: any)                   => api.post('/coaching/dashboard/orders/confirm-completion', body),
+  // Order lifecycle — buyer
+  approveDelivery:    (body: any)                   => api.post('/coaching/orders/approve', body),
+  requestRevision:    (body: any)                   => api.post('/coaching/orders/revision', body),
+  cancelOrder:        (body: any)                   => api.post('/coaching/orders/cancel', body),
+  // Coach profile
+  updateBio:          (bio: string)                 => api.post('/coaching/dashboard/bio', { bio }),
+  updateCoachProfile: (body: any)                   => api.post('/coaching/dashboard/profile', body),
+  getReviewDistribution: (slug: string)             => api.get(`/coaching/coaches/${slug}/review-distribution`),
 }
 
 // INVITES
@@ -307,6 +322,9 @@ export const supportApi = {
   sendMessage: (ticketId: string, body: any) => api.post(`/support/${ticketId}/message`, body),
   close:       (ticketId: string)          => api.post(`/support/${ticketId}/close`),
   reopen:      (ticketId: string)          => api.post(`/support/${ticketId}/reopen`),
+  requestStaff: (body: { category: string; contextId?: string; contextLabel?: string; message?: string }) => api.post('/support/request-staff', body),
+  getMyLiveChat:        ()                                          => api.get('/support/live-chat/mine'),
+  sendLiveChatMessage:  (sessionId: string, body: { text: string }) => api.post(`/support/live-chat/${sessionId}/message`, body),
 }
 
 // BADGES
@@ -381,6 +399,7 @@ export const adminApi = {
   getCoach:             (id: string)                    => api.get(`/admin/coaching/coaches/${id}`),
   updateCoach:          (id: string, body: any)         => api.patch(`/admin/coaching/coaches/${id}`, body),
   verifyCoach:          (id: string)                    => api.post(`/admin/coaching/coaches/${id}/verify`),
+  unverifyCoach:        (id: string)                    => api.post(`/admin/coaching/coaches/${id}/unverify`),
   suspendCoach:         (id: string)                    => api.post(`/admin/coaching/coaches/${id}/suspend`),
   deleteCoach:          (id: string)                    => api.delete(`/admin/coaching/coaches/${id}`),
   getCoachingOrders:    (params?: any)                  => api.get(`/admin/coaching/orders${toQuery(params)}`),
@@ -436,12 +455,17 @@ export const adminApi = {
   getTicket:            (id: string)                    => api.get(`/admin/support/${id}`),
   getTicketStats:       ()                              => api.get(`/admin/support/stats`),
   assignTicket:         (ticketId: string, body: any)   => api.post(`/admin/support/${ticketId}/assign`, body),
+  claimTicket:          (id: string)                    => api.post(`/admin/support/${id}/claim`),
+  replyToTicket:        (id: string, text: string)      => api.post(`/admin/support/${id}/reply`, { text }),
+  closeTicket:          (id: string)                    => api.post(`/admin/support/${id}/close`),
+  reopenTicket:         (id: string)                    => api.post(`/admin/support/${id}/reopen`),
 
   // Games
   getGames:             (params?: any)                   => api.get(`/admin/games${toQuery(params)}`),
   createGame:           (body: any)                     => api.post(`/admin/games`, body),
   updateGame:           (id: string, body: any)         => api.patch(`/admin/games/${id}`, body),
   disableGame:          (id: string)                    => api.post(`/admin/games/${id}/disable`),
+  migrateGameSlug:      (id: string, oldSlug: string, oldName?: string) => api.post(`/admin/games/${id}/migrate-slug`, { oldSlug, oldName }),
   deleteGame:           (id: string)                    => api.delete(`/admin/games/${id}`),
 
   // Ladders
@@ -474,6 +498,8 @@ export const adminApi = {
 
   // Player of the Week
   getPOTWCandidates:    ()                              => api.get(`/admin/player-of-week/candidates`),
+  getPOTWCandidateMatches: (userId: string)             => api.get(`/admin/player-of-week/candidates/${userId}/matches`),
+  selectPOTW:           (userId: string)                => api.post(`/admin/player-of-week/select`, { userId }),
   getPOTWHistory:       (params?: any)                  => api.get(`/admin/player-of-week/history${toQuery(params)}`),
   deletePOTW:           (id: string)                    => api.delete(`/admin/player-of-week/${id}`),
 

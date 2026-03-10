@@ -30,7 +30,7 @@ export default function WalletPage() {
     const params: any = { page, limit: 20 }
     if (filterType !== 'All') params.type = filterType.toLowerCase().replace(/ /g, '_')
     walletApi.getTransactions(params).then((res: any) => {
-      const txns = res.transactions ?? res
+      const txns = res.items ?? res.transactions ?? res
       setTxHistory(Array.isArray(txns) ? txns : [])
       if (res.totalPages) setTotalPages(res.totalPages)
     }).catch(() => {})
@@ -106,7 +106,7 @@ export default function WalletPage() {
               {[
                 { label:'Available Cash',  value:`$${cashVal}`,    sub:'Ready to use or withdraw',       color:'#4ade80', icon:'💵' },
                 { label:'Pending Payouts', value:'—',              sub:'Processing, 1–3 business days',  color:'#F39C12', icon:'⏳' },
-                { label:'CE Credits',      value:`${credits}`,     sub:'Platform credits balance',       color:'#E74C3C', icon:'🪙' },
+                { label:'CE Tickets',      value:`${credits}`,     sub:'Platform tickets balance',       color:'#E74C3C', icon:'🪙' },
               ].map((b,i) => (
                 <div key={i} style={{ background:'#18181C', borderRadius:12, padding:'22px 24px', border:`1px solid ${b.color}20`, position:'relative', overflow:'hidden' }}>
                   <div style={{ position:'absolute', right:20, top:14, fontSize:30, opacity:0.12 }}>{b.icon}</div>
@@ -146,7 +146,7 @@ export default function WalletPage() {
                         <div style={{ padding:'40px 20px', textAlign:'center', ...R, fontSize:13, color:'#4A5568' }}>No transactions found</div>
                       ) : (
                         txHistory.map((tx: any, i: number) => {
-                          const isPositive = tx.amount > 0 || tx.type === 'deposit' || tx.type === 'match_win' || tx.type === 'prize_claim'
+                          const isPositive = tx.amount > 0 || ['deposit','match_win','match_refund','prize_claim','coaching_payment','reward','refund'].includes(tx.type)
                           const amtDisplay = tx.amount != null ? `${isPositive ? '+' : ''}$${(Math.abs(tx.amount) / 100).toFixed(2)}` : '—'
                           const status = tx.status || 'completed'
                           const statusCap = status.charAt(0).toUpperCase() + status.slice(1)

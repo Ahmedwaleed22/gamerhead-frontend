@@ -31,7 +31,7 @@ const STATIC_NAV = [
     icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/><path d="M1 7h14" stroke="currentColor" strokeWidth="1.4"/><circle cx="12" cy="10.5" r="1.2" fill="currentColor"/></svg>,
   },
   {
-    key: 'store', href: '/store', label: 'Buy Credits',
+    key: 'store', href: '/store', label: 'Buy Tickets',
     icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4" fill="none"/><path d="M8 5v3l2 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
   },
   {

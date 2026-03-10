@@ -131,7 +131,7 @@ export default function AdminUsersPage() {
     },
     { key: 'level', label: 'Level', width: '60px' },
     {
-      key: 'credits', label: 'Credits', width: '80px',
+      key: 'credits', label: 'Tickets', width: '80px',
       render: (row) => row.credits.toLocaleString(),
     },
     {

@@ -4,7 +4,7 @@
 // Used by: TeamProfilePage (pre-loads team), GameProfilePage (user picks team first)
 
 import { useState, useEffect } from 'react'
-import { matchesApi, teamsApi, gamesApi } from '@/lib/api'
+import { matchesApi, teamsApi, gamesApi, walletApi } from '@/lib/api'
 import { useMutation } from '@/lib/use-api'
 import { useAuth } from '@/lib/auth-context'
 
@@ -68,6 +68,8 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
   const [schedDate,     setSchedDate]     = useState(today())
   const [schedTime,     setSchedTime]     = useState('12:00 PM')
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
+  const [wagerAmount, setWagerAmount]         = useState('')
+  const [walletBalance, setWalletBalance]     = useState<number|null>(null)
 
 
   const { mutate: post, loading, error } = useMutation((dto: any) => matchesApi.createListing(dto))
@@ -108,6 +110,13 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
     setGamemode('')
   }, [selectedTeam])
 
+  // Fetch wallet balance for cash matches
+  useEffect(() => {
+    if (selectedTeam?.matchType === 'cash') {
+      walletApi.getBalance().then((res: any) => setWalletBalance(res?.cashBalance ?? res?.balance ?? 0)).catch(() => {})
+    }
+  }, [selectedTeam])
+
   const isSolo     = selectedTeam?.format === 'Solo' || selectedTeam?.ladder === 'Solo'
   const isCash     = selectedTeam?.matchType === 'cash'
   const modes      = loadedModes
@@ -123,9 +132,17 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
     )
   }
 
+  const wagerCents     = Math.round(parseFloat(wagerAmount || '0') * 100)
+  const playersPerTeam = isSolo ? 1 : required
+  const totalPot       = isCash ? wagerCents * playersPerTeam * 2 : 0
+  const platformFee    = isCash ? Math.round(totalPot * 0.125) : 0
+  const winnerPayout   = totalPot - platformFee
+  const hasFunds       = !isCash || (walletBalance !== null && walletBalance >= wagerCents && wagerCents > 0)
+
   const canSubmit = selectedTeam && gamemode &&
     (isSolo || selectedPlayers.length === required) &&
-    (scheduleType === 'now' || (schedDate && schedTime))
+    (scheduleType === 'now' || (schedDate && schedTime)) &&
+    (!isCash || (wagerCents > 0 && hasFunds))
 
   async function handleSubmit() {
     if (!canSubmit || loading) return
@@ -158,6 +175,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
         bestOf,
         scheduleType,
         scheduledAt,
+        wagerPerPlayer: isCash ? wagerCents : undefined,
       })
       onPosted()
       onClose()
@@ -272,6 +290,56 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
                   ))}
                 </div>
               </div>
+
+              {/* ── WAGER (Cash matches only) ── */}
+              {isCash && (
+                <div>
+                  <label style={{ ...R, fontSize: 11, color: '#9CA3AF', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Wager Per Player *</label>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', ...BC, fontWeight: 900, fontSize: 18, color: '#F0AA1A' }}>$</span>
+                    <input
+                      type="number" min="0.50" step="0.50" placeholder="5.00"
+                      value={wagerAmount} onChange={e => setWagerAmount(e.target.value)}
+                      style={{ width: '100%', background: '#25252C', border: '1px solid rgba(212,146,10,0.3)', borderRadius: 8, padding: '12px 14px 12px 32px', color: '#fff', ...BC, fontWeight: 900, fontSize: 22, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  {wagerCents > 0 && (
+                    <div style={{ marginTop: 10, background: 'rgba(212,146,10,0.08)', border: '1px solid rgba(212,146,10,0.2)', borderRadius: 8, padding: '10px 14px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Per player</span>
+                        <span style={{ ...BC, fontWeight: 900, fontSize: 13, color: '#F0AA1A' }}>${(wagerCents / 100).toFixed(2)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Total pot ({playersPerTeam * 2} players)</span>
+                        <span style={{ ...BC, fontWeight: 900, fontSize: 13, color: '#fff' }}>${(totalPot / 100).toFixed(2)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Platform fee (12.5%)</span>
+                        <span style={{ ...R, fontWeight: 700, fontSize: 11, color: '#6B7280' }}>-${(platformFee / 100).toFixed(2)}</span>
+                      </div>
+                      <div style={{ borderTop: '1px solid rgba(212,146,10,0.2)', paddingTop: 6, marginTop: 4, display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ ...R, fontSize: 11, color: '#9CA3AF', fontWeight: 700 }}>Winner takes</span>
+                        <span style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#4ade80' }}>${(winnerPayout / 100).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
+                  {/* Wallet balance */}
+                  <div style={{ marginTop: 8, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 8, padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Your wallet balance</span>
+                    <span style={{ ...BC, fontWeight: 900, fontSize: 14, color: hasFunds ? '#4ade80' : '#ef4444' }}>
+                      {walletBalance !== null ? `$${(walletBalance / 100).toFixed(2)}` : '...'}
+                    </span>
+                  </div>
+                  {wagerCents > 0 && !hasFunds && walletBalance !== null && (
+                    <div style={{ ...R, fontSize: 11, color: '#ef4444', marginTop: 6 }}>
+                      Insufficient funds. <a href="/wallet" style={{ color: '#60A5FA', fontWeight: 700 }}>Add funds →</a>
+                    </div>
+                  )}
+                  <div style={{ ...R, fontSize: 10, color: '#6B7280', marginTop: 6 }}>
+                    Wagers are held from each player's wallet when both teams ready up.
+                  </div>
+                </div>
+              )}
 
               {/* ── GAMEMODE ── */}
               <div>

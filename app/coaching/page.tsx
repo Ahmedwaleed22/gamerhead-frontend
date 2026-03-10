@@ -13,10 +13,12 @@ interface CoachListing {
   slug:           string
   name:           string
   emoji:          string
+  avatarUrl:      string
   title:          string
   game:           string
   gameEmoji:      string
   gameSlug:       string
+  gameSlugs:      string[]
   verified:       boolean
   online:         boolean
   rating:         number
@@ -99,14 +101,21 @@ function CoachCard({ coach, serviceFilter }: { coach: CoachListing; serviceFilte
           {/* Row 1 — avatar + name + badges */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: 10,
-                background: `linear-gradient(135deg, ${coach.accentColor}44, ${coach.accentColor}11)`,
-                border: `1px solid ${coach.accentColor}33`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-              }}>
-                {coach.emoji}
-              </div>
+              {coach.avatarUrl ? (
+                <img src={coach.avatarUrl} alt={coach.name} style={{
+                  width: 48, height: 48, borderRadius: 10, objectFit: 'cover',
+                  border: `1px solid ${coach.accentColor}33`,
+                }}/>
+              ) : (
+                <div style={{
+                  width: 48, height: 48, borderRadius: 10,
+                  background: `linear-gradient(135deg, ${coach.accentColor}44, ${coach.accentColor}11)`,
+                  border: `1px solid ${coach.accentColor}33`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+                }}>
+                  {coach.emoji}
+                </div>
+              )}
               <div style={{
                 position: 'absolute', bottom: 1, right: 1,
                 width: 10, height: 10, borderRadius: '50%',
@@ -263,10 +272,12 @@ export default function CoachingBrowsePage() {
         slug:           c.slug,
         name:           c.displayName || c.name,
         emoji:          c.emoji,
+        avatarUrl:      c.avatarUrl || '',
         title:          c.title,
         game:           c.game,
         gameEmoji:      c.gameEmoji,
         gameSlug:       c.gameSlug,
+        gameSlugs:      c.gameSlugs || [],
         verified:       c.isVerified ?? c.verified,
         online:         c.isOnline ?? c.online,
         rating:         c.rating,
@@ -301,7 +312,7 @@ export default function CoachingBrowsePage() {
         c.tagline.toLowerCase().includes(q)
       )
     }
-    if (gameFilter !== 'all')    list = list.filter(c => c.gameSlug === gameFilter)
+    if (gameFilter !== 'all')    list = list.filter(c => c.gameSlug === gameFilter || (c.gameSlugs || []).includes(gameFilter))
     if (serviceFilter !== 'all') list = list.filter(c => c.packages.some(p => p.type === serviceFilter))
     if (onlineOnly)              list = list.filter(c => c.online)
     if (priceMax !== null)       list = list.filter(c => Math.min(...c.packages.map(p => p.price)) <= priceMax)

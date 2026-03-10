@@ -3,7 +3,7 @@
 // FILE: app/components/GameMatchesTab.tsx
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+
 import Link from 'next/link'
 import { useApi, useMutation } from '@/lib/use-api'
 import { matchesApi, teamsApi } from '@/lib/api'
@@ -130,9 +130,9 @@ function MatchListingCard({
 
       {/* ── RIGHT: wager + action ── */}
       <div className="match-item-right">
-        {isCash && match.wagerAmount && (
-          <div className="match-wager">${(match.wagerAmount / 100).toFixed(2)}</div>
-        )}
+        {isCash && match.wagerPerPlayer ? (
+          <div className="match-wager">${(match.wagerPerPlayer / 100).toFixed(2)}</div>
+        ) : null}
         {isMyMatch ? (
           <button
             className="match-listing-cancel-btn"
@@ -158,7 +158,6 @@ function MatchListingCard({
 // ─── MATCHES TAB ──────────────────────────────────────────────────────────────
 export function MatchesTab({ game, xpLadders, cashLadders }: { game: any; xpLadders: any[]; cashLadders: any[] }) {
   const { user } = useAuth()
-  const router = useRouter()
   const [refreshKey, setRefreshKey] = useState(0)
   const refresh = () => setRefreshKey(k => k + 1)
 
@@ -167,44 +166,6 @@ export function MatchesTab({ game, xpLadders, cashLadders }: { game: any; xpLadd
   const [showPost,     setShowPost]     = useState(false)
   const [acceptMatch,  setAcceptMatch]  = useState<any>(null)
   const [cancelMatch,  setCancelMatch]  = useState<any>(null)
-  const [showCreateTeam, setShowCreateTeam] = useState(false)
-  const [createLadder,   setCreateLadder]   = useState<any>(null)
-  const [createName,     setCreateName]     = useState('')
-  const [createAgreed,   setCreateAgreed]   = useState(false)
-  const [createLoading,  setCreateLoading]  = useState(false)
-  const [createError,    setCreateError]    = useState('')
-
-  const allLadders = [...(xpLadders || []), ...(cashLadders || [])]
-
-  async function handleCreateTeam() {
-    if (!createLadder || !createName.trim() || !createAgreed || createLoading) return
-    const maxMemberMap: Record<string, number> = { Solo: 1, Duo: 2, Trio: 3, Squad: 5 }
-    setCreateLoading(true)
-    setCreateError('')
-    try {
-      const result = await teamsApi.create({
-        name: createName.trim(),
-        game: game.name,
-        gameSlug: game.slug,
-        gameEmoji: game.emoji || '',
-        matchType: createLadder.type || 'xp',
-        ladder: createLadder.teamSize,
-        maxMembers: maxMemberMap[createLadder.teamSize] || 5,
-        captainUsername: user?.username || 'Unknown',
-      })
-      setShowCreateTeam(false)
-      setCreateName('')
-      setCreateAgreed(false)
-      setCreateLadder(null)
-      if (result?.slug) router.push(`/teams/${result.slug}`)
-      else refresh()
-    } catch (e: any) {
-      setCreateError(e?.message || 'Failed to create team')
-    } finally {
-      setCreateLoading(false)
-    }
-  }
-
   const { data: listings, loading } = useApi(
     () => matchesApi.getOpenByGame(game.slug),
     [game.slug, refreshKey]
@@ -245,20 +206,6 @@ export function MatchesTab({ game, xpLadders, cashLadders }: { game: any; xpLadd
 
   return (
     <div>
-      {/* No team for this game */}
-      {user && myGameTeams.length === 0 && (
-        <div className="no-team-alert">
-          <span className="no-team-alert-icon">!</span>
-          <div className="no-team-alert-text">
-            <strong>You don't have a team for {game.name}.</strong>
-            <span> Create a team first to post or accept matches.</span>
-          </div>
-          <button onClick={() => { setShowCreateTeam(true); setCreateLadder(allLadders[0] || null) }} className="btn-primary" style={{ padding: '7px 16px', fontSize: 12, flexShrink: 0, border: 'none', cursor: 'pointer' }}>
-            + Create Team
-          </button>
-        </div>
-      )}
-
       {/* Already have open listing — only show after data has loaded */}
       {!loading && myOpenListing && (
         <div className="no-team-alert" style={{ borderColor: 'rgba(240,170,26,0.3)', background: 'rgba(240,170,26,0.05)' }}>
@@ -368,82 +315,6 @@ export function MatchesTab({ game, xpLadders, cashLadders }: { game: any; xpLadd
                 style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: '1px solid rgba(231,76,60,0.4)', background: 'rgba(231,76,60,0.15)', color: '#E74C3C', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 15, cursor: 'pointer' }}
               >
                 Cancel Match
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create Team Modal */}
-      {showCreateTeam && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setShowCreateTeam(false)}>
-          <div style={{ background: '#18181C', borderRadius: 16, width: 420, maxWidth: '100%', border: '1px solid #25252C', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #25252C', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(178,45,45,0.15)', border: '1px solid rgba(178,45,45,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#C0392B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="7" r="4" stroke="#C0392B" strokeWidth="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#C0392B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </div>
-              <div>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 20, color: '#fff' }}>Create Team</div>
-                <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 11, color: '#6B7280' }}>{game.name}</div>
-              </div>
-              <button onClick={() => setShowCreateTeam(false)} style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '50%', width: 28, height: 28, color: '#6B7280', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✕</button>
-            </div>
-
-            <div style={{ padding: '20px 24px 24px' }}>
-              {/* Ladder picker */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontFamily: 'Roboto, sans-serif', fontSize: 11, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', marginBottom: 8 }}>Select Ladder</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {allLadders.map((l: any) => (
-                    <button
-                      key={l._id}
-                      onClick={() => setCreateLadder(l)}
-                      style={{
-                        padding: '6px 14px', borderRadius: 6, fontSize: 11, fontFamily: 'Roboto, sans-serif', fontWeight: 600, cursor: 'pointer',
-                        background: createLadder?._id === l._id ? 'rgba(178,45,45,0.2)' : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${createLadder?._id === l._id ? 'rgba(178,45,45,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                        color: createLadder?._id === l._id ? '#fff' : '#9CA3AF',
-                      }}
-                    >
-                      {l.name}
-                    </button>
-                  ))}
-                </div>
-                {allLadders.length === 0 && (
-                  <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 12, color: '#6B7280' }}>No ladders available for this game.</div>
-                )}
-              </div>
-
-              {/* Team name */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontFamily: 'Roboto, sans-serif', fontSize: 11, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', marginBottom: 6 }}>Team Name</label>
-                <input
-                  value={createName}
-                  onChange={e => setCreateName(e.target.value)}
-                  placeholder="Enter team name..."
-                  style={{ width: '100%', background: '#303034', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '10px 12px', fontFamily: 'Roboto, sans-serif', fontSize: 13, color: '#fff', outline: 'none', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              {/* Agree */}
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 16, cursor: 'pointer' }}>
-                <input type="checkbox" checked={createAgreed} onChange={e => setCreateAgreed(e.target.checked)} style={{ marginTop: 2 }} />
-                <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 11, color: '#6B7280', lineHeight: 1.5 }}>By checking this box, you accept the Ladder Rules & Prizing</span>
-              </label>
-
-              {createError && <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 12, color: '#E74C3C', margin: '0 0 12px' }}>{createError}</p>}
-
-              <button
-                onClick={handleCreateTeam}
-                disabled={!createLadder || !createName.trim() || !createAgreed || createLoading}
-                style={{
-                  width: '100%', padding: '12px 0', borderRadius: 10, border: 'none', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 15, cursor: 'pointer',
-                  background: createLadder && createName.trim() && createAgreed && !createLoading ? '#B22D2D' : '#303034',
-                  color: createLadder && createName.trim() && createAgreed && !createLoading ? '#fff' : '#4A5568',
-                }}
-              >
-                {createLoading ? 'CREATING...' : 'CREATE TEAM'}
               </button>
             </div>
           </div>

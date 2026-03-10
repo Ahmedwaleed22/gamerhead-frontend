@@ -74,7 +74,7 @@ export default function AdminAnalyticsPage() {
               borderBottom: '1px solid rgba(255,255,255,.03)',
             }}>
               <span style={{ fontSize: 12, fontWeight: 900, color: i < 3 ? '#f59e0b' : '#4F5568', fontFamily: 'Barlow Condensed, sans-serif', width: 20 }}>#{i + 1}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', flex: 1 }}>{u.username}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', flex: 1 }}>{u.displayName || u.username}</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', fontFamily: 'Rajdhani, sans-serif' }}>${((u.lifetimeEarnings || 0) / 100).toFixed(2)}</span>
             </div>
           ))}

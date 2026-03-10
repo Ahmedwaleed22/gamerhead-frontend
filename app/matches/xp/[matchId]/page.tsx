@@ -23,11 +23,13 @@ interface Player {
   wins: number; losses: number; gameRank: number | null
   socials: { ttv?: string; tw?: string; yt?: string }
   avatarGrad: string; avatarBorder: string; isYou?: boolean; usernameColor?: string
+  avatarUrl?: string; xpDelta?: number
 }
 interface Team {
   name: string; slug: string; emoji: string; ladderRank: number; record: string; winPct: string
   wins: number; losses: number
   bannerGrad: string; teamBorder: string; players: Player[]; isHost?: boolean
+  logoUrl?: string; bannerUrl?: string
 }
 
 const TEAM_A: Team = {
@@ -118,13 +120,20 @@ function PlayerRow({ player, side }: { player:Player; side:'left'|'right' }) {
       style={{ display:'flex', flexDirection:'column', padding:'10px 14px', margin:'2px 6px', borderRadius:8, background:hover?'rgba(255,255,255,.03)':'transparent', border:`1px solid ${hover?'rgba(255,255,255,.08)':'transparent'}`, transition:'all .15s', textDecoration:'none' }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, flexDirection:isR?'row-reverse':'row' }}>
         <span style={{ width:6,height:6,borderRadius:3,background:player.online?'#27AE60':'#4F5568',flexShrink:0 }} />
-        <div style={{ width:38,height:38,borderRadius:7,background:player.avatarGrad,border:`1.5px solid ${player.avatarBorder}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative' }}>
-          <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:14,color:'#fff' }}>{player.initials}</span>
+        <div style={{ width:38,height:38,borderRadius:7,background:player.avatarGrad,border:`1.5px solid ${player.avatarBorder}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative',overflow:'hidden' }}>
+          {player.avatarUrl && (player.avatarUrl.startsWith('http') || player.avatarUrl.startsWith('/') || player.avatarUrl.startsWith('data:image'))
+            ? <img src={player.avatarUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+            : <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:900,fontSize:14,color:'#fff' }}>{player.initials}</span>}
           {player.isYou && <div style={{ position:'absolute',bottom:-6,left:'50%',transform:'translateX(-50%)',background:'rgba(167,139,250,.9)',borderRadius:3,padding:'1px 4px',fontSize:6,fontWeight:900,color:'#000',whiteSpace:'nowrap' }}>YOU</div>}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ display:'flex',alignItems:'center',gap:5,flexDirection:isR?'row-reverse':'row',flexWrap:'wrap' }}>
             <span style={{ fontFamily:'Rajdhani, sans-serif',fontWeight:700,fontSize:13,color:hover?ACCENT:(player.usernameColor||'#fff'),whiteSpace:'nowrap',transition:'color .15s' }}>{player.name}</span>
+            {player.xpDelta !== undefined && player.xpDelta !== 0 && (
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif',fontWeight:800,fontSize:11,color:player.xpDelta>0?'#4ade80':'#ef4444',whiteSpace:'nowrap' }}>
+                {player.xpDelta > 0 ? `+${player.xpDelta}` : player.xpDelta} XP
+              </span>
+            )}
             {player.premium && <span style={{ background:'rgba(243,156,18,0.15)',border:'1px solid rgba(243,156,18,0.4)',borderRadius:3,padding:'1px 5px',fontSize:7,fontWeight:700,color:'#F39C12',fontFamily:'Rajdhani, sans-serif',lineHeight:'14px',letterSpacing:0.4 }}>★ Premium</span>}
             {player.isCoach && <span style={{ background:'rgba(90,159,212,.2)',border:'1px solid rgba(90,159,212,.3)',borderRadius:3,padding:'1px 5px',fontSize:7,fontWeight:700,color:'#5A9FD4',fontFamily:'Rajdhani, sans-serif',lineHeight:'14px' }}>COACH</span>}
             <PlatformPill platform={player.platform} handle={player.platformHandle} />
@@ -164,9 +173,12 @@ function TeamBanner({ team, side }: { team:Team; side:'left'|'right' }) {
   return (
     <div style={{ position:'relative',height:100,overflow:'hidden' }}>
       <div style={{ position:'absolute',inset:0,background:team.bannerGrad }} />
+      {team.bannerUrl && <img src={team.bannerUrl} alt="" style={{ position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:.45 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />}
       <div style={{ position:'absolute',inset:0,background:'linear-gradient(180deg,transparent 0%,rgba(15,15,24,.96) 100%)' }} />
       <div style={{ position:'absolute',inset:0,display:'flex',alignItems:'flex-end',padding:'0 16px 10px',flexDirection:isR?'row-reverse':'row',gap:12 }}>
-        <div style={{ width:54,height:54,background:'#13131E',border:`2px solid ${team.teamBorder}`,boxShadow:`0 0 14px ${team.teamBorder}66`,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0 }}>{team.emoji}</div>
+        <div style={{ width:54,height:54,background:'#13131E',border:`2px solid ${team.teamBorder}`,boxShadow:`0 0 14px ${team.teamBorder}66`,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0,overflow:'hidden' }}>
+          {team.logoUrl ? <img src={team.logoUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';e.currentTarget.parentElement!.textContent=team.emoji}} /> : team.emoji}
+        </div>
         <div style={{ flex:1,textAlign:isR?'right':'left' }}>
           <div style={{ display:'flex',alignItems:'center',gap:8,justifyContent:isR?'flex-end':'flex-start',flexWrap:'wrap' }}>
             <Link href={`/teams/${team.slug}`} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
@@ -341,6 +353,8 @@ function buildTeam(match: any, side: 'A' | 'B', fallback: Team): Team {
     bannerGrad: side === 'A' ? 'linear-gradient(135deg,#1C0606 0%,#320A0A 35%,#0E0E1C 100%)' : 'linear-gradient(135deg,#060C1C 0%,#0A1432 35%,#0E0E1C 100%)',
     teamBorder: side === 'A' ? '#B82C2C' : '#2A6CC4',
     isHost:     side === 'A',
+    logoUrl:    teamStats?.logoUrl || '',
+    bannerUrl:  teamStats?.bannerUrl || '',
     players:    players.length > 0 ? players.map((p: any) => {
       // Determine primary platform from gamertags or psnId/xboxGamertag
       const gt = (p.gamertags || [])[0]
@@ -379,6 +393,7 @@ function buildTeam(match: any, side: 'A' | 'B', fallback: Team): Team {
         avatarBorder:   side === 'A' ? 'rgba(184,44,44,.4)' : 'rgba(42,108,196,.4)',
         isYou:          false,
         usernameColor:  p.usernameColor || p.color || '',
+        avatarUrl:      p.avatarUrl || '',
       }
     }) : fallback.players,
   }
@@ -402,7 +417,7 @@ export default function XPMatchPage() {
   const teamA = buildTeam(match, 'A', TEAM_A)
   const teamB = buildTeam(match, 'B', TEAM_B)
 
-  // Mark current user
+  // Mark current user + assign per-player XP deltas for completed non-tournament matches
   if (user && match) {
     const markYou = (players: Player[]) => players.map(p => ({
       ...p,
@@ -410,6 +425,13 @@ export default function XPMatchPage() {
     }))
     teamA.players = markYou(teamA.players)
     teamB.players = markYou(teamB.players)
+  }
+  if (match?.status === 'completed' && match.winnerId && !match.tournamentId) {
+    const teamAWon = match.winnerId === match.teamAId
+    const xpWin = match.xpWin || 0
+    const xpLoss = match.xpLoss || 0
+    teamA.players = teamA.players.map(p => ({ ...p, xpDelta: teamAWon ? xpWin : -xpLoss }))
+    teamB.players = teamB.players.map(p => ({ ...p, xpDelta: teamAWon ? -xpLoss : xpWin }))
   }
 
   // Determine which team the current user is on
@@ -436,12 +458,14 @@ export default function XPMatchPage() {
   const bestOf       = match?.bestOf || 'BO1'
   const ladderName  = match?.ladderName || match?.ladder || ''
   const formatStr   = match?.format || 'Squad'
+  const isTournament = !!(match?.tournamentId)
 
   const [timer,   setTimer]   = useState(254)
   const [chatMsg, setChatMsg] = useState('')
   const [msgs, setMsgs] = useState<any[]>([])
   const [showReportModal, setShowReportModal] = useState(false)
   const [showTicketModal, setShowTicketModal] = useState(false)
+  const [staffRequested, setStaffRequested] = useState(false)
 
   useEffect(() => {
     if (match?.chat?.length) {
@@ -455,7 +479,7 @@ export default function XPMatchPage() {
       })))
     } else {
       setMsgs([
-        { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:`Match #${REAL_MATCH_ID} created. XP ladder match.`, type:'system' },
+        { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:`Match ${REAL_MATCH_ID} created. XP ladder match.`, type:'system' },
       ])
     }
   }, [match])
@@ -510,15 +534,12 @@ export default function XPMatchPage() {
         {/* Title row */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, marginBottom:16 }}>
           <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-            <div style={{ background:`linear-gradient(135deg,${ACCENT_DARK},rgba(124,58,237,.5))`, border:`1px solid ${ACCENT_BDR}`, boxShadow:`0 0 14px rgba(124,58,237,.25)`, borderRadius:8, padding:'6px 14px', fontSize:11, fontWeight:700, color:'#fff', fontFamily:'Rajdhani, sans-serif', letterSpacing:.6, flexShrink:0 }}>
-              XP LADDER MATCH
+            <div style={{ background: isTournament ? 'linear-gradient(135deg,rgba(155,89,182,.6),rgba(155,89,182,.3))' : `linear-gradient(135deg,${ACCENT_DARK},rgba(124,58,237,.5))`, border:`1px solid ${isTournament ? 'rgba(155,89,182,.4)' : ACCENT_BDR}`, boxShadow:`0 0 14px ${isTournament ? 'rgba(155,89,182,.25)' : 'rgba(124,58,237,.25)'}`, borderRadius:8, padding:'6px 14px', fontSize:11, fontWeight:700, color:'#fff', fontFamily:'Rajdhani, sans-serif', letterSpacing:.6, flexShrink:0 }}>
+              {isTournament ? 'TOURNAMENT MATCH' : 'XP LADDER MATCH'}
             </div>
             <div>
               <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#fff', lineHeight:1 }}>
                 {teamA.name} <span style={{ color:'#4F5568', fontSize:16, fontWeight:400 }}>vs</span> {teamB.name}
-              </div>
-              <div style={{ fontSize:11, color:'#4F5568', marginTop:3, fontFamily:'Rajdhani, sans-serif' }}>
-                {gameName} · {ladderName || `${formatStr} XP Ladder`} · {bestOf === 'BO1' ? 'Best of 1' : bestOf === 'BO3' ? 'Best of 3' : bestOf}
               </div>
             </div>
           </div>
@@ -526,7 +547,7 @@ export default function XPMatchPage() {
             {/* Match ID */}
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)', borderRadius:6, padding:'5px 12px' }}>
               <span style={{ fontSize:9, color:'#4F5568', fontFamily:'Rajdhani, sans-serif', fontWeight:700, letterSpacing:1, textTransform:'uppercase' }}>Match</span>
-              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:14, color:'#fff', letterSpacing:1 }}>#{REAL_MATCH_ID}</span>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:14, color:'#fff', letterSpacing:1 }}>{REAL_MATCH_ID}</span>
               <span style={{ background: matchStatus==='completed'?'rgba(74,222,128,.15)':matchStatus==='disputed'?'rgba(239,68,68,.15)':matchStatus==='cancelled'?'rgba(136,144,164,.15)':'rgba(30,138,62,.2)', border:`1px solid ${matchStatus==='completed'?'rgba(74,222,128,.35)':matchStatus==='disputed'?'rgba(239,68,68,.35)':matchStatus==='cancelled'?'rgba(136,144,164,.35)':'rgba(30,138,62,.35)'}`, borderRadius:3, padding:'1px 6px', fontSize:9, fontWeight:700, color:matchStatus==='completed'?'#4ade80':matchStatus==='disputed'?'#ef4444':matchStatus==='cancelled'?'#8890A4':'#4ade80', fontFamily:'Rajdhani, sans-serif', letterSpacing:.4 }}>{matchStatus.toUpperCase()}</span>
             </div>
           </div>
@@ -547,54 +568,80 @@ export default function XPMatchPage() {
           {/* CENTER */}
           <div style={{ display:'flex', flexDirection:'column', background:'#0B0B12', borderRight:'1px solid rgba(255,255,255,.055)' }}>
 
-            {/* XP stakes bar */}
-            <div style={{ margin:'12px 14px 4px', background:ACCENT_DIM, border:`1px solid ${ACCENT_BDR}`, borderRadius:6, padding:'10px 14px', textAlign:'center' }}>
-              <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'#4F5568', textTransform:'uppercase', letterSpacing:1, marginBottom:6 }}>XP Stakes</div>
-              {matchStatus === 'completed' && match?.winnerId ? (
+            {/* XP stakes / Tournament result bar */}
+            <div style={{ margin:'12px 14px 4px', background: isTournament ? 'rgba(155,89,182,.1)' : ACCENT_DIM, border:`1px solid ${isTournament ? 'rgba(155,89,182,.25)' : ACCENT_BDR}`, borderRadius:6, padding:'10px 14px', textAlign:'center' }}>
+              {isTournament ? (
                 <>
-                  <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:18, color:'#4ade80', lineHeight:1, marginBottom:6 }}>
-                    {match.winnerName || 'Winner'} wins!
-                  </div>
-                  <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:24, color:'#fff', lineHeight:1, marginBottom:8 }}>
-                    {match.scoreA} - {match.scoreB}
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'center', gap:20 }}>
-                    <div>
-                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#4ade80', lineHeight:1 }}>{match.xpWin ? `+${match.xpWin}` : '+XP'}</div>
-                      <div style={{ fontSize:9, color:'#4F5568', marginTop:2, fontFamily:'Rajdhani, sans-serif' }}>WINNER</div>
-                    </div>
-                    <div style={{ width:1, background:'rgba(255,255,255,.07)' }} />
-                    <div>
-                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#ef4444', lineHeight:1 }}>{match.xpLoss ? `-${match.xpLoss}` : '-XP'}</div>
-                      <div style={{ fontSize:9, color:'#4F5568', marginTop:2, fontFamily:'Rajdhani, sans-serif' }}>LOSER</div>
-                    </div>
-                  </div>
+                  {matchStatus === 'completed' && match?.winnerId ? (
+                    <>
+                      <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'#4F5568', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>Match Result</div>
+                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:18, color:'#4ade80', lineHeight:1, marginBottom:4 }}>
+                        {match.winnerName || 'Winner'} wins!
+                      </div>
+                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:24, color:'#fff', lineHeight:1 }}>
+                        {match.scoreA} - {match.scoreB}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'#4F5568', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>Tournament</div>
+                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:16, color:'#9B59B6', lineHeight:1 }}>{match?.tournamentRound || 'Round 1'}</div>
+                      <div style={{ fontSize:9, color:'#8890A4', marginTop:4, fontFamily:'Rajdhani, sans-serif' }}>
+                        {gameName} · {formatStr} · {bestOf === 'BO1' ? 'Best of 1' : bestOf === 'BO3' ? 'Best of 3' : 'Best of 5'}
+                      </div>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
-                  <div style={{ display:'flex', justifyContent:'center', gap:20 }}>
-                    <div>
-                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#4ade80', lineHeight:1 }}>+XP</div>
-                      <div style={{ fontSize:9, color:'#4F5568', marginTop:2, fontFamily:'Rajdhani, sans-serif' }}>WINNER</div>
-                    </div>
-                    <div style={{ width:1, background:'rgba(255,255,255,.07)' }} />
-                    <div>
-                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#ef4444', lineHeight:1 }}>-XP</div>
-                      <div style={{ fontSize:9, color:'#4F5568', marginTop:2, fontFamily:'Rajdhani, sans-serif' }}>LOSER</div>
-                    </div>
-                  </div>
+                  <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'#4F5568', textTransform:'uppercase', letterSpacing:1, marginBottom:6 }}>XP Stakes</div>
+                  {matchStatus === 'completed' && match?.winnerId ? (
+                    <>
+                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:18, color:'#4ade80', lineHeight:1, marginBottom:6 }}>
+                        {match.winnerName || 'Winner'} wins!
+                      </div>
+                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:24, color:'#fff', lineHeight:1, marginBottom:8 }}>
+                        {match.scoreA} - {match.scoreB}
+                      </div>
+                      <div style={{ display:'flex', justifyContent:'center', gap:20 }}>
+                        <div>
+                          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#4ade80', lineHeight:1 }}>{match.xpWin ? `+${match.xpWin}` : '+XP'}</div>
+                          <div style={{ fontSize:9, color:'#4F5568', marginTop:2, fontFamily:'Rajdhani, sans-serif' }}>WINNER</div>
+                        </div>
+                        <div style={{ width:1, background:'rgba(255,255,255,.07)' }} />
+                        <div>
+                          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#ef4444', lineHeight:1 }}>{match.xpLoss ? `-${match.xpLoss}` : '-XP'}</div>
+                          <div style={{ fontSize:9, color:'#4F5568', marginTop:2, fontFamily:'Rajdhani, sans-serif' }}>LOSER</div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ display:'flex', justifyContent:'center', gap:20 }}>
+                        <div>
+                          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#4ade80', lineHeight:1 }}>+XP</div>
+                          <div style={{ fontSize:9, color:'#4F5568', marginTop:2, fontFamily:'Rajdhani, sans-serif' }}>WINNER</div>
+                        </div>
+                        <div style={{ width:1, background:'rgba(255,255,255,.07)' }} />
+                        <div>
+                          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#ef4444', lineHeight:1 }}>-XP</div>
+                          <div style={{ fontSize:9, color:'#4F5568', marginTop:2, fontFamily:'Rajdhani, sans-serif' }}>LOSER</div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  <div style={{ fontSize:9, color:'#8890A4', marginTop:6, fontFamily:'Rajdhani, sans-serif' }}>XP applied to individual ladder rankings</div>
                 </>
               )}
-              <div style={{ fontSize:9, color:'#8890A4', marginTop:6, fontFamily:'Rajdhani, sans-serif' }}>XP applied to individual ladder rankings</div>
             </div>
 
             <SectLabel>Match Details</SectLabel>
             <div style={{ padding:'4px 16px 12px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4px 12px' }}>
               {[
-                { label:'Match ID',  val:`#${REAL_MATCH_ID}`,  color:'#DDE0EA' },
-                { label:'Type',      val:'XP Ladder',          color:ACCENT   },
-                { label:'Game',      val:gameName,              color:'#DDE0EA' },
-                { label:'Ladder',    val:ladderName || `${formatStr} XP`, color:'#DDE0EA' },
+                { label:'Match ID',  val:REAL_MATCH_ID,                                  color:'#DDE0EA' },
+                { label:'Type',      val: isTournament ? 'Tournament' : 'XP Ladder',    color: isTournament ? '#9B59B6' : ACCENT },
+                { label:'Game',      val:gameName,                                        color:'#DDE0EA' },
+                { label: isTournament ? 'Round' : 'Ladder', val: isTournament ? (match?.tournamentRound || 'Round 1') : (ladderName || `${formatStr} XP`), color:'#DDE0EA' },
                 { label:'Series',    val:bestOf === 'BO1' ? 'Best of 1' : bestOf === 'BO3' ? 'Best of 3' : bestOf === 'BO5' ? 'Best of 5' : bestOf, color:'#DDE0EA' },
                 { label:'Premium',   val: match?.isPremium ? 'Yes' : 'No', color: match?.isPremium ? '#F39C12' : '#8890A4' },
                 { label:'Ruleset',   val:gamemode || 'Standard', color:'#8890A4' },
@@ -624,9 +671,6 @@ export default function XPMatchPage() {
                   </div>
                 )
               })}
-              <div style={{ marginTop:8, background:'rgba(255,255,255,.024)', border:'1px solid rgba(255,255,255,.055)', borderRadius:4, padding:'7px 10px', fontSize:9, color:'#8890A4', lineHeight:1.5 }}>
-                <strong style={{ color:'#4F5568' }}>{bestOf} Rule:</strong> Highest-ranked team hosts. Host picks side, not mode. No host advantage.
-              </div>
             </div>
 
             <div style={{ borderTop:'1px solid rgba(255,255,255,.055)' }}>
@@ -659,8 +703,23 @@ export default function XPMatchPage() {
             <div style={{ borderTop:'1px solid rgba(255,255,255,.055)', padding:'10px 16px', display:'flex', gap:8, flexWrap:'wrap' }}>
               {(() => {
                 const isActive = ['live','accepted','pending'].includes(matchStatus)
+                const isPremium = !!match?.isPremium
+                const handleRequestStaff = () => {
+                  if (staffRequested) return
+                  setStaffRequested(true)
+                  supportApi.requestStaff({
+                    category: isPremium ? 'premium' : 'match',
+                    contextId: REAL_MATCH_ID,
+                    contextLabel: `XP Match: ${teamA.name} vs ${teamB.name}`,
+                    message: `Staff requested for XP match ${REAL_MATCH_ID}`,
+                  }).then(() => {
+                    setMsgs(p => [...p, { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:'Staff has been notified. A team member will join shortly.', type:'system' }])
+                  }).catch(() => setStaffRequested(false))
+                }
                 const buttons = [
-                  { label:'Create a Ticket', color:'#8890A4', onClick: () => setShowTicketModal(true), show: true },
+                  // Premium XP matches get Request Staff; non-premium get Create a Ticket
+                  { label: staffRequested ? 'Staff Requested' : 'Request Staff', color: staffRequested ? '#4ade80' : '#F0AA1A', onClick: handleRequestStaff, show: isPremium },
+                  { label:'Create a Ticket', color:'#8890A4', onClick: () => setShowTicketModal(true), show: !isPremium },
                   { label:'Report Match',    color:'#ef4444', onClick: () => setShowReportModal(true), show: isActive },
                   { label:'Cancel',          color:'#8890A4', onClick: handleCancel, show: isActive },
                 ]
