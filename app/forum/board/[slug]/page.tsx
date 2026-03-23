@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { forumApi } from '@/lib/api'
+import { Icon } from '@iconify/react'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
 
 type ThreadState = 'hot' | 'pinned' | 'locked' | 'official' | 'normal'
 
@@ -54,22 +56,22 @@ function Avatar({ src, size = 36, style }: { src: string; size?: number; style?:
   if (src && (src.startsWith('http') || src.startsWith('/') || src.startsWith('data:image'))) {
     return <img src={src} alt="" style={{ width: size, height: size, borderRadius: 8, objectFit: 'cover', ...style }} />
   }
-  return <span style={{ fontSize: size * 0.55, lineHeight: 1, ...style }}>{src || '👤'}</span>
+  return <EmojiSolar emoji={src || '👤'} size={Math.round(size * 0.65)} inline={false} style={style} />
 }
 
 function ThreadStateBadge({ state }: { state: ThreadState }) {
   const configs: Record<ThreadState, { label: string; bg: string; color: string; border: string; icon: string }> = {
-    hot:      { label: 'Hot',      icon: '🔥', bg: 'rgba(232,100,13,0.12)',  color: '#f97316', border: 'rgba(232,100,13,0.3)'   },
-    pinned:   { label: 'Pinned',   icon: '📌', bg: 'rgba(255,200,50,0.12)',  color: '#f0c040', border: 'rgba(255,200,50,0.3)'   },
-    locked:   { label: 'Locked',   icon: '🔒', bg: 'rgba(120,120,140,0.12)', color: '#888',    border: 'rgba(120,120,140,0.25)' },
-    official: { label: 'Official', icon: '🛡️', bg: 'rgba(0,180,232,0.1)',    color: '#38bdf8', border: 'rgba(0,180,232,0.25)'  },
+    hot:      { label: 'Hot',      icon: Solar.fire, bg: 'rgba(232,100,13,0.12)',  color: '#f97316', border: 'rgba(232,100,13,0.3)'   },
+    pinned:   { label: 'Pinned',   icon: Solar.pin, bg: 'rgba(255,200,50,0.12)',  color: '#f0c040', border: 'rgba(255,200,50,0.3)'   },
+    locked:   { label: 'Locked',   icon: Solar.lock, bg: 'rgba(120,120,140,0.12)', color: '#888',    border: 'rgba(120,120,140,0.25)' },
+    official: { label: 'Official', icon: Solar.shield, bg: 'rgba(0,180,232,0.1)',    color: '#38bdf8', border: 'rgba(0,180,232,0.25)'  },
     normal:   { label: '',         icon: '',   bg: '',                        color: '',        border: ''                      },
   }
   const c = configs[state]
   if (!c.label) return null
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: c.bg, border: `1px solid ${c.border}`, color: c.color, fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, letterSpacing: 0.4, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-      {c.icon} {c.label}
+      <Icon icon={c.icon} width={11} height={11} style={{ flexShrink: 0 }} /> {c.label}
     </span>
   )
 }
@@ -292,8 +294,8 @@ export default function ForumBoardPage() {
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, justifyContent: 'space-between', flexWrap: 'wrap', paddingBottom: 28 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18 }}>
-              <div style={{ width: 64, height: 64, background: 'linear-gradient(135deg, rgba(232,0,13,0.15), rgba(13,21,32,0.8))', border: '1px solid rgba(232,0,13,0.25)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, flexShrink: 0 }}>
-                {board.emoji}
+              <div style={{ width: 64, height: 64, background: 'linear-gradient(135deg, rgba(232,0,13,0.15), rgba(13,21,32,0.8))', border: '1px solid rgba(232,0,13,0.25)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <EmojiSolar emoji={board.emoji || '💬'} size={34} inline={false} />
               </div>
               <div>
                 <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 36, fontWeight: 900, textTransform: 'uppercase', color: '#fff', margin: '0 0 6px', lineHeight: 1 }}>{board.name}</h1>
@@ -312,7 +314,7 @@ export default function ForumBoardPage() {
                 </div>
               </div>
             </div>
-            {canPost && <button className="btn-primary" style={{ fontSize: 12, padding: '9px 20px' }} onClick={() => setShowNewThread(true)}>✏️ New Thread</button>}
+            {canPost && <button type="button" className="btn-primary" style={{ fontSize: 12, padding: '9px 20px', display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={() => setShowNewThread(true)}><Icon icon={Solar.pen} width={15} height={15} /> New Thread</button>}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '10px 0 0' }}>
@@ -332,7 +334,7 @@ export default function ForumBoardPage() {
             {/* Controls */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
               <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
-                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-dim)', pointerEvents: 'none' }}>🔍</span>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)', pointerEvents: 'none', display: 'flex' }}><Icon icon={Solar.magnifier} width={15} height={15} /></span>
                 <input type="text" placeholder="Search threads..." value={search} onChange={e => setSearch(e.target.value)} className="site-input" style={{ paddingLeft: 32, fontSize: 12, height: 34, width: '100%' }} />
               </div>
               <div style={{ display: 'flex', gap: 4 }}>
@@ -381,8 +383,8 @@ export default function ForumBoardPage() {
                     >
                       {/* Thread info */}
                       <div style={{ padding: '13px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', minWidth: 0 }}>
-                        <div style={{ width: 36, height: 36, background: isLocked ? 'rgba(120,120,140,0.1)' : isSticky ? 'rgba(232,0,13,0.1)' : 'var(--bg-4)', border: `1px solid ${isLocked ? 'rgba(120,120,140,0.15)' : isSticky ? 'rgba(232,0,13,0.2)' : 'var(--border)'}`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, marginTop: 1 }}>
-                          {isLocked ? '🔒' : isPinned ? '📌' : thread.state.includes('official') ? '🛡️' : thread.state.includes('hot') ? '🔥' : '💬'}
+                        <div style={{ width: 36, height: 36, background: isLocked ? 'rgba(120,120,140,0.1)' : isSticky ? 'rgba(232,0,13,0.1)' : 'var(--bg-4)', border: `1px solid ${isLocked ? 'rgba(120,120,140,0.15)' : isSticky ? 'rgba(232,0,13,0.2)' : 'var(--border)'}`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                          <Icon icon={isLocked ? Solar.lock : isPinned ? Solar.pin : thread.state.includes('official') ? Solar.shield : thread.state.includes('hot') ? Solar.fire : Solar.chat} width={18} height={18} style={{ opacity: 0.95 }} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 5 }}>
@@ -448,17 +450,17 @@ export default function ForumBoardPage() {
                     </Link>
                     {user?.role === 'admin' && (
                       <div style={{ display:'flex', gap:6, padding:'4px 16px 8px', background: isSticky ? 'rgba(255,255,255,0.015)' : 'transparent', borderBottom: idx < sortedThreads.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                        <button onClick={(e) => { e.preventDefault(); handlePinThread(thread.id, isPinned) }} style={{ fontSize:10, fontWeight:700, color: isPinned ? '#f0c040' : 'var(--text-dim)', background:'none', border:'1px solid var(--border)', borderRadius:4, padding:'2px 8px', cursor:'pointer' }}>
-                          📌 {isPinned ? 'Unpin' : 'Pin'}
+                        <button type="button" onClick={(e) => { e.preventDefault(); handlePinThread(thread.id, isPinned) }} style={{ fontSize:10, fontWeight:700, color: isPinned ? '#f0c040' : 'var(--text-dim)', background:'none', border:'1px solid var(--border)', borderRadius:4, padding:'2px 8px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:4 }}>
+                          <Icon icon={Solar.pin} width={12} height={12} /> {isPinned ? 'Unpin' : 'Pin'}
                         </button>
-                        <button onClick={(e) => { e.preventDefault(); handleLockThread(thread.id, isLocked) }} style={{ fontSize:10, fontWeight:700, color: isLocked ? '#888' : 'var(--text-dim)', background:'none', border:'1px solid var(--border)', borderRadius:4, padding:'2px 8px', cursor:'pointer' }}>
-                          🔒 {isLocked ? 'Unlock' : 'Lock'}
+                        <button type="button" onClick={(e) => { e.preventDefault(); handleLockThread(thread.id, isLocked) }} style={{ fontSize:10, fontWeight:700, color: isLocked ? '#888' : 'var(--text-dim)', background:'none', border:'1px solid var(--border)', borderRadius:4, padding:'2px 8px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:4 }}>
+                          <Icon icon={Solar.lock} width={12} height={12} /> {isLocked ? 'Unlock' : 'Lock'}
                         </button>
-                        <button onClick={(e) => { e.preventDefault(); handleOfficialThread(thread.id, thread.state.includes('official')) }} style={{ fontSize:10, fontWeight:700, color: thread.state.includes('official') ? '#38bdf8' : 'var(--text-dim)', background:'none', border:'1px solid var(--border)', borderRadius:4, padding:'2px 8px', cursor:'pointer' }}>
-                          🛡️ {thread.state.includes('official') ? 'Unofficial' : 'Official'}
+                        <button type="button" onClick={(e) => { e.preventDefault(); handleOfficialThread(thread.id, thread.state.includes('official')) }} style={{ fontSize:10, fontWeight:700, color: thread.state.includes('official') ? '#38bdf8' : 'var(--text-dim)', background:'none', border:'1px solid var(--border)', borderRadius:4, padding:'2px 8px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:4 }}>
+                          <Icon icon={Solar.shield} width={12} height={12} /> {thread.state.includes('official') ? 'Unofficial' : 'Official'}
                         </button>
-                        <button onClick={(e) => { e.preventDefault(); handleDeleteThread(thread.id) }} style={{ fontSize:10, fontWeight:700, color:'var(--red)', background:'none', border:'1px solid rgba(232,0,13,0.3)', borderRadius:4, padding:'2px 8px', cursor:'pointer', marginLeft:'auto' }}>
-                          🗑 Delete
+                        <button type="button" onClick={(e) => { e.preventDefault(); handleDeleteThread(thread.id) }} style={{ fontSize:10, fontWeight:700, color:'var(--red)', background:'none', border:'1px solid rgba(232,0,13,0.3)', borderRadius:4, padding:'2px 8px', cursor:'pointer', marginLeft:'auto', display:'inline-flex', alignItems:'center', gap:4 }}>
+                          <Icon icon={Solar.trash} width={12} height={12} /> Delete
                         </button>
                       </div>
                     )}
@@ -487,14 +489,14 @@ export default function ForumBoardPage() {
               <div style={{ padding: '11px 16px', background: 'var(--bg-3)', borderBottom: '1px solid var(--border)', fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: '#fff' }}>Thread Status</div>
               <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
-                  { icon: '🔥', label: 'Hot',      desc: 'High activity'    },
-                  { icon: '📌', label: 'Pinned',   desc: 'Stickied by mods' },
-                  { icon: '🛡️', label: 'Official', desc: 'Staff post'       },
-                  { icon: '🔒', label: 'Locked',   desc: 'No new replies'   },
-                  { icon: '💬', label: 'Normal',   desc: 'Regular thread'   },
+                  { icon: Solar.fire, label: 'Hot',      desc: 'High activity'    },
+                  { icon: Solar.pin, label: 'Pinned',   desc: 'Stickied by mods' },
+                  { icon: Solar.shield, label: 'Official', desc: 'Staff post'       },
+                  { icon: Solar.lock, label: 'Locked',   desc: 'No new replies'   },
+                  { icon: Solar.chat, label: 'Normal',   desc: 'Regular thread'   },
                 ].map(({ icon, label, desc }) => (
                   <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 14, lineHeight: 1, width: 20, textAlign: 'center' }}>{icon}</span>
+                    <span style={{ width: 20, display: 'flex', justifyContent: 'center' }}><Icon icon={icon} width={16} height={16} /></span>
                     <div>
                       <span style={{ fontSize: 11, fontWeight: 700, color: '#e0e0e8' }}>{label}</span>
                       <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 5 }}>{desc}</span>
@@ -510,7 +512,7 @@ export default function ForumBoardPage() {
                 <Link key={b.slug} href={`/forum/board/${b.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderBottom: i < board.relatedBoards.length - 1 ? '1px solid var(--border)' : 'none', textDecoration: 'none', transition: 'background 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-3)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  <span style={{ fontSize: 18, width: 28, height: 28, background: 'var(--bg-4)', border: '1px solid var(--border)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{b.emoji}</span>
+                  <span style={{ width: 28, height: 28, background: 'var(--bg-4)', border: '1px solid var(--border)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><EmojiSolar emoji={b.emoji} size={18} inline={false} /></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#f0f0f0' }}>{b.name}</div>
                     <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 1 }}>{b.threads.toLocaleString()} threads</div>
@@ -524,7 +526,7 @@ export default function ForumBoardPage() {
               <div style={{ background: 'linear-gradient(135deg, rgba(232,0,13,0.1), rgba(13,13,20,0.8))', border: '1px solid rgba(232,0,13,0.2)', borderRadius: 10, padding: '16px' }}>
                 <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 16, fontWeight: 800, textTransform: 'uppercase', color: '#fff', marginBottom: 6 }}>Start a Discussion</div>
                 <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 12px' }}>Share your thoughts, strategies, clips, and more with the community.</p>
-                <button className="btn-primary" style={{ width: '100%', fontSize: 12, padding: '9px', justifyContent: 'center' }} onClick={() => setShowNewThread(true)}>✏️ New Thread</button>
+                <button type="button" className="btn-primary" style={{ width: '100%', fontSize: 12, padding: '9px', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => setShowNewThread(true)}><Icon icon={Solar.pen} width={15} height={15} /> New Thread</button>
               </div>
             ) : postRoles.length > 0 && (
               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '16px', textAlign: 'center' }}>
@@ -542,8 +544,8 @@ export default function ForumBoardPage() {
           <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:600, maxWidth:'calc(100vw - 32px)', background:'#0F0F18', border:'1px solid rgba(255,255,255,0.075)', borderRadius:14, zIndex:1001, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 40px 100px rgba(0,0,0,0.85)' }}>
             {/* Header */}
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 22px', borderBottom:'1px solid rgba(255,255,255,0.065)' }}>
-              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:18, fontWeight:800, textTransform:'uppercase', color:'#fff' }}>✏️ New Thread</span>
-              <button onClick={() => setShowNewThread(false)} style={{ background:'var(--bg-4)', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:'50%', width:28, height:28, fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:18, fontWeight:800, textTransform:'uppercase', color:'#fff', display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.pen} width={20} height={20} /> New Thread</span>
+              <button type="button" onClick={() => setShowNewThread(false)} aria-label="Close" style={{ background:'var(--bg-4)', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:'50%', width:28, height:28, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.close} width={16} height={16} /></button>
             </div>
 
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:16 }}>
@@ -589,7 +591,7 @@ export default function ForumBoardPage() {
                         style={{ width:26, height:26, background:'transparent', border:'none', borderRadius:4, color:'var(--text-muted)', fontSize:t.length > 1 ? 13 : 11, fontWeight:t==='B'?800:t==='I'?400:700, fontStyle:t==='I'?'italic':'normal', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.15s, color 0.15s' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background='var(--bg-4)'; (e.currentTarget as HTMLButtonElement).style.color='#fff' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background='transparent'; (e.currentTarget as HTMLButtonElement).style.color='var(--text-muted)' }}>
-                        {t}
+                        {t === '🔗' ? <Icon icon={Solar.link} width={14} height={14} /> : t === '🖼️' ? <Icon icon={Solar.gallery} width={14} height={14} /> : t}
                       </button>
                   ))}
                 </div>
@@ -621,7 +623,7 @@ export default function ForumBoardPage() {
 
               {/* Posting as */}
               <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:11, color:'var(--text-muted)' }}>
-                <div style={{ width:24, height:24, background:'rgba(232,0,13,0.15)', border:'1px solid rgba(232,0,13,0.25)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>👤</div>
+                <div style={{ width:24, height:24, background:'rgba(232,0,13,0.15)', border:'1px solid rgba(232,0,13,0.25)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.user} width={14} height={14} /></div>
                 Posting as <strong style={{ color: (user as any)?.usernameColor || '#e74c3c' }}>{user?.username || 'Guest'}</strong> in <strong style={{ color:'#fff' }}>{board.name}</strong>
               </div>
 
@@ -632,7 +634,7 @@ export default function ForumBoardPage() {
                 disabled={creating || newTitle.trim().length < 5 || newContent.trim().length < 10}
                 style={{ width:'100%', justifyContent:'center', padding:'12px', fontSize:13, opacity:(creating || newTitle.trim().length < 5 || newContent.trim().length < 10) ? 0.5 : 1, cursor:(creating || newTitle.trim().length < 5 || newContent.trim().length < 10) ? 'not-allowed' : 'pointer' }}
               >
-                {creating ? 'Creating...' : '✈️ Create Thread'}
+                {creating ? 'Creating...' : <><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Icon icon={Solar.plain} width={16} height={16} /> Create Thread</span></>}
               </button>
             </div>
           </div>

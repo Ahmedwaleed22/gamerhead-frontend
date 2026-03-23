@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { adminApi } from '@/lib/api'
 import ActionBtn from '../components/ActionBtn'
 import StatCard from '../components/StatCard'
+import { Solar } from '@/lib/solar-duotone'
 
 const CATEGORY_COLORS: Record<string, string> = {
   match: '#3b82f6', tournament: '#a855f7', wager: '#f59e0b', premium: '#22c55e', technical: '#3b82f6', general: '#8890A4',
@@ -100,8 +101,8 @@ export default function AdminLiveChatPage() {
       {/* Stats */}
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-          <StatCard icon="⏳" label="In Queue" value={stats.queueCount} color={stats.queueCount > 0 ? '#e8000d' : '#22c55e'} />
-          <StatCard icon="💬" label="Active Chats" value={stats.activeCount} color="#3b82f6" />
+          <StatCard icon={Solar.hourglass} label="In Queue" value={stats.queueCount} color={stats.queueCount > 0 ? '#e8000d' : '#22c55e'} />
+          <StatCard icon={Solar.chat} label="Active Chats" value={stats.activeCount} color="#3b82f6" />
         </div>
       )}
 

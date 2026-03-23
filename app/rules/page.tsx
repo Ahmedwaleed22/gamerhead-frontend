@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 // ─── TERMS & POLICY ──────────────────────────────────────────────────────────
 const termsData = [
@@ -99,9 +101,9 @@ const faqData = [
 ]
 
 const TABS = [
-  { key: 'terms',  label: 'Terms & Policy', icon: '📜' },
-  { key: 'rules',  label: 'General Rules',  icon: '📋' },
-  { key: 'faq',    label: 'F.A.Q',          icon: '❓' },
+  { key: 'terms',  label: 'Terms & Policy', icon: Solar.rules },
+  { key: 'rules',  label: 'General Rules',  icon: Solar.clipboard },
+  { key: 'faq',    label: 'F.A.Q',          icon: Solar.question },
 ] as const
 
 type TabKey = typeof TABS[number]['key']
@@ -163,7 +165,7 @@ export default function RulesPage() {
               gap: 8,
             }}
           >
-            <span>{tab.icon}</span>
+            <Icon icon={tab.icon} width={18} height={18} style={{ flexShrink: 0 }} />
             {tab.label}
           </button>
         ))}

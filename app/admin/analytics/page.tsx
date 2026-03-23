@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { adminApi } from '@/lib/api'
 import StatCard from '../components/StatCard'
+import { Solar } from '@/lib/solar-duotone'
 import DataTable, { Column } from '../components/DataTable'
 
 type Period = '7d' | '30d' | '90d'
@@ -54,10 +55,10 @@ export default function AdminAnalyticsPage() {
       {/* Stats Row */}
       {analytics && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-          <StatCard icon="💵" label={`Revenue (${period})`} value={`$${((analytics.revenue || 0) / 100).toFixed(2)}`} color="#22c55e" />
-          <StatCard icon="👥" label={`New Users (${period})`} value={analytics.newUsers} color="#3b82f6" />
-          <StatCard icon="⚔️" label={`Matches (${period})`} value={analytics.matchesPlayed} />
-          <StatCard icon="🎓" label={`Coaching Orders (${period})`} value={analytics.coachingOrders} color="#a855f7" />
+          <StatCard icon={Solar.bill} label={`Revenue (${period})`} value={`$${((analytics.revenue || 0) / 100).toFixed(2)}`} color="#22c55e" />
+          <StatCard icon={Solar.users} label={`New Users (${period})`} value={analytics.newUsers} color="#3b82f6" />
+          <StatCard icon={Solar.sword} label={`Matches (${period})`} value={analytics.matchesPlayed} />
+          <StatCard icon={Solar.diploma} label={`Coaching Orders (${period})`} value={analytics.coachingOrders} color="#a855f7" />
         </div>
       )}
 

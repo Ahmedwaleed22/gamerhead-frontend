@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { getRepColor, getRepGradient, getRepLabel } from '@/lib/reputation'
 import { useAuth } from '@/lib/auth-context'
 import { forumApi } from '@/lib/api'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 import { sendActivity } from '@/lib/socket'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
@@ -487,8 +489,9 @@ export default function ThreadPage() {
                 {thread.tags.map(tag => (
                   <span key={tag} style={{ fontSize: 10, fontWeight: 600, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 4 }}>{tag}</span>
                 ))}
-                <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(39,174,96,0.1)', border: '1px solid rgba(39,174,96,0.2)', color: '#4ade80', padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: 0.4 }}>
-                  🟢 {thread.status === 'open' ? 'Open' : 'Locked'}
+                <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(39,174,96,0.1)', border: '1px solid rgba(39,174,96,0.2)', color: '#4ade80', padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: 0.4, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <Icon icon={Solar.online} width={12} height={12} style={{ flexShrink: 0, color: thread.status === 'open' ? '#4ade80' : '#888' }} />
+                  {thread.status === 'open' ? 'Open' : 'Locked'}
                 </span>
               </div>
               <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 26, fontWeight: 900, textTransform: 'uppercase', color: '#fff', margin: '0 0 10px', lineHeight: 1.2 }}>
@@ -515,7 +518,10 @@ export default function ThreadPage() {
                   } catch (err) { console.error('Subscribe failed:', err) }
                 }}
                 style={{ padding: '7px 14px', background: subscribed ? 'rgba(232,0,13,0.12)' : 'var(--bg-3)', border: `1px solid ${subscribed ? 'rgba(232,0,13,0.3)' : 'var(--border)'}`, borderRadius: 6, color: subscribed ? 'var(--red)' : 'var(--text-muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Barlow, sans-serif', textTransform: 'uppercase', letterSpacing: 0.3 }}>
-                {subscribed ? '🔔 Subscribed' : '🔔 Subscribe'}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Icon icon={Solar.bell} width={13} height={13} />
+                  {subscribed ? 'Subscribed' : 'Subscribe'}
+                </span>
               </button>
               <button
                 onClick={async () => {
@@ -525,19 +531,28 @@ export default function ThreadPage() {
                   } catch (err) { console.error('Bookmark failed:', err) }
                 }}
                 style={{ padding: '7px 14px', background: bookmarked ? 'rgba(240,192,64,0.12)' : 'var(--bg-3)', border: `1px solid ${bookmarked ? 'rgba(240,192,64,0.3)' : 'var(--border)'}`, borderRadius: 6, color: bookmarked ? '#f0c040' : 'var(--text-muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Barlow, sans-serif', textTransform: 'uppercase', letterSpacing: 0.3 }}>
-                {bookmarked ? '🔖 Bookmarked' : '🔖 Bookmark'}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Icon icon={Solar.bookmark} width={13} height={13} />
+                  {bookmarked ? 'Bookmarked' : 'Bookmark'}
+                </span>
               </button>
               <button className="btn-primary" style={{ fontSize: 11, padding: '7px 16px' }}
                 onClick={() => document.getElementById('reply-box')?.scrollIntoView({ behavior: 'smooth' })}>
-                ✏️ Reply
+                <Icon icon={Solar.pen} width={13} height={13} /> Reply
               </button>
               {user?.role === 'admin' && (
                 <>
                   <button onClick={handleLockThread} style={{ padding:'7px 14px', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, color: thread.status === 'locked' ? '#f0c040' : 'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'Barlow, sans-serif', textTransform:'uppercase', letterSpacing:0.3 }}>
-                    🔒 {thread.status === 'locked' ? 'Unlock' : 'Lock'}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <Icon icon={Solar.lock} width={13} height={13} />
+                      {thread.status === 'locked' ? 'Unlock' : 'Lock'}
+                    </span>
                   </button>
                   <button onClick={handleDeleteThread} style={{ padding:'7px 14px', background:'rgba(232,0,13,0.1)', border:'1px solid rgba(232,0,13,0.3)', borderRadius:6, color:'var(--red)', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'Barlow, sans-serif', textTransform:'uppercase', letterSpacing:0.3 }}>
-                    🗑 Delete
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <Icon icon={Solar.trash} width={13} height={13} />
+                      Delete
+                    </span>
                   </button>
                 </>
               )}
@@ -750,13 +765,13 @@ export default function ThreadPage() {
                       {/* Action buttons */}
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {[
-                          { label: 'Quote', icon: '💬', action: () => handleQuote(post) },
-                          { label: 'Reply', icon: '↩️', action: () => { setQuoting(null); document.getElementById('reply-box')?.scrollIntoView({ behavior: 'smooth' }) } },
-                          { label: 'Share', icon: '🔗', action: handleShare },
-                          ...(user?.username === post.user.name || user?.role === 'admin' ? [{ label: 'Edit', icon: '✏️', action: () => { setEditingPostId(post.id); setEditContent(post.content) } }] : []),
-                          ...(user?.role === 'admin' ? [{ label: 'Delete', icon: '🗑', action: () => handleDeletePost(post.id) }] : []),
-                          ...(user?.role === 'admin' && post.isReported ? [{ label: 'Dismiss Report', icon: '✅', color: '#F39C12', action: () => handleDismissReport(post.id) }] : []),
-                          ...(user?.username !== post.user.name ? [{ label: 'Report', icon: '🚩', action: () => { setReportPostId(post.id); setReportReason('') } }] : []),
+                          { label: 'Quote', icon: Solar.chat, action: () => handleQuote(post) },
+                          { label: 'Reply', icon: Solar.reply, action: () => { setQuoting(null); document.getElementById('reply-box')?.scrollIntoView({ behavior: 'smooth' }) } },
+                          { label: 'Share', icon: Solar.link, action: handleShare },
+                          ...(user?.username === post.user.name || user?.role === 'admin' ? [{ label: 'Edit', icon: Solar.pen, action: () => { setEditingPostId(post.id); setEditContent(post.content) } }] : []),
+                          ...(user?.role === 'admin' ? [{ label: 'Delete', icon: Solar.trash, action: () => handleDeletePost(post.id) }] : []),
+                          ...(user?.role === 'admin' && post.isReported ? [{ label: 'Dismiss Report', icon: Solar.check, color: '#F39C12', action: () => handleDismissReport(post.id) }] : []),
+                          ...(user?.username !== post.user.name ? [{ label: 'Report', icon: Solar.flag, action: () => { setReportPostId(post.id); setReportReason('') } }] : []),
                         ].map((btn: any) => (
                           <button
                             key={btn.label}
@@ -765,7 +780,7 @@ export default function ThreadPage() {
                             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLButtonElement).style.color = btn.color || '#fff' }}
                             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = btn.color || 'var(--text-dim)' }}
                           >
-                            <span style={{ fontSize: 12 }}>{btn.icon}</span> {btn.label}
+                            <Icon icon={btn.icon} width={12} height={12} style={{ flexShrink: 0 }} /> {btn.label}
                           </button>
                         ))}
                       </div>
@@ -789,14 +804,14 @@ export default function ThreadPage() {
             {/* ── REPLY BOX ── */}
             {thread.status === 'locked' && user?.role !== 'admin' ? (
               <div id="reply-box" style={{ background: 'var(--bg-2)', border: '1px solid rgba(240,192,64,0.2)', borderRadius: 10, padding: '20px', textAlign: 'center' }}>
-                <span style={{ fontSize: 20, marginBottom: 6, display: 'block' }}>🔒</span>
+                <span style={{ marginBottom: 6, display: 'flex', justifyContent: 'center' }}><Icon icon={Solar.lock} width={20} height={20} style={{ color: '#f0c040' }} /></span>
                 <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 14, fontWeight: 800, textTransform: 'uppercase', color: '#f0c040', letterSpacing: 0.5 }}>Thread Locked</div>
                 <div style={{ fontSize: 11, color: '#4F5568', marginTop: 4 }}>This thread has been locked. No new replies can be posted.</div>
               </div>
             ) : (
             <div id="reply-box" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
               <div style={{ padding: '13px 18px', background: 'var(--bg-3)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 16 }}>✏️</span>
+                <Icon icon={Solar.pen} width={16} height={16} />
                 <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 14, fontWeight: 800, textTransform: 'uppercase', color: '#fff' }}>Post a Reply</span>
               </div>
 
@@ -808,7 +823,7 @@ export default function ThreadPage() {
                       <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--red)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>Quoting {quoting.author}:</div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic', lineHeight: 1.5 }}>{quoting.text}</div>
                     </div>
-                    <button onClick={() => setQuoting(null)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: 14, cursor: 'pointer', flexShrink: 0, padding: '0 4px' }}>✕</button>
+                    <button type="button" onClick={() => setQuoting(null)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', flexShrink: 0, padding: '0 4px', display: 'inline-flex', alignItems: 'center' }}><Icon icon={Solar.close} width={14} height={14} /></button>
                   </div>
                 )}
 
@@ -922,13 +937,20 @@ export default function ThreadPage() {
                   { label: 'Views',      value: thread.views.toLocaleString()       },
                   { label: 'Started',    value: thread.createdAt                    },
                   { label: 'Board',      value: thread.board, isLink: true          },
-                  { label: 'Status',     value: '🟢 Open', isStatus: true           },
+                  { label: 'Status',     statusRow: true as const                   },
                 ].map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-dim)' }}>{row.label}</span>
-                    {row.isLink
+                    {'isLink' in row && row.isLink
                       ? <Link href={`/forum/board/${thread.boardSlug}`} style={{ fontSize: 11, fontWeight: 700, color: 'var(--red)', textDecoration: 'none' }}>{row.value}</Link>
-                      : <span style={{ fontSize: 11, fontWeight: 700, color: row.isStatus ? '#4ade80' : '#fff' }}>{row.value}</span>
+                      : 'statusRow' in row && row.statusRow
+                        ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                            <Icon icon={Solar.online} width={12} height={12} style={{ color: thread.status === 'open' ? '#4ade80' : '#888' }} />
+                            <span style={{ fontSize: 11, fontWeight: 700, color: thread.status === 'open' ? '#4ade80' : 'var(--text-muted)' }}>{thread.status === 'open' ? 'Open' : 'Locked'}</span>
+                          </span>
+                          )
+                        : <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{'value' in row ? row.value : ''}</span>
                     }
                   </div>
                 ))}

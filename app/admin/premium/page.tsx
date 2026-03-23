@@ -6,6 +6,7 @@ import DataTable, { Column } from '../components/DataTable'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
 import StatCard from '../components/StatCard'
+import { Solar } from '@/lib/solar-duotone'
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
@@ -83,9 +84,9 @@ export default function AdminPremiumPage() {
 
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-          <StatCard icon="⭐" label="Total Premium Members" value={stats.totalMembers} color="#f59e0b" />
-          <StatCard icon="⚠️" label="Expiring This Week" value={stats.expiringThisWeek} color={stats.expiringThisWeek > 0 ? '#e8000d' : '#22c55e'} />
-          <StatCard icon="🆕" label="New This Month" value={stats.newThisMonth} color="#3b82f6" />
+          <StatCard icon={Solar.star} label="Total Premium Members" value={stats.totalMembers} color="#f59e0b" />
+          <StatCard icon={Solar.warning} label="Expiring This Week" value={stats.expiringThisWeek} color={stats.expiringThisWeek > 0 ? '#e8000d' : '#22c55e'} />
+          <StatCard icon={Solar.sparkles} label="New This Month" value={stats.newThisMonth} color="#3b82f6" />
         </div>
       )}
 

@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Icon } from '@iconify/react'
 import { useApi } from '@/lib/use-api'
 import { gamesApi } from '@/lib/api'
+import { Solar } from '@/lib/solar-duotone'
 
 const FILTERS = ['All Games', 'FPS', 'Sports', 'Battle Royale', 'Fighting', 'Racing', 'Other']
 
@@ -101,7 +103,9 @@ export default function GamesPage() {
 
       {error && (
         <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+          <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
+            <Icon icon={Solar.warning} width={40} height={40} />
+          </div>
           <div>Failed to load games. Make sure the backend is running.</div>
         </div>
       )}
@@ -126,7 +130,6 @@ export default function GamesPage() {
     </div>
   )
 }
-
 function GameCard({ game }: { game: any }) {
   const [hovered, setHovered] = useState(false)
   const pc      = platformColor(game)

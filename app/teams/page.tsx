@@ -6,6 +6,8 @@ import { useApi, useMutation } from '@/lib/use-api'
 import { teamsApi, invitesApi, usersApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import DashSidebar from '@/app/components/DashSidebar'
+import { Icon } from '@iconify/react'
+import { Solar, EmojiSolar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 
@@ -113,14 +115,14 @@ function ManageTeamModal({ team, user, onClose, onUpdated }: { team: any; user: 
             <div style={{ width: 40, height: 40, background: '#25252C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, overflow: 'hidden' }}>
               {(team.logoUrl || team.bannerUrl) && ((team.logoUrl || team.bannerUrl).startsWith('http') || (team.logoUrl || team.bannerUrl).startsWith('/') || (team.logoUrl || team.bannerUrl).startsWith('data:image'))
                 ? <img src={team.logoUrl || team.bannerUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                : (team.emoji || team.name?.charAt(0).toUpperCase() || 'T')}
+                : (team.emoji ? <EmojiSolar emoji={team.emoji} size={20} /> : team.name?.charAt(0).toUpperCase() || 'T')}
             </div>
             <div>
               <div style={{ ...R, fontWeight: 700, fontSize: 16, color: '#fff' }}>{team.name}</div>
               <div style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Manage Team</div>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: '#25252C', border: 'none', borderRadius: 8, width: 32, height: 32, color: '#9CA3AF', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button type="button" onClick={onClose} style={{ background: '#25252C', border: 'none', borderRadius: 8, width: 32, height: 32, color: '#9CA3AF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Close"><Icon icon={Solar.close} width={16} height={16} /></button>
         </div>
 
         {/* Tabs */}
@@ -449,7 +451,7 @@ export default function MyTeamsPage() {
                         <div style={{ width: 56, height: 56, background: '#25252C', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                           {(team.logoUrl || team.bannerUrl) && ((team.logoUrl || team.bannerUrl).startsWith('http') || (team.logoUrl || team.bannerUrl).startsWith('/') || (team.logoUrl || team.bannerUrl).startsWith('data:image'))
                             ? <img src={team.logoUrl || team.bannerUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                            : (team.emoji || team.name?.charAt(0).toUpperCase() || 'T')}
+                            : (team.emoji ? <EmojiSolar emoji={team.emoji} size={26} /> : team.name?.charAt(0).toUpperCase() || 'T')}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
@@ -457,8 +459,8 @@ export default function MyTeamsPage() {
                             <span style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 10, color: '#6B7280', fontFamily: 'monospace' }}>ID-{team._id?.toString().slice(-8).toUpperCase()}</span>
                             <span style={{ background: roleBg, border: `1px solid ${roleBdr}`, borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: roleColor, textTransform: 'uppercase', letterSpacing: 0.4 }}>{myRole}</span>
                             {team.tournamentId ? (
-                              <span style={{ background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.3)', borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: '#f0c040', letterSpacing: 0.4 }}>
-                                🏆 Tournament
+                              <span style={{ background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.3)', borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: '#f0c040', letterSpacing: 0.4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <Icon icon={Solar.trophy} width={12} height={12} /> Tournament
                               </span>
                             ) : (
                               <span style={{ background: isCash ? 'rgba(212,146,10,0.12)' : 'rgba(124,58,237,0.12)', border: `1px solid ${isCash ? 'rgba(212,146,10,0.3)' : 'rgba(124,58,237,0.3)'}`, borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: isCash ? '#F0AA1A' : '#A78BFA', letterSpacing: 0.4 }}>

@@ -5,6 +5,7 @@ import { adminApi } from '@/lib/api'
 import DataTable, { Column } from '../components/DataTable'
 import SearchFilter from '../components/SearchFilter'
 import StatCard from '../components/StatCard'
+import { Solar } from '@/lib/solar-duotone'
 import ActionBtn from '../components/ActionBtn'
 
 const R: React.CSSProperties = { fontFamily: 'Rajdhani, sans-serif' }
@@ -350,9 +351,9 @@ export default function AdminSupportPage() {
 
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-          <StatCard icon="📋" label="Open" value={stats.open} color={stats.open > 0 ? '#f59e0b' : '#22c55e'} />
-          <StatCard icon="👤" label="Claimed" value={stats.claimed} color="#3b82f6" />
-          <StatCard icon="✅" label="Closed" value={stats.closed} />
+          <StatCard icon={Solar.clipboard} label="Open" value={stats.open} color={stats.open > 0 ? '#f59e0b' : '#22c55e'} />
+          <StatCard icon={Solar.user} label="Claimed" value={stats.claimed} color="#3b82f6" />
+          <StatCard icon={Solar.check} label="Closed" value={stats.closed} />
         </div>
       )}
 

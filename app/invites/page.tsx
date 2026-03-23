@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { Icon } from '@iconify/react'
 import { useApi, useMutation } from '@/lib/use-api'
 import { invitesApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 
@@ -37,8 +39,12 @@ function InviteDetailModal({ invite, onClose, onRespond }: { invite: any; onClos
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: '#18181C', borderRadius: 14, width: 520, padding: '32px 36px', border: '1px solid #25252C' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-          <div style={{ width: 64, height: 64, background: '#25252C', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, flexShrink: 0 }}>
-            {invite.logo || '🎮'}
+          <div style={{ width: 64, height: 64, background: '#25252C', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {invite.logo && String(invite.logo).startsWith('http') ? (
+              <img src={invite.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 14 }} />
+            ) : (
+              <EmojiSolar emoji={invite.logo || '🎮'} size={36} inline={false} />
+            )}
           </div>
           <div>
             <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 24, color: '#fff' }}>{invite.team}</div>
@@ -131,7 +137,9 @@ export default function InvitesPage() {
               {/* Empty */}
               {!loading && invites.length === 0 && (
                 <div style={{ padding: '52px 24px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>✉️</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
+                    <Icon icon={Solar.letter} width={40} height={40} style={{ opacity: 0.85 }} />
+                  </div>
                   <div style={{ ...R, fontWeight: 700, fontSize: 15, color: '#fff', marginBottom: 6 }}>No pending invites</div>
                   <div style={{ ...R, fontSize: 13, color: '#4A5568' }}>You're all caught up! Check back later.</div>
                 </div>
@@ -147,8 +155,12 @@ export default function InvitesPage() {
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
 
                       {/* Team logo */}
-                      <div style={{ width: 52, height: 52, background: '#25252C', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
-                        {inv.logo || '🎮'}
+                      <div style={{ width: 52, height: 52, background: '#25252C', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                        {inv.logo && String(inv.logo).startsWith('http') ? (
+                          <img src={inv.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <EmojiSolar emoji={inv.logo || '🎮'} size={28} inline={false} />
+                        )}
                       </div>
 
                       <div style={{ flex: 1, minWidth: 0 }}>

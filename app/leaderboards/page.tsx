@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Icon } from '@iconify/react'
 import { leaderboardsApi } from '@/lib/api'
+import { Solar } from '@/lib/solar-duotone'
 
 const FILTER_TABS = ['Wins', 'Cash', 'XP', 'Trophies']
 const PER_PAGE    = 10
@@ -111,15 +113,15 @@ function Cell({ colKey, player }: { colKey: ColKey; player: any }) {
         <td style={{ padding: '14px 14px', whiteSpace: 'nowrap' }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 13 }}>🏆</span>
+              <Icon icon={Solar.trophy} width={15} height={15} style={{ flexShrink: 0, color: '#F0C040' }} />
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 14, color: '#F0C040' }}>{player.trophies.gold}</span>
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 13 }}>🥈</span>
+              <Icon icon={Solar.medalRibbon} width={15} height={15} style={{ flexShrink: 0, color: '#C0C0C0' }} />
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 14, color: '#C0C0C0' }}>{player.trophies.silver}</span>
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 13 }}>🥉</span>
+              <Icon icon={Solar.medalRibbon} width={15} height={15} style={{ flexShrink: 0, color: '#CD7F32' }} />
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 14, color: '#CD7F32' }}>{player.trophies.bronze}</span>
             </span>
           </div>
@@ -249,8 +251,14 @@ export default function LeaderboardsPage() {
             <div className="lb-sidebar-header" style={{ cursor: 'default' }}><span>Filter by</span></div>
             <div className="lb-sidebar-body">
               {FILTER_TABS.map(t => (
-                <button key={t} className={`lb-sidebar-link${activeTab === t ? ' active' : ''}`} onClick={() => handleTab(t)}>
-                  {t === 'Wins' ? '🏆 ' : t === 'Cash' ? '💵 ' : t === 'XP' ? '⭐ ' : '🎖️ '}{t}
+                <button key={t} className={`lb-sidebar-link${activeTab === t ? ' active' : ''}`} onClick={() => handleTab(t)} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon
+                    icon={t === 'Wins' ? Solar.trophy : t === 'Cash' ? Solar.bill : t === 'XP' ? Solar.star : Solar.medal}
+                    width={16}
+                    height={16}
+                    style={{ flexShrink: 0, opacity: 0.9 }}
+                  />
+                  {t}
                 </button>
               ))}
             </div>
@@ -319,7 +327,7 @@ export default function LeaderboardsPage() {
                             color: rankColor(p.rank),
                             minWidth: 28,
                           }}>
-                            {p.rank === 1 ? '👑' : ordinal(p.rank)}
+                            {p.rank === 1 ? <Icon icon={Solar.crown} width={18} height={18} style={{ color: '#F0C040' }} /> : ordinal(p.rank)}
                           </span>
                           {p.rank > 3 && p.trend === 'up'   && <span style={{ fontSize: 9, color: '#4ADE80', fontWeight: 800 }}>▲</span>}
                           {p.rank > 3 && p.trend === 'down' && <span style={{ fontSize: 9, color: '#E8000D', fontWeight: 800 }}>▼</span>}

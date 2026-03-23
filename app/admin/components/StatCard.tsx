@@ -1,5 +1,11 @@
 'use client'
 
+import { Icon } from '@iconify/react'
+
+function isIconifyId(icon: string) {
+  return /^[a-z0-9]+:/i.test(icon)
+}
+
 interface StatCardProps {
   icon: string
   label: string
@@ -15,7 +21,7 @@ export default function StatCard({ icon, label, value, color = '#fff', sub }: St
       padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 6,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 20 }}>{icon}</span>
+        {isIconifyId(icon) ? <Icon icon={icon} width={22} height={22} style={{ flexShrink: 0 }} /> : <span style={{ fontSize: 20 }}>{icon}</span>}
         <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8 }}>
           {label}
         </span>

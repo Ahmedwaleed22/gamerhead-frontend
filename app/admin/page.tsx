@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { adminApi } from '@/lib/api'
 import StatCard from './components/StatCard'
 import Link from 'next/link'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 interface DashboardStats {
   totalUsers: number
@@ -30,11 +32,11 @@ interface DashboardStats {
 }
 
 const QUICK_ACTIONS = [
-  { label: 'Resolve Disputes', href: '/admin/matches?status=disputed', icon: '⚔️', color: '#e8000d' },
-  { label: 'Review Tickets', href: '/admin/support?status=open', icon: '🎫', color: '#3b82f6' },
-  { label: 'Send Announcement', href: '/admin/announcements', icon: '📢', color: '#f59e0b' },
-  { label: 'Set Player of Week', href: '/admin/player-of-week', icon: '🏅', color: '#a855f7' },
-  { label: 'View Withdrawals', href: '/admin/wallet?tab=withdrawals', icon: '💰', color: '#22c55e' },
+  { label: 'Resolve Disputes', href: '/admin/matches?status=disputed', icon: Solar.sword, color: '#e8000d' },
+  { label: 'Review Tickets', href: '/admin/support?status=open', icon: Solar.ticket, color: '#3b82f6' },
+  { label: 'Send Announcement', href: '/admin/announcements', icon: Solar.megaphone, color: '#f59e0b' },
+  { label: 'Set Player of Week', href: '/admin/player-of-week', icon: Solar.medal, color: '#a855f7' },
+  { label: 'View Withdrawals', href: '/admin/wallet?tab=withdrawals', icon: Solar.coin, color: '#22c55e' },
 ]
 
 export default function AdminDashboard() {
@@ -80,14 +82,14 @@ export default function AdminDashboard() {
 
       {/* Row 1: Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-        <StatCard icon="👥" label="Total Users" value={stats.totalUsers.toLocaleString()} />
-        <StatCard icon="🟢" label="Active (24h)" value={stats.activeUsers24h.toLocaleString()} color="#22c55e" />
-        <StatCard icon="⚡" label="Live Matches" value={stats.liveMatches} color="#3b82f6" />
-        <StatCard icon="⚠️" label="Open Disputes" value={stats.disputedMatches} color={stats.disputedMatches > 0 ? '#e8000d' : '#22c55e'} />
-        <StatCard icon="🎫" label="Open Tickets" value={stats.openTickets} color={stats.openTickets > 0 ? '#f59e0b' : '#22c55e'} />
-        <StatCard icon="💵" label="Revenue (30d)" value={`$${(stats.revenue30d / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="#22c55e" />
-        <StatCard icon="⏳" label="Pending Withdrawals" value={stats.pendingWithdrawals} color={stats.pendingWithdrawals > 0 ? '#f59e0b' : '#4F5568'} />
-        <StatCard icon="🚫" label="Banned Users" value={stats.bannedUsers} color={stats.bannedUsers > 0 ? '#e8000d' : '#4F5568'} />
+        <StatCard icon={Solar.users} label="Total Users" value={stats.totalUsers.toLocaleString()} />
+        <StatCard icon={Solar.live} label="Active (24h)" value={stats.activeUsers24h.toLocaleString()} color="#22c55e" />
+        <StatCard icon={Solar.bolt} label="Live Matches" value={stats.liveMatches} color="#3b82f6" />
+        <StatCard icon={Solar.warning} label="Open Disputes" value={stats.disputedMatches} color={stats.disputedMatches > 0 ? '#e8000d' : '#22c55e'} />
+        <StatCard icon={Solar.ticket} label="Open Tickets" value={stats.openTickets} color={stats.openTickets > 0 ? '#f59e0b' : '#22c55e'} />
+        <StatCard icon={Solar.bill} label="Revenue (30d)" value={`$${(stats.revenue30d / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="#22c55e" />
+        <StatCard icon={Solar.hourglass} label="Pending Withdrawals" value={stats.pendingWithdrawals} color={stats.pendingWithdrawals > 0 ? '#f59e0b' : '#4F5568'} />
+        <StatCard icon={Solar.forbidden} label="Banned Users" value={stats.bannedUsers} color={stats.bannedUsers > 0 ? '#e8000d' : '#4F5568'} />
       </div>
 
       {/* Row 2: Activity + Quick Actions */}
@@ -113,8 +115,8 @@ export default function AdminDashboard() {
                 display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
                 borderRadius: 6, background: 'rgba(255,255,255,.02)',
               }}>
-                <span style={{ fontSize: 14, width: 22, textAlign: 'center' }}>
-                  {item.type === 'new_user' ? '🆕' : item.type === 'admin_action' ? '🔧' : '📋'}
+                <span style={{ width: 22, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+                  <Icon icon={item.type === 'new_user' ? Solar.sparkles : item.type === 'admin_action' ? Solar.tools : Solar.clipboard} width={16} height={16} />
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
@@ -167,7 +169,7 @@ export default function AdminDashboard() {
                     e.currentTarget.style.borderColor = 'rgba(255,255,255,.04)'
                   }}
                 >
-                  <span style={{ fontSize: 18 }}>{qa.icon}</span>
+                  <Icon icon={qa.icon} width={20} height={20} style={{ flexShrink: 0 }} />
                   <span style={{
                     fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 13,
                     color: '#DDE0EA',
@@ -186,10 +188,10 @@ export default function AdminDashboard() {
 
       {/* Row 3: Mini Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-        <StatCard icon="🛡️" label="Active Teams" value={stats.totalTeams} />
-        <StatCard icon="🎯" label="Total Matches" value={stats.totalMatches.toLocaleString()} />
-        <StatCard icon="📋" label="Claimed Tickets" value={stats.claimedTickets} sub="Being handled" />
-        <StatCard icon="🆕" label="New Today" value={stats.newUsersToday} sub="User registrations" color="#3b82f6" />
+        <StatCard icon={Solar.shield} label="Active Teams" value={stats.totalTeams} />
+        <StatCard icon={Solar.target} label="Total Matches" value={stats.totalMatches.toLocaleString()} />
+        <StatCard icon={Solar.clipboard} label="Claimed Tickets" value={stats.claimedTickets} sub="Being handled" />
+        <StatCard icon={Solar.sparkles} label="New Today" value={stats.newUsersToday} sub="User registrations" color="#3b82f6" />
       </div>
     </div>
   )

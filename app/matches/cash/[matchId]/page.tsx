@@ -8,6 +8,8 @@ import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { matchesApi, supportApi } from '@/lib/api'
 import { sendActivity } from '@/lib/socket'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 // ─── ACCENT COLOR: Gold / Wager ────────────────────────
 const ACCENT      = '#F0AA1A'
@@ -599,7 +601,7 @@ export default function CashMatchPage() {
                 return (
                   <div key={idx} style={{ display:'grid', gridTemplateColumns:'22px 26px 1fr auto', gap:6, alignItems:'center', padding:'5px 0' }}>
                     <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, color:'#4F5568', textAlign:'center' }}>{idx + 1}</span>
-                    <div style={{ width:24, height:24, background:`linear-gradient(135deg,${hostColor}40,${hostColor}14)`, border:`1px solid ${hostColor}4D`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12 }}>🏙️</div>
+                    <div style={{ width:24, height:24, background:`linear-gradient(135deg,${hostColor}40,${hostColor}14)`, border:`1px solid ${hostColor}4D`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.building} width={14} height={14} style={{ opacity: 0.9 }} /></div>
                     <div>
                       <div style={{ fontSize:11, fontWeight:700, color: mapName === 'Pending' ? '#4F5568' : '#DDE0EA', fontFamily:'Rajdhani, sans-serif', lineHeight:1.2 }}>{mapName}</div>
                       <div style={{ fontSize:9, color:'#4F5568', marginTop:1 }}>{gamemode || 'Standard'}</div>

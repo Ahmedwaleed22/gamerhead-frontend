@@ -9,6 +9,8 @@ import { useApi } from '@/lib/use-api'
 import { teamsApi, matchesApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import PostMatchModal from '@/app/components/PostMatchModal'
+import { Icon } from '@iconify/react'
+import { Solar, EmojiSolar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 const BC: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif" }
@@ -150,7 +152,7 @@ export default function TeamProfilePage() {
                 {!team.tournamentId && <span style={{ background: `${cfg.accent}18`, border: `1px solid ${cfg.accent}30`, borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: cfg.accent, letterSpacing: 0.5, textTransform: 'uppercase' }}>{cfg.badge}</span>}
                 {team.isPremiumTeam && <span style={{ background: 'rgba(240,170,26,0.09)', border: '1px solid rgba(240,170,26,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#F0AA1A', letterSpacing: 0.5, textTransform: 'uppercase' }}>&#9733; Premium</span>}
                 {team.isRecruiting && <span style={{ background: 'rgba(74,222,128,0.09)', border: '1px solid rgba(74,222,128,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#4ade80', letterSpacing: 0.5, textTransform: 'uppercase' }}>Recruiting</span>}
-                {team.tournamentId && <span style={{ background: 'rgba(240,192,64,0.09)', border: '1px solid rgba(240,192,64,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#f0c040', letterSpacing: 0.5, textTransform: 'uppercase' }}>🏆 Tournament</span>}
+                {team.tournamentId && <span style={{ background: 'rgba(240,192,64,0.09)', border: '1px solid rgba(240,192,64,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#f0c040', letterSpacing: 0.5, textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.trophy} width={12} height={12} /> Tournament</span>}
               </div>
 
               {/* Game + Ladder + Format tags */}
@@ -419,7 +421,7 @@ export default function TeamProfilePage() {
                         <div style={{ fontSize: 9, color: '#4F5568', fontFamily: "'Roboto',sans-serif", marginBottom: 6 }}>#{liveMatch.matchId}</div>
                         {/* Teams VS */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontFamily: "'Barlow Condensed',sans-serif" }}>
-                          <span style={{ fontSize: 18 }}>{liveMatch.teamAEmoji || team.emoji || ''}</span>
+                          {(liveMatch.teamAEmoji || team.emoji) ? <EmojiSolar emoji={liveMatch.teamAEmoji || team.emoji} size={18} /> : null}
                           <span style={{ fontWeight: 900, fontSize: 16, color: '#fff' }}>{liveMatch.teamAName || 'Team A'}</span>
                           <span style={{ fontWeight: 400, fontSize: 13, color: '#4F5568' }}>vs</span>
                           <span style={{ fontSize: 18 }}>{liveMatch.teamBEmoji || ''}</span>
@@ -479,7 +481,7 @@ export default function TeamProfilePage() {
                       <div style={{ width: 44, height: 44, background: '#1A1A2E', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
                         {gameImg
                           ? <img src={gameImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                          : <span style={{ fontSize: 18 }}>🎮</span>}
+                          : <Icon icon={Solar.gamepad} width={22} height={22} />}
                       </div>
 
                       {/* Teams: Our team vs Opponent with pfps */}
@@ -487,13 +489,13 @@ export default function TeamProfilePage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           {/* Our team pfp */}
                           <div style={{ width: 22, height: 22, background: '#25252C', borderRadius: 5, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {teamLogo ? <img src={teamLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : <span style={{ fontSize: 10 }}>{team.emoji || '🎮'}</span>}
+                            {teamLogo ? <img src={teamLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : <EmojiSolar emoji={team.emoji || '🎮'} size={14} />}
                           </div>
                           <span style={{ ...BC, fontWeight: 800, fontSize: 14, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.name}</span>
                           <span style={{ ...R, fontSize: 12, color: '#4A5568', flexShrink: 0 }}>vs</span>
                           {/* Opponent pfp */}
                           <div style={{ width: 22, height: 22, background: '#25252C', borderRadius: 5, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {oppLogo ? <img src={oppLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : <span style={{ fontSize: 10 }}>🎮</span>}
+                            {oppLogo ? <img src={oppLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : <Icon icon={Solar.gamepad} width={14} height={14} />}
                           </div>
                           <span style={{ ...BC, fontWeight: 800, fontSize: 14, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.opponentName || 'Unknown'}</span>
                         </div>
@@ -529,7 +531,7 @@ export default function TeamProfilePage() {
             <Link href={`/tournaments/${team.tournamentSlug || team.tournamentId}`} style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#18181C', borderRadius: 12, padding: '16px 20px', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.04)', transition: 'border-color .15s' }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = '#f0c04044')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)')}>
-              <div style={{ width: 44, height: 44, background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.3)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 20 }}>🏆</div>
+              <div style={{ width: 44, height: 44, background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.3)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon icon={Solar.trophy} width={24} height={24} /></div>
               <div>
                 <div style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#fff' }}>{team.tournamentName || 'Tournament'}</div>
                 <div style={{ ...R, fontSize: 11, color: '#f0c040', marginTop: 1 }}>View Tournament Page →</div>
@@ -566,7 +568,7 @@ export default function TeamProfilePage() {
                     </Link>
                     {team.tournamentId && (
                       <Link href={`/tournaments/${team.tournamentSlug || team.tournamentId}?tab=bracket`} style={{ display: 'block', background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.2)', borderRadius: 10, padding: '11px 20px', ...BC, fontWeight: 700, fontSize: 14, color: '#f0c040', textDecoration: 'none', textAlign: 'center', letterSpacing: 0.3 }}>
-                        🏆 View Bracket
+                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Icon icon={Solar.trophy} width={16} height={16} /> View Bracket</span>
                       </Link>
                     )}
                   </>

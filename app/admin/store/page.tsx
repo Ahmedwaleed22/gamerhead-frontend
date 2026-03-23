@@ -6,6 +6,7 @@ import DataTable, { Column } from '../components/DataTable'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
 import StatCard from '../components/StatCard'
+import { Solar } from '@/lib/solar-duotone'
 
 type Tab = 'Items' | 'Orders' | 'Coupons' | 'Revenue'
 
@@ -430,7 +431,7 @@ function RevenueTab() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <StatCard icon="💵" label="Revenue (30d)" value={`$${(data.totalRevenue || 0).toFixed(2)}`} color="#22c55e" />
+      <StatCard icon={Solar.bill} label="Revenue (30d)" value={`$${(data.totalRevenue || 0).toFixed(2)}`} color="#22c55e" />
 
       {data.byCategory?.length > 0 && (
         <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 16 }}>

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { supportApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 
@@ -107,7 +109,7 @@ function CreateModal({ isPremium, onClose, onCreated }: { isPremium: boolean; on
       <div style={{ background: '#18181C', borderRadius: 14, width: 580, maxHeight: '90vh', overflowY: 'auto', padding: '32px 36px', border: '1px solid #25252C', boxShadow: '0 32px 80px rgba(0,0,0,0.8)' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, color: '#fff', letterSpacing: 0.3 }}>Create a Ticket</div>
-          <button onClick={onClose} style={{ background: '#25252C', border: 'none', width: 30, height: 30, borderRadius: 8, color: '#9CA3AF', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button type="button" onClick={onClose} style={{ background: '#25252C', border: 'none', width: 30, height: 30, borderRadius: 8, color: '#9CA3AF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Close"><Icon icon={Solar.close} width={14} height={14} /></button>
         </div>
 
         {/* Department tabs */}
@@ -284,9 +286,9 @@ function CreateModal({ isPremium, onClose, onCreated }: { isPremium: boolean; on
 // ─── LIVE SUPPORT MODAL ──────────────────────────────────────────────────────────
 
 const LIVE_DEPARTMENTS = [
-  { label: 'Tournament Support', category: 'tournament', desc: 'Issues with tournament matches, brackets, or scheduling', icon: '🏆' },
-  { label: 'Technical Issue', category: 'technical', desc: 'Bugs, errors, or things not working correctly', icon: '🔧' },
-  { label: 'General', category: 'general', desc: 'General questions or account help', icon: '💬' },
+  { label: 'Tournament Support', category: 'tournament', desc: 'Issues with tournament matches, brackets, or scheduling', icon: Solar.trophy },
+  { label: 'Technical Issue', category: 'technical', desc: 'Bugs, errors, or things not working correctly', icon: Solar.tools },
+  { label: 'General', category: 'general', desc: 'General questions or account help', icon: Solar.chat },
 ]
 
 function LiveSupportModal({ onClose, onStarted }: { onClose: () => void; onStarted: (session: any) => void }) {
@@ -316,7 +318,7 @@ function LiveSupportModal({ onClose, onStarted }: { onClose: () => void; onStart
       <div style={{ background: '#18181C', borderRadius: 14, width: 500, maxHeight: '90vh', overflowY: 'auto', padding: '32px 36px', border: '1px solid #25252C', boxShadow: '0 32px 80px rgba(0,0,0,0.8)' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, color: '#fff', letterSpacing: 0.3 }}>Live Support</div>
-          <button onClick={onClose} style={{ background: '#25252C', border: 'none', width: 30, height: 30, borderRadius: 8, color: '#9CA3AF', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button type="button" onClick={onClose} style={{ background: '#25252C', border: 'none', width: 30, height: 30, borderRadius: 8, color: '#9CA3AF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Close"><Icon icon={Solar.close} width={14} height={14} /></button>
         </div>
 
         <div style={{ ...R, fontSize: 12, color: '#9CA3AF', marginBottom: 20 }}>
@@ -336,7 +338,7 @@ function LiveSupportModal({ onClose, onStarted }: { onClose: () => void; onStart
                 transition: 'all 0.15s',
               }}
             >
-              <span style={{ fontSize: 20 }}>{d.icon}</span>
+              <Icon icon={d.icon} width={22} height={22} style={{ flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
                 <div style={{ ...R, fontWeight: 700, fontSize: 13, color: category === d.category ? '#fff' : '#9CA3AF' }}>{d.label}</div>
                 <div style={{ ...R, fontSize: 11, color: '#6B7280', marginTop: 2 }}>{d.desc}</div>
@@ -476,7 +478,7 @@ function LiveChatView({ userId, onClose }: { userId: string; onClose: () => void
                     fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 13,
                     color: isMe ? '#B22D2D' : '#3B82F6',
                   }}>
-                    {isAdmin ? '🛡️' : (msg.senderName?.slice(0, 2).toUpperCase() || '??')}
+                    {isAdmin ? <Icon icon={Solar.shield} width={18} height={18} /> : (msg.senderName?.slice(0, 2).toUpperCase() || '??')}
                   </div>
                   <div style={{
                     background: isMe ? 'rgba(178,45,45,0.12)' : '#202023',
@@ -666,7 +668,7 @@ function TicketChat({ ticket, userId, userRole, onBack, onRefresh }: { ticket: a
                     fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 13,
                     color: isMe ? '#B22D2D' : '#3B82F6',
                   }}>
-                    {isStaff ? '🛡️' : (msg.initials || msg.senderName?.slice(0, 2).toUpperCase() || '??')}
+                    {isStaff ? <Icon icon={Solar.shield} width={18} height={18} /> : (msg.initials || msg.senderName?.slice(0, 2).toUpperCase() || '??')}
                   </div>
                   {/* Bubble */}
                   <div style={{
@@ -894,7 +896,7 @@ export default function SupportPage() {
                 </div>
               ) : filtered.length === 0 ? (
                 <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>🎫</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Icon icon={Solar.ticket} width={40} height={40} /></div>
                   <div style={{ ...R, fontWeight: 700, fontSize: 15, color: '#fff', marginBottom: 6 }}>No tickets found</div>
                   <div style={{ ...R, fontSize: 13, color: '#4A5568' }}>Try adjusting your filters or create a new ticket</div>
                 </div>

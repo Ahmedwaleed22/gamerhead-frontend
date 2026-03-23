@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useParams, useSearchParams } from 'next/navigation'
+import { Icon } from '@iconify/react'
 import { useAuth } from '@/lib/auth-context'
 import { tournamentsApi } from '@/lib/api'
+import { Solar, EmojiSolar } from '@/lib/solar-duotone'
 
 type TourneyEntryType = 'solo' | 'team' | 'both'
 type EntryStep = 'method' | 'solo-info' | 'create-team' | 'join-team' | 'processing' | 'success'
@@ -125,7 +127,8 @@ function TrophyIcon({ place, size = 22 }: { place: string; size?: number }) {
 function TicketsBadge({ amount }: { amount: number }) {
   return (
     <span style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(240,192,64,0.12)', border:'1px solid rgba(240,192,64,0.3)', borderRadius:6, padding:'3px 10px', fontSize:12, fontWeight:800, color:'#f0c040', fontFamily:'Barlow Condensed, sans-serif' }}>
-      💰 {amount.toLocaleString()} Tickets
+      <Icon icon={Solar.tickets} width={16} height={16} style={{ flexShrink: 0 }} />
+      {amount.toLocaleString()} Tickets
     </span>
   )
 }
@@ -336,8 +339,8 @@ function MatchCard({ match, tournamentId, accent = '#1A5C9E' }: {
         minHeight: 40,
       }}>
         {/* Team emoji */}
-        <div style={{ width:26, height:26, borderRadius:6, background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>
-          {team?.emoji ?? '?'}
+        <div style={{ width:26, height:26, borderRadius:6, background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          {team?.emoji ? <EmojiSolar emoji={team.emoji} size={16} /> : '?'}
         </div>
         {/* Team name — link to team profile */}
         {team ? (
@@ -386,8 +389,8 @@ function MatchCard({ match, tournamentId, accent = '#1A5C9E' }: {
         onMouseEnter={() => setVsHover(true)}
         onMouseLeave={() => setVsHover(false)}
         style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 12px', background: vsHover ? 'rgba(26,92,158,0.22)' : isLive ? 'rgba(184,44,44,0.08)' : 'rgba(255,255,255,0.03)', textDecoration:'none', width:'100%', cursor:'pointer', transition:'background .15s' }}>
-        <span style={{ fontSize:8, color: vsHover ? '#5A9FD4' : 'var(--text-dim)', fontWeight:700, textTransform:'uppercase', letterSpacing:1, transition:'color .15s' }}>
-          {isLive ? '🔴 Live' : isDone ? '✓ Final' : 'Pending'}
+        <span style={{ fontSize:8, color: vsHover ? '#5A9FD4' : 'var(--text-dim)', fontWeight:700, textTransform:'uppercase', letterSpacing:1, transition:'color .15s', display:'inline-flex', alignItems:'center', gap:4 }}>
+          {isLive ? (<><Icon icon={Solar.live} width={10} height={10} style={{ color: '#ff6b6b' }} /> Live</>) : isDone ? (<><Icon icon={Solar.checkRead} width={10} height={10} /> Final</>) : 'Pending'}
         </span>
         {/* VS icon */}
         <div style={{ display:'flex', alignItems:'center', gap:5 }}>
@@ -454,7 +457,7 @@ function WinnerSpot({ match }: { match?: BracketMatch }) {
         {winner ? (
           <>
             <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <span style={{ fontSize:18 }}>{winner.emoji}</span>
+              <EmojiSolar emoji={winner.emoji} size={18} />
               <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:15, color:'#f0c040', textAlign:'center' }}>{winner.name}</span>
             </div>
             <span style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:1, color:'rgba(240,192,64,.6)', fontFamily:'Rajdhani, sans-serif' }}>Champion</span>
@@ -525,10 +528,13 @@ function SingleEliminationBracket({ rounds, tournamentId }: { rounds: BracketRou
 function DoubleEliminationBracket({ winners, losers, gf, tournamentId }: {
   winners: BracketRound[]; losers: BracketRound[]; gf: BracketMatch; tournamentId: string
 }) {
-  const BracketSection = ({ rounds, label, accent, borderColor }: { rounds:BracketRound[]; label:string; accent:string; borderColor:string }) => (
+  const BracketSection = ({ rounds, label, labelIcon, accent, borderColor }: { rounds:BracketRound[]; label:string; labelIcon?: string; accent:string; borderColor:string }) => (
     <div style={{ marginBottom: 28 }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-        <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:13, textTransform:'uppercase', letterSpacing:1, color:accent }}>{label}</span>
+        <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:13, textTransform:'uppercase', letterSpacing:1, color:accent, display:'flex', alignItems:'center', gap:6 }}>
+          {labelIcon ? <Icon icon={labelIcon} width={16} height={16} /> : null}
+          {label}
+        </span>
         <div style={{ flex:1, height:1, background:borderColor }} />
       </div>
       <div style={{ display:'flex', gap:0, alignItems:'flex-start', overflowX:'auto', paddingBottom:8 }}>
@@ -553,11 +559,13 @@ function DoubleEliminationBracket({ winners, losers, gf, tournamentId }: {
 
   return (
     <div>
-      <BracketSection rounds={winners} label="🏅 Winners Bracket" accent="#4ade80" borderColor="rgba(39,174,96,0.2)" />
-      <BracketSection rounds={losers}  label="💀 Losers Bracket"  accent="#ef4444" borderColor="rgba(184,44,44,0.2)" />
+      <BracketSection rounds={winners} label="Winners Bracket" labelIcon={Solar.medal} accent="#4ade80" borderColor="rgba(39,174,96,0.2)" />
+      <BracketSection rounds={losers}  label="Losers Bracket"  labelIcon={Solar.skull} accent="#ef4444" borderColor="rgba(184,44,44,0.2)" />
       <div>
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-          <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:13, textTransform:'uppercase', letterSpacing:1, color:'#f0c040' }}>🏆 Grand Final</span>
+          <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:13, textTransform:'uppercase', letterSpacing:1, color:'#f0c040', display:'flex', alignItems:'center', gap:6 }}>
+            <Icon icon={Solar.trophy} width={16} height={16} /> Grand Final
+          </span>
           <div style={{ flex:1, height:1, background:'rgba(240,192,64,0.25)' }} />
         </div>
         <MatchCard match={gf} tournamentId={tournamentId} accent="#f0c040" />
@@ -570,10 +578,10 @@ function DoubleEliminationBracket({ winners, losers, gf, tournamentId }: {
 }
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({ title, children }: { title: ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-      <div style={{ padding:'12px 18px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:.5, color:'#fff' }}>{title}</div>
+      <div style={{ padding:'12px 18px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:.5, color:'#fff', display:'flex', alignItems:'center', gap:8 }}>{title}</div>
       {children}
     </div>
   )
@@ -585,19 +593,27 @@ function ModalTop({ title, onBack, onClose }: { title: string; onBack?: () => vo
         {onBack && <button onClick={onBack} style={{ background:'var(--bg-4)', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:6, padding:'4px 10px', fontSize:11, cursor:'pointer', fontWeight:600 }}>← Back</button>}
         <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:18, fontWeight:800, textTransform:'uppercase', color:'#fff' }}>{title}</span>
       </div>
-      <button onClick={onClose} style={{ background:'var(--bg-4)', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:'50%', width:28, height:28, fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+      <button onClick={onClose} style={{ background:'var(--bg-4)', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:'50%', width:28, height:28, fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }} aria-label="Close"><Icon icon={Solar.close} width={14} height={14} /></button>
     </div>
   )
 }
 function InfoPill({ children }: { children: React.ReactNode }) {
   return <div style={{ background:'rgba(26,92,158,0.08)', border:'1px solid rgba(26,92,158,0.2)', borderRadius:8, padding:'10px 14px', display:'flex', alignItems:'center', gap:14, fontSize:11, flexWrap:'wrap' }}>{children}</div>
 }
-function EntryOptionBtn({ icon, title, sub, onClick }: { icon:string; title:string; sub:string; onClick:()=>void }) {
+function TeamEmojiCell({ gameImgUrl, teamEmoji }: { gameImgUrl: string | null | undefined; teamEmoji: string }) {
+  const [imgErr, setImgErr] = useState(false)
+  const showImg = gameImgUrl && !imgErr
+  if (showImg) {
+    return <img src={gameImgUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={() => setImgErr(true)} />
+  }
+  return <EmojiSolar emoji={teamEmoji} size={22} />
+}
+function EntryOptionBtn({ icon, title, sub, onClick }: { icon: ReactNode; title:string; sub:string; onClick:()=>void }) {
   return (
     <button onClick={onClick} style={{ display:'flex', alignItems:'center', gap:14, padding:'16px', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:10, cursor:'pointer', textAlign:'left', width:'100%', transition:'all .15s' }}
       onMouseEnter={e=>{ (e.currentTarget as HTMLButtonElement).style.borderColor='rgba(184,44,44,.4)'; (e.currentTarget as HTMLButtonElement).style.background='rgba(184,44,44,.05)' }}
       onMouseLeave={e=>{ (e.currentTarget as HTMLButtonElement).style.borderColor='var(--border)'; (e.currentTarget as HTMLButtonElement).style.background='var(--bg-3)' }}>
-      <div style={{ width:46, height:46, background:'rgba(184,44,44,.1)', border:'1px solid rgba(184,44,44,.2)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>{icon}</div>
+      <div style={{ width:46, height:46, background:'rgba(184,44,44,.1)', border:'1px solid rgba(184,44,44,.2)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{icon}</div>
       <div style={{ flex:1 }}>
         <div style={{ fontSize:14, fontWeight:700, color:'#fff', marginBottom:3 }}>{title}</div>
         <div style={{ fontSize:11, color:'var(--text-muted)' }}>{sub}</div>
@@ -652,14 +668,14 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
 
         {step === 'success' && (
           <div style={{ padding:52, display:'flex', flexDirection:'column', alignItems:'center', gap:18, textAlign:'center' }}>
-            <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(240,192,64,0.12)', border:'2px solid rgba(240,192,64,0.45)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:38 }}>🏆</div>
+            <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(240,192,64,0.12)', border:'2px solid rgba(240,192,64,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.trophy} width={44} height={44} /></div>
             <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:28, fontWeight:900, textTransform:'uppercase', color:'#f0c040', letterSpacing:1 }}>You're Registered!</div>
             <p style={{ fontSize:13, color:'var(--text-muted)', lineHeight:1.7, maxWidth:310 }}>
               {entryType==='solo' ? `You've been entered into ${name}. Check-in opens at ${tournament.checkIn} on ${tournament.startDate}.`
                 : `Your team has been entered into ${name}. Check-in opens at ${tournament.checkIn} on ${tournament.startDate}.`}
             </p>
             <div style={{ background:'rgba(240,192,64,0.08)', border:'1px solid rgba(240,192,64,0.2)', borderRadius:8, padding:'12px 20px', display:'flex', alignItems:'center', gap:10 }}>
-              <span style={{ fontSize:18 }}>💰</span>
+              <Icon icon={Solar.tickets} width={20} height={20} style={{ flexShrink: 0 }} />
               <span style={{ fontSize:13, color:'#f0c040', fontWeight:700 }}>{totalCredits.toLocaleString()} Tickets deducted from your balance</span>
             </div>
             {invites.length > 0 && (
@@ -685,15 +701,15 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
             <ModalTop title="Enter Tournament" onClose={onClose} />
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:16 }}>
               <InfoPill>
-                <span style={{ color:'#5A9FD4' }}>🏆 {name}</span>
+                <span style={{ color:'#5A9FD4', display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.trophy} width={14} height={14} /> {name}</span>
                 <span style={{ color:'var(--text-dim)' }}>•</span>
                 <span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span>
               </InfoPill>
               <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.6, color:'var(--text-dim)' }}>How are you entering?</div>
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                <EntryOptionBtn icon="👤" title="Enter Solo" sub="Register as an individual player" onClick={() => go('solo-info')} />
-                <EntryOptionBtn icon="⚡" title="Create a Team" sub={`Form a squad of ${maxTeamSize} and invite teammates`} onClick={() => go('create-team')} />
-                <EntryOptionBtn icon="🤝" title="Join an Existing Team" sub="Enter with a team invite code from your captain" onClick={() => go('join-team')} />
+                <EntryOptionBtn icon={<Icon icon={Solar.user} width={26} height={26} />} title="Enter Solo" sub="Register as an individual player" onClick={() => go('solo-info')} />
+                <EntryOptionBtn icon={<Icon icon={Solar.bolt} width={26} height={26} />} title="Create a Team" sub={`Form a squad of ${maxTeamSize} and invite teammates`} onClick={() => go('create-team')} />
+                <EntryOptionBtn icon={<Icon icon={Solar.handshake} width={26} height={26} />} title="Join an Existing Team" sub="Enter with a team invite code from your captain" onClick={() => go('join-team')} />
               </div>
             </div>
           </>
@@ -703,7 +719,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
           <>
             <ModalTop title="Solo Registration" onBack={entryType==='both'?back:undefined} onClose={onClose} />
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:16 }}>
-              <InfoPill><span style={{ color:'#5A9FD4' }}>🏆 {name}</span><span style={{ color:'var(--text-dim)' }}>•</span><span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span></InfoPill>
+              <InfoPill><span style={{ color:'#5A9FD4', display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.trophy} width={14} height={14} /> {name}</span><span style={{ color:'var(--text-dim)' }}>•</span><span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span></InfoPill>
               <div>
                 <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.6, color:'var(--text-dim)', display:'block', marginBottom:8 }}>Your Gamertag</label>
                 <input className="site-input" placeholder="Enter your in-game username..." value={gamertag} onChange={e=>setGamertag(e.target.value)} style={{ fontSize:13 }} />
@@ -722,7 +738,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
               </div>
               {error && <div style={{ background:'rgba(232,0,13,.1)', border:'1px solid rgba(232,0,13,.3)', borderRadius:8, padding:'10px 14px', fontSize:12, color:'#e8000d', fontWeight:600 }}>{error}</div>}
               <button className="btn-primary" style={{ width:'100%', justifyContent:'center' }} disabled={!gamertag.trim()} onClick={doConfirm}>
-                💰 Confirm Entry — {entryCredits.toLocaleString()} Tickets
+                <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8 }}><Icon icon={Solar.tickets} width={18} height={18} /> Confirm Entry — {entryCredits.toLocaleString()} Tickets</span>
               </button>
             </div>
           </>
@@ -734,7 +750,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:16 }}>
               {/* Tournament info header */}
               <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'rgba(255,255,255,0.03)', borderRadius:10, border:'1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ width:42, height:42, background:'rgba(240,192,64,0.12)', border:'1px solid rgba(240,192,64,0.3)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0 }}>🏆</div>
+                <div style={{ width:42, height:42, background:'rgba(240,192,64,0.12)', border:'1px solid rgba(240,192,64,0.3)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Icon icon={Solar.trophy} width={22} height={22} /></div>
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{name}</div>
                   <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:1 }}>{tournament.game} · Tournament · {tournament.format.replace(/\s*\(.*?\)/g, '')}</div>
@@ -801,14 +817,14 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
                     <div style={{ width:28, height:28, background:'rgba(184,44,44,.1)', border:'1px solid rgba(184,44,44,.2)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:800, color:'var(--red)', fontFamily:'Barlow Condensed, sans-serif' }}>{inv.slice(0,2).toUpperCase()}</div>
                     <span style={{ flex:1, fontSize:12, color:'#fff', fontWeight:600 }}>{inv}</span>
                     <span style={{ fontSize:10, color:'#f0c040', fontWeight:700 }}>Pending Invite</span>
-                    <button onClick={()=>setInvites(p=>p.filter((_,j)=>j!==i))} style={{ background:'none', border:'none', color:'var(--text-dim)', fontSize:13, cursor:'pointer' }}>✕</button>
+                    <button type="button" onClick={()=>setInvites(p=>p.filter((_,j)=>j!==i))} style={{ background:'none', border:'none', color:'var(--text-dim)', cursor:'pointer', display:'flex', alignItems:'center', padding:4 }} aria-label="Remove invite"><Icon icon={Solar.close} width={14} height={14} /></button>
                   </div>
                 ))}
               </div>
               {invites.length > 0 && (
                 <div onClick={()=>setPayForTeam(!payForTeam)} style={{ display:'flex', alignItems:'center', gap:12, background:payForTeam?'rgba(240,192,64,.08)':'var(--bg-3)', border:`1px solid ${payForTeam?'rgba(240,192,64,.3)':'var(--border)'}`, borderRadius:8, padding:'12px 14px', cursor:'pointer', transition:'all .15s' }}>
                   <div style={{ width:20, height:20, borderRadius:4, border:`2px solid ${payForTeam?'#f0c040':'var(--border)'}`, background:payForTeam?'#f0c040':'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all .15s' }}>
-                    {payForTeam && <span style={{ fontSize:12, color:'#000', fontWeight:900 }}>✓</span>}
+                    {payForTeam && <Icon icon={Solar.checkRead} width={14} height={14} style={{ color:'#000' }} />}
                   </div>
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:12, fontWeight:700, color:'#fff' }}>Pay Tickets for teammates</div>
@@ -829,7 +845,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
               </div>
               {error && <div style={{ background:'rgba(232,0,13,.1)', border:'1px solid rgba(232,0,13,.3)', borderRadius:8, padding:'10px 14px', fontSize:12, color:'#e8000d', fontWeight:600 }}>{error}</div>}
               <button className="btn-primary" style={{ width:'100%', justifyContent:'center' }} disabled={!teamName.trim()} onClick={doConfirm}>
-                💰 Confirm Entry — {totalCredits.toLocaleString()} Tickets
+                <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8 }}><Icon icon={Solar.tickets} width={18} height={18} /> Confirm Entry — {totalCredits.toLocaleString()} Tickets</span>
               </button>
             </div>
           </>
@@ -839,7 +855,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
           <>
             <ModalTop title="Join a Team" onBack={back} onClose={onClose} />
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:16 }}>
-              <InfoPill><span style={{ color:'#5A9FD4' }}>🏆 {name}</span><span style={{ color:'var(--text-dim)' }}>•</span><span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span></InfoPill>
+              <InfoPill><span style={{ color:'#5A9FD4', display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.trophy} width={14} height={14} /> {name}</span><span style={{ color:'var(--text-dim)' }}>•</span><span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span></InfoPill>
               <div>
                 <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.6, color:'var(--text-dim)', display:'block', marginBottom:8 }}>Team Invite Code</label>
                 <input className="site-input" placeholder="Enter 6-digit invite code from your captain..." style={{ fontSize:13 }} />
@@ -853,7 +869,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
                 <TicketsBadge amount={entryCredits} />
               </div>
               <button className="btn-primary" style={{ width:'100%', justifyContent:'center' }} onClick={doConfirm}>
-                💰 Find Team and Confirm — {entryCredits.toLocaleString()} Tickets
+                <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8 }}><Icon icon={Solar.tickets} width={18} height={18} /> Find Team and Confirm — {entryCredits.toLocaleString()} Tickets</span>
               </button>
             </div>
           </>
@@ -926,7 +942,7 @@ export default function TournamentOverviewPage() {
               {TOURNAMENT.gameEmoji && (TOURNAMENT.gameEmoji.startsWith('/') || TOURNAMENT.gameEmoji.startsWith('http')) ? (
                 <img src={TOURNAMENT.gameEmoji} alt={TOURNAMENT.game} style={{ width:80, height:80, borderRadius:14, objectFit:'cover', border:'1px solid rgba(26,92,158,.4)', flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }} />
               ) : (
-                <div style={{ width:80, height:80, background:'linear-gradient(135deg, rgba(26,92,158,.3), rgba(10,16,28,.9))', border:'1px solid rgba(26,92,158,.4)', borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', fontSize:36, flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }}>{TOURNAMENT.gameEmoji}</div>
+                <div style={{ width:80, height:80, background:'linear-gradient(135deg, rgba(26,92,158,.3), rgba(10,16,28,.9))', border:'1px solid rgba(26,92,158,.4)', borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }}><EmojiSolar emoji={TOURNAMENT.gameEmoji} size={40} /></div>
               )}
               <div>
                 <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, flexWrap:'wrap' }}>
@@ -948,14 +964,14 @@ export default function TournamentOverviewPage() {
                 </div>
               </div>
               {isRegistered ? (
-                <div style={{ padding:'12px 28px', fontSize:13, fontWeight:700, color:'#4ade80', background:'rgba(39,174,96,.1)', border:'1px solid rgba(39,174,96,.25)', borderRadius:8, textAlign:'center' }}>✅ Registered</div>
+                <div style={{ padding:'12px 28px', fontSize:13, fontWeight:700, color:'#4ade80', background:'rgba(39,174,96,.1)', border:'1px solid rgba(39,174,96,.25)', borderRadius:8, textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><Icon icon={Solar.check} width={16} height={16} /> Registered</div>
               ) : TOURNAMENT.status === 'open' ? (
-                <button className="btn-primary" style={{ padding:'12px 28px', fontSize:13 }} onClick={()=>setShowEntry(true)}>⚔️ Enter Tournament</button>
+                <button className="btn-primary" style={{ padding:'12px 28px', fontSize:13, display:'inline-flex', alignItems:'center', gap:8 }} onClick={()=>setShowEntry(true)}><Icon icon={Solar.sword} width={16} height={16} /> Enter Tournament</button>
               ) : (
                 <div style={{ padding:'12px 28px', fontSize:13, fontWeight:700, color:'var(--text-muted)', background:'rgba(255,255,255,.04)', border:'1px solid var(--border)', borderRadius:8, textAlign:'center' }}>Registration Closed</div>
               )}
               <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:11, color:'var(--text-muted)' }}>
-                <span style={{ color:'#f0c040' }}>💰</span>
+                <Icon icon={Solar.tickets} width={14} height={14} style={{ color:'#f0c040' }} />
                 <span>Entry: <strong style={{ color:'#f0c040' }}>{TOURNAMENT.entryCredits.toLocaleString()} Tickets</strong>{TOURNAMENT.entryType!=='solo'?' per player':''}</span>
               </div>
             </div>
@@ -974,7 +990,15 @@ export default function TournamentOverviewPage() {
           <div style={{ display:'flex', gap:0, marginTop:14 }}>
             {(['overview','bracket','teams','rules'] as const).map(tab=>(
               <button key={tab} onClick={()=>setActiveTab(tab)} style={{ padding:'12px 20px', background:'none', border:'none', borderBottom:`2px solid ${activeTab===tab?'#5A9FD4':'transparent'}`, color:activeTab===tab?'#5A9FD4':'var(--text-muted)', fontSize:13, fontWeight:700, fontFamily:'Barlow, sans-serif', textTransform:'uppercase', letterSpacing:.4, cursor:'pointer', transition:'all .2s', whiteSpace:'nowrap' }}>
-                {tab==='overview'?'📋 Overview':tab==='bracket'?'🏆 Bracket':tab==='teams'?'👥 Teams':'📜 Rules'}
+                {tab==='overview' ? (
+                  <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.clipboard} width={14} height={14} /> Overview</span>
+                ) : tab==='bracket' ? (
+                  <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.trophy} width={14} height={14} /> Bracket</span>
+                ) : tab==='teams' ? (
+                  <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.users} width={14} height={14} /> Teams</span>
+                ) : (
+                  <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.rules} width={14} height={14} /> Rules</span>
+                )}
               </button>
             ))}
           </div>
@@ -990,7 +1014,7 @@ export default function TournamentOverviewPage() {
             <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
               {/* Prize pool — trophy icons for each place */}
-              <SectionCard title="🏆 Prize Pool">
+              <SectionCard title={<><Icon icon={Solar.trophy} width={16} height={16} /> Prize Pool</>}>
                 {TOURNAMENT.prizes.map((p,i)=>(
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', borderBottom:i<TOURNAMENT.prizes.length-1?'1px solid var(--border)':'none' }}>
                     <TrophyIcon place={p.place} size={24} />
@@ -1008,7 +1032,7 @@ export default function TournamentOverviewPage() {
               </SectionCard>
 
               {/* Schedule */}
-              <SectionCard title="📅 Tournament Schedule">
+              <SectionCard title={<><Icon icon={Solar.calendar} width={16} height={16} /> Tournament Schedule</>}>
                 <div style={{ padding:'8px 0' }}>
                   {TOURNAMENT.schedule.map((s,i)=>(
                     <div key={i} style={{ display:'flex', alignItems:'center', gap:16, padding:'10px 18px', borderBottom:i<TOURNAMENT.schedule.length-1?'1px solid var(--border)':'none' }}>
@@ -1026,7 +1050,7 @@ export default function TournamentOverviewPage() {
 
             {/* Sidebar */}
             <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-              <SectionCard title="ℹ️ Details">
+              <SectionCard title={<><Icon icon={Solar.info} width={16} height={16} /> Details</>}>
                 <div style={{ padding:'8px 0' }}>
                   {[
                     { label:'Game',       value: TOURNAMENT.game || '—',      col: undefined },
@@ -1055,8 +1079,8 @@ export default function TournamentOverviewPage() {
                   <>
                     <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:16, fontWeight:800, textTransform:'uppercase', color:'#fff', marginBottom:6 }}>Ready to Compete?</div>
                     <p style={{ fontSize:11, color:'var(--text-muted)', lineHeight:1.6, margin:'0 0 12px' }}>{TOURNAMENT.maxTeams-TOURNAMENT.teams} spots remaining. Register now.</p>
-                    <button className="btn-primary" style={{ width:'100%', justifyContent:'center', fontSize:12, padding:'10px' }} onClick={()=>setShowEntry(true)}>
-                      💰 Enter — {TOURNAMENT.entryCredits.toLocaleString()} Tickets{TOURNAMENT.entryType!=='solo'?'/player':''}
+                    <button className="btn-primary" style={{ width:'100%', justifyContent:'center', fontSize:12, padding:'10px', display:'flex', alignItems:'center', gap:8 }} onClick={()=>setShowEntry(true)}>
+                      <Icon icon={Solar.tickets} width={16} height={16} /> Enter — {TOURNAMENT.entryCredits.toLocaleString()} Tickets{TOURNAMENT.entryType!=='solo'?'/player':''}
                     </button>
                   </>
                 ) : (
@@ -1091,7 +1115,7 @@ export default function TournamentOverviewPage() {
                   : <DoubleEliminationBracket winners={doubleData!.winners} losers={doubleData!.losers} gf={doubleData!.gf} tournamentId={TOURNAMENT.id} />
               ) : (
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:200, gap:12 }}>
-                  <div style={{ fontSize:48, opacity:0.3 }}>🏆</div>
+                  <div style={{ opacity:0.3 }}><Icon icon={Solar.trophy} width={48} height={48} /></div>
                   <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:20, fontWeight:800, textTransform:'uppercase', color:'var(--text-muted)', letterSpacing:.5 }}>Bracket Not Yet Generated</div>
                   <div style={{ fontSize:12, color:'var(--text-dim)', maxWidth:400, textAlign:'center', lineHeight:1.6 }}>
                     The bracket will be generated when the tournament starts{TOURNAMENT.startDate ? ` on ${fmtDateTime(TOURNAMENT.startDate, TOURNAMENT.startTime)}` : ''}. Register your team now to secure your spot!
@@ -1116,7 +1140,7 @@ export default function TournamentOverviewPage() {
                 <span style={{ color:'#5A9FD4', fontSize:13 }}>→</span> Click team name to view profile
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:7, fontSize:11, color:'var(--text-muted)' }}>
-                <span style={{ color:'var(--text-dim)', fontSize:13 }}>⚔</span> Click VS to open match page
+                <span style={{ display:'inline-flex', alignItems:'center', gap:6, color:'var(--text-dim)', fontSize:13 }}><Icon icon={Solar.sword} width={14} height={14} /> Click VS to open match page</span>
               </div>
             </div>
           </div>
@@ -1137,10 +1161,11 @@ export default function TournamentOverviewPage() {
                       {team.seed <= 3 && <TrophyIcon place={team.seed===1?'1st':team.seed===2?'2nd':'3rd'} size={20} />}
                     </>
                   )}
-                  <div style={{ width:40, height:40, background:'var(--bg-4)', border:'1px solid var(--border)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0, overflow:'hidden' }}>
-                    {(TOURNAMENT.gameEmoji && (TOURNAMENT.gameEmoji.startsWith('/') || TOURNAMENT.gameEmoji.startsWith('http')))
-                      ? <img src={TOURNAMENT.gameEmoji} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';e.currentTarget.parentElement!.textContent=team.emoji}} />
-                      : team.emoji}
+                  <div style={{ width:40, height:40, background:'var(--bg-4)', border:'1px solid var(--border)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
+                    <TeamEmojiCell
+                      gameImgUrl={(TOURNAMENT.gameEmoji && (TOURNAMENT.gameEmoji.startsWith('/') || TOURNAMENT.gameEmoji.startsWith('http'))) ? TOURNAMENT.gameEmoji : null}
+                      teamEmoji={team.emoji}
+                    />
                   </div>
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:14, fontWeight:700, color:'#fff' }}>{team.name}</div>

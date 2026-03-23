@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Icon } from '@iconify/react'
 import { useAuth } from '@/lib/auth-context'
 import { forumApi } from '@/lib/api'
 import { sendActivity } from '@/lib/socket'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
 
 interface Board {
   name: string; slug: string; emoji: string; description: string
@@ -172,7 +174,7 @@ export default function ForumPage() {
           <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-                <span style={{ fontSize:28 }}>💬</span>
+                <Icon icon={Solar.chat} width={34} height={34} style={{ flexShrink: 0 }} />
                 <h1 style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:36, fontWeight:900, textTransform:'uppercase', color:'#fff', margin:0, lineHeight:1 }}>Forum</h1>
               </div>
               <p style={{ fontFamily:'Barlow, sans-serif', fontSize:13, color:'var(--text-muted)', margin:0 }}>
@@ -180,7 +182,7 @@ export default function ForumPage() {
               </p>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.2)', borderRadius:8, padding:'8px 14px' }}>
-              <span style={{ width:8, height:8, background:'#27AE60', borderRadius:'50%', boxShadow:'0 0 6px #27AE60', display:'inline-block' }} />
+              <Icon icon={Solar.online} width={16} height={16} style={{ flexShrink: 0, color: '#4ade80' }} />
               <span style={{ fontSize:12, fontWeight:700, color:'#4ade80' }}>{FORUM_STATS.online.toLocaleString()} online now</span>
             </div>
           </div>
@@ -188,8 +190,8 @@ export default function ForumPage() {
           {/* Welcome bar */}
           <div style={{ marginTop:20, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, padding:'12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap' }}>
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <div style={{ width:36, height:36, background:'rgba(232,0,13,0.15)', border:'1px solid rgba(232,0,13,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, overflow:'hidden' }}>
-                {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{ width:36, height:36, borderRadius:8, objectFit:'cover' }} /> : '👤'}
+              <div style={{ width:36, height:36, background:'rgba(232,0,13,0.15)', border:'1px solid rgba(232,0,13,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+                {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{ width:36, height:36, borderRadius:8, objectFit:'cover' }} /> : <Icon icon={Solar.user} width={22} height={22} style={{ opacity: 0.7 }} />}
               </div>
               <div>
                 <div style={{ fontSize:13, fontWeight:700, color:user?.usernameColor || '#e74c3c' }}>Welcome back, {user?.username || 'Guest'}</div>
@@ -221,8 +223,7 @@ export default function ForumPage() {
                     onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-4)')}
                     onMouseLeave={e=>(e.currentTarget.style.background='var(--bg-3)')}
                   >
-                    {/* Bare emoji — no box */}
-                    <span style={{ fontSize:18, lineHeight:1 }}>{cat.emoji}</span>
+                    <EmojiSolar emoji={cat.emoji} size={18} inline={false} />
                     <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:16, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', flex:1 }}>{cat.name}</span>
                     <span style={{ fontSize:9, color:'var(--text-dim)', fontWeight:700, letterSpacing:0.3 }}>{cat.boards.reduce((a,b)=>a+b.threads,0).toLocaleString()} threads</span>
                     <span style={{ fontSize:11, color:'var(--text-dim)', marginLeft:8 }}>{isCollapsed?'▼':'▲'}</span>
@@ -236,8 +237,7 @@ export default function ForumPage() {
                       onMouseLeave={e=>(e.currentTarget.style.background='transparent')}
                     >
                       <Link href={`/forum/board/${board.slug}`} style={{ display:'flex', alignItems:'center', gap:12, padding:'14px 18px', textDecoration:'none' }}>
-                        {/* Bare emoji — no box */}
-                        <span style={{ fontSize:22, lineHeight:1, flexShrink:0, width:28, textAlign:'center' }}>{board.emoji}</span>
+                        <span style={{ flexShrink:0, width:28, display:'flex', justifyContent:'center' }}><EmojiSolar emoji={board.emoji} size={22} inline={false} /></span>
                         <div>
                           <div style={{ fontFamily:'Barlow, sans-serif', fontSize:13, fontWeight:700, color:'#f0f0f0', marginBottom:3 }}>{board.name}</div>
                           <div style={{ fontSize:11, color:'var(--text-dim)', lineHeight:1.4 }}>{board.description}</div>
@@ -284,7 +284,7 @@ export default function ForumPage() {
 
             {/* Forum Stats */}
             <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff' }}>📊 Forum Stats</div>
+              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.chart} width={18} height={18} /> Forum Stats</div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1, background:'var(--border)' }}>
                 {[{label:'Members',value:formatNumber(FORUM_STATS.members),color:'#fff'},{label:'Threads',value:formatNumber(FORUM_STATS.threads),color:'#fff'},{label:'Posts',value:formatNumber(FORUM_STATS.posts),color:'#fff'},{label:'Online',value:formatNumber(FORUM_STATS.online),color:'#4ade80'}].map(s=>(
                   <div key={s.label} style={{ background:'var(--bg-2)', padding:'12px 14px', textAlign:'center' }}>
@@ -297,13 +297,13 @@ export default function ForumPage() {
 
             {/* Top Posters */}
             <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff' }}>
-                🏅 Top Posters <span style={{ fontSize:10, color:'var(--text-dim)', fontWeight:400, textTransform:'none', letterSpacing:0 }}>this week</span>
+              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                <Icon icon={Solar.medal} width={18} height={18} /> Top Posters <span style={{ fontSize:10, color:'var(--text-dim)', fontWeight:400, textTransform:'none', letterSpacing:0 }}>this week</span>
               </div>
               {TOP_POSTERS.map((p,i)=>(
                 <div key={p.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderBottom:i<TOP_POSTERS.length-1?'1px solid var(--border)':'none' }}>
                   <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:14, fontWeight:900, color:i===0?'#f0c040':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--text-dim)', width:18, textAlign:'center', flexShrink:0 }}>{i+1}</span>
-                  <span style={{ fontSize:20 }}>{p.pfp}</span>
+                  <span style={{ display:'flex', alignItems:'center' }}>{p.pfp && String(p.pfp).startsWith('http') ? <img src={p.pfp} alt="" style={{ width:28, height:28, borderRadius:6, objectFit:'cover' }} /> : <EmojiSolar emoji={p.pfp || '👤'} size={22} />}</span>
                   <div style={{ flex:1, minWidth:0 }}>
                     {p.slug ? (
                       <Link href={`/profile/${p.slug}`} style={{ fontSize:12, fontWeight:700, color:p.usernameColor || ROLE_COLORS[p.role], textDecoration:'none' }}
@@ -321,7 +321,7 @@ export default function ForumPage() {
 
             {/* Recent Activity */}
             <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff' }}>⚡ Recent Activity</div>
+              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.bolt} width={18} height={18} /> Recent Activity</div>
               {RECENT_ACTIVITY.map((a,i)=>(
                 <Link key={i} href={a.boardSlug && a.threadId ? `/forum/board/${a.boardSlug}/${a.threadId}` : '#'} style={{ display:'block', padding:'9px 14px', borderBottom:i<RECENT_ACTIVITY.length-1?'1px solid var(--border)':'none', cursor:'pointer', transition:'background 0.15s', textDecoration:'none' }}
                   onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-3)')}
@@ -345,7 +345,7 @@ export default function ForumPage() {
 
             {/* User Roles — Admin / Premium / Coach / Member */}
             <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff' }}>👤 User Roles</div>
+              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.user} width={18} height={18} /> User Roles</div>
               <div style={{ padding:'10px 14px', display:'flex', flexDirection:'column', gap:8 }}>
                 {Object.entries(ROLE_COLORS).map(([role,color])=>(
                   <div key={role} style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -358,11 +358,11 @@ export default function ForumPage() {
 
             {/* Thread Status Legend */}
             <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff' }}>📋 Thread Status</div>
+              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.clipboard} width={18} height={18} /> Thread Status</div>
               <div style={{ padding:'10px 14px', display:'flex', flexDirection:'column', gap:8 }}>
-                {[['🔥','Hot','#f97316'],['📌','Pinned','#f0c040'],['🛡️','Official','#38bdf8'],['🔒','Locked','#888'],['💬','Normal','var(--text-muted)']].map(([icon,label,color])=>(
+                {[[Solar.fire,'Hot','#f97316'],[Solar.pin,'Pinned','#f0c040'],[Solar.shield,'Official','#38bdf8'],[Solar.lock,'Locked','#888'],[Solar.chat,'Normal','var(--text-muted)']].map(([icon,label,color])=>(
                   <div key={label} style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <span style={{ fontSize:13, width:18, textAlign:'center', flexShrink:0 }}>{icon}</span>
+                    <Icon icon={icon} width={16} height={16} style={{ flexShrink: 0, color }} />
                     <span style={{ fontSize:12, fontWeight:700, color }}>{label}</span>
                   </div>
                 ))}

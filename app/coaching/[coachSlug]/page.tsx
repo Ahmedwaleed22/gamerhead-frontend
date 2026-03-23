@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { coachingApi, walletApi } from '@/lib/api'
+import { Icon } from '@iconify/react'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type PackageType = 'vod' | 'session' | 'drills' | 'team' | 'custom'
@@ -44,7 +46,11 @@ const TYPE_LABELS: Record<PackageType, { label:string; color:string; bg:string }
 }
 
 const TYPE_ICONS: Record<PackageType, string> = {
-  vod:'🎬', session:'🎙️', drills:'⚙️', team:'👥', custom:'✨',
+  vod: Solar.clapperboard,
+  session: Solar.microphone,
+  drills: Solar.tools,
+  team: Solar.users,
+  custom: Solar.sparkles,
 }
 
 const SOCIAL_ICONS: Record<string,React.ReactNode> = {
@@ -91,13 +97,13 @@ function HireModal({ pkg, coach, onClose }: { pkg: Package; coach: any; onClose:
           <>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
               <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#fff', letterSpacing:.5 }}>Confirm Package</span>
-              <button onClick={onClose} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer', lineHeight:1 }}>✕</button>
+              <button type="button" onClick={onClose} aria-label="Close" style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', cursor:'pointer', lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', padding:4 }}><Icon icon={Solar.close} width={22} height={22} /></button>
             </div>
 
             {/* Package summary */}
             <div style={{ background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)', borderRadius:10, padding:'14px 16px', marginBottom:18 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
-                <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>{TYPE_ICONS[pkg.type]} {tp.label}</span>
+                <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, display:'inline-flex', alignItems:'center', gap:5 }}><Icon icon={TYPE_ICONS[pkg.type]} width={12} height={12} style={{ flexShrink: 0, color: tp.color }} /> {tp.label}</span>
                 {pkg.popular&&<span style={{ background:'rgba(178,45,45,.15)', border:'1px solid rgba(178,45,45,.3)', borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:'#ff8080', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>MOST POPULAR</span>}
               </div>
               <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:18, color:'#fff', marginBottom:6 }}>{pkg.title}</div>
@@ -118,7 +124,7 @@ function HireModal({ pkg, coach, onClose }: { pkg: Package; coach: any; onClose:
               <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:.8, marginBottom:8 }}>What's included</div>
               {pkg.includes.map((inc,i)=>(
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
-                  <span style={{ color:'#4ade80', fontSize:10 }}>✓</span>
+                  <Icon icon={Solar.check} width={12} height={12} style={{ color:'#4ade80', flexShrink: 0 }} />
                   <span style={{ fontFamily:'Barlow, sans-serif', fontSize:12, color:'rgba(255,255,255,.55)' }}>{inc}</span>
                 </div>
               ))}
@@ -161,7 +167,7 @@ function HireModal({ pkg, coach, onClose }: { pkg: Package; coach: any; onClose:
 
         {step===2&&(
           <div style={{ textAlign:'center', padding:'12px 0' }}>
-            <div style={{ fontSize:48, marginBottom:16 }}>📬</div>
+            <div style={{ marginBottom:16, display:'flex', justifyContent:'center' }}><Icon icon={Solar.letter} width={48} height={48} style={{ opacity: 0.9 }} /></div>
             <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:24, color:'#fff', marginBottom:8, letterSpacing:.5 }}>Request Sent!</div>
             <p style={{ fontFamily:'Barlow, sans-serif', fontSize:13, color:'rgba(255,255,255,.45)', lineHeight:1.7, marginBottom:24, maxWidth:340, margin:'0 auto 24px' }}>
               Your message has been sent to <strong style={{ color:'#fff' }}>{coach.name}</strong>. They typically respond in {coach.responseTime}. You'll be notified when they accept, counter-offer, or create a custom package for you.
@@ -216,8 +222,8 @@ function CustomRequestModal({ coach, onClose }: { coach: any; onClose:()=>void }
         {step===1&&(
           <>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#F0AA1A', letterSpacing:.5 }}>✨ Custom Request</span>
-              <button onClick={onClose} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer', lineHeight:1 }}>✕</button>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#F0AA1A', letterSpacing:.5, display:'inline-flex', alignItems:'center', gap:8 }}><Icon icon={Solar.sparkles} width={22} height={22} style={{ color: '#F0AA1A' }} /> Custom Request</span>
+              <button type="button" onClick={onClose} aria-label="Close" style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', cursor:'pointer', lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', padding:4 }}><Icon icon={Solar.close} width={22} height={22} /></button>
             </div>
 
             <div style={{ fontSize:12, color:'rgba(255,255,255,.4)', fontFamily:'Barlow, sans-serif', marginBottom:18, lineHeight:1.6 }}>
@@ -276,7 +282,7 @@ function CustomRequestModal({ coach, onClose }: { coach: any; onClose:()=>void }
 
         {step===2&&(
           <div style={{ textAlign:'center', padding:'12px 0' }}>
-            <div style={{ fontSize:48, marginBottom:16 }}>✨</div>
+            <div style={{ marginBottom:16, display:'flex', justifyContent:'center' }}><Icon icon={Solar.sparkles} width={48} height={48} style={{ color: '#F0AA1A' }} /></div>
             <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:24, color:'#fff', marginBottom:8, letterSpacing:.5 }}>Request Sent!</div>
             <p style={{ fontFamily:'Barlow, sans-serif', fontSize:13, color:'rgba(255,255,255,.45)', lineHeight:1.7, marginBottom:24, maxWidth:340, margin:'0 auto 24px' }}>
               <strong style={{ color:'#fff' }}>{coach.name}</strong> will review your request and create a custom offer tailored to your needs. You'll be notified when it's ready.
@@ -375,7 +381,8 @@ export default function CoachPackagePage() {
 
   if (loading || !coach) {
     return (
-      <div style={{ minHeight:'100vh', background:'#0C0C11', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ minHeight:'100vh', background:'#0C0C11', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+        <Icon icon={Solar.hourglass} width={36} height={36} style={{ opacity: 0.85 }} />
         <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:18, color:'rgba(255,255,255,.4)', letterSpacing:.5 }}>Loading coach...</div>
       </div>
     )
@@ -404,8 +411,8 @@ export default function CoachPackagePage() {
                 {COACH.avatarUrl ? (
                   <img src={COACH.avatarUrl} alt={COACH.name} style={{ width:72, height:72, borderRadius:16, objectFit:'cover', border:'2px solid rgba(178,45,45,.35)' }}/>
                 ) : (
-                  <div style={{ width:72, height:72, borderRadius:16, background:'linear-gradient(135deg,#B22D2D,#7a1a1a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:34, border:'2px solid rgba(178,45,45,.35)' }}>
-                    {COACH.emoji}
+                  <div style={{ width:72, height:72, borderRadius:16, background:'linear-gradient(135deg,#B22D2D,#7a1a1a)', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(178,45,45,.35)' }}>
+                    <EmojiSolar emoji={COACH.emoji || '🎯'} size={36} inline={false} />
                   </div>
                 )}
                 {/* Online dot */}
@@ -416,27 +423,29 @@ export default function CoachPackagePage() {
                 {/* Name + badges */}
                 <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5, flexWrap:'wrap' }}>
                   <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:26, color:'#fff', letterSpacing:.5 }}>{COACH.name}</span>
-                  <span style={{ background:'rgba(178,45,45,.18)', border:'1px solid rgba(178,45,45,.4)', borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:'#ff8080', fontFamily:'Rajdhani, sans-serif', letterSpacing:.5 }}>✓ VERIFIED COACH</span>
-                  <span style={{ background:COACH.online?'rgba(74,222,128,.1)':'rgba(107,114,128,.1)', border:`1px solid ${COACH.online?'rgba(74,222,128,.3)':'rgba(107,114,128,.25)'}`, borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:COACH.online?'#4ade80':'#6B7280', fontFamily:'Rajdhani, sans-serif', letterSpacing:.4 }}>
-                    {COACH.online?'● ONLINE':'OFFLINE'}
+                  <span style={{ background:'rgba(178,45,45,.18)', border:'1px solid rgba(178,45,45,.4)', borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:'#ff8080', fontFamily:'Rajdhani, sans-serif', letterSpacing:.5, display:'inline-flex', alignItems:'center', gap:4 }}><Icon icon={Solar.check} width={10} height={10} style={{ flexShrink: 0 }} /> VERIFIED COACH</span>
+                  <span style={{ background:COACH.online?'rgba(74,222,128,.1)':'rgba(107,114,128,.1)', border:`1px solid ${COACH.online?'rgba(74,222,128,.3)':'rgba(107,114,128,.25)'}`, borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:COACH.online?'#4ade80':'#6B7280', fontFamily:'Rajdhani, sans-serif', letterSpacing:.4, display:'inline-flex', alignItems:'center', gap:4 }}>
+                    {COACH.online ? <><Icon icon={Solar.online} width={10} height={10} style={{ color: '#4ade80', flexShrink: 0 }} /> ONLINE</> : 'OFFLINE'}
                   </span>
                 </div>
 
                 <div style={{ fontFamily:'Barlow, sans-serif', fontSize:13, color:'rgba(255,255,255,.45)', marginBottom:10 }}>
-                  {COACH.title}{COACH.title && COACH.game ? ' · ' : ''}{COACH.game && <Link href={`/games/${COACH.gameSlug}`} style={{ color:'rgba(255,255,255,.45)', textDecoration:'none' }}>{COACH.gameEmoji} {COACH.game}</Link>}
+                  {COACH.title}{COACH.title && COACH.game ? ' · ' : ''}{COACH.game && <Link href={`/games/${COACH.gameSlug}`} style={{ color:'rgba(255,255,255,.45)', textDecoration:'none', display:'inline-flex', alignItems:'center', gap:6 }}><EmojiSolar emoji={COACH.gameEmoji || '🎮'} size={14} /> {COACH.game}</Link>}
                 </div>
 
                 {/* Quick stats row */}
                 <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
                   {[
-                    { val:`${COACH.rating}`, label:'Rating', icon:'★', color:'#F0AA1A' },
-                    { val:`${COACH.totalReviews}`, label:'Reviews', icon:'💬', color:'rgba(255,255,255,.6)' },
-                    { val:`${COACH.totalOrders}`, label:'Orders', icon:'📦', color:'rgba(255,255,255,.6)' },
-                    { val:`${COACH.completionRate}%`, label:'Completion', icon:'✓', color:'#4ade80' },
-                    { val:COACH.responseTime, label:'Response', icon:'⚡', color:'#60A5FA' },
+                    { val:`${COACH.rating}`, label:'Rating', icon: Solar.star, color:'#F0AA1A' },
+                    { val:`${COACH.totalReviews}`, label:'Reviews', icon: Solar.chat, color:'rgba(255,255,255,.6)' },
+                    { val:`${COACH.totalOrders}`, label:'Orders', icon: Solar.package, color:'rgba(255,255,255,.6)' },
+                    { val:`${COACH.completionRate}%`, label:'Completion', icon: Solar.checkRead, color:'#4ade80' },
+                    { val:COACH.responseTime, label:'Response', icon: Solar.bolt, color:'#60A5FA' },
                   ].map((s,i)=>(
                     <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
-                      <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:15, color:s.color }}>{s.icon} {s.val}</span>
+                      <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:15, color:s.color, display:'inline-flex', alignItems:'center', gap:5 }}>
+                        <Icon icon={s.icon} width={14} height={14} style={{ flexShrink: 0, color: s.color, opacity: 0.95 }} /> {s.val}
+                      </span>
                       <span style={{ fontFamily:'Rajdhani, sans-serif', fontSize:9, fontWeight:700, color:'rgba(255,255,255,.25)', textTransform:'uppercase', letterSpacing:.7 }}>{s.label}</span>
                     </div>
                   ))}
@@ -511,8 +520,8 @@ export default function CoachPackagePage() {
                         <div>
                           {/* Type badge + popular */}
                           <div style={{ display:'flex', gap:7, marginBottom:8, flexWrap:'wrap' }}>
-                            <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>{TYPE_ICONS[pkg.type]} {tp.label}</span>
-                            {pkg.popular&&<span style={{ background:'rgba(178,45,45,.15)', border:'1px solid rgba(178,45,45,.3)', borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:'#ff8080', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>🔥 MOST POPULAR</span>}
+                            <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, display:'inline-flex', alignItems:'center', gap:5 }}><Icon icon={TYPE_ICONS[pkg.type]} width={12} height={12} style={{ flexShrink: 0, color: tp.color }} /> {tp.label}</span>
+                            {pkg.popular&&<span style={{ background:'rgba(178,45,45,.15)', border:'1px solid rgba(178,45,45,.3)', borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:'#ff8080', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, display:'inline-flex', alignItems:'center', gap:4 }}><Icon icon={Solar.fire} width={11} height={11} style={{ flexShrink: 0 }} /> MOST POPULAR</span>}
                           </div>
 
                           <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:20, color:'#fff', letterSpacing:.3, marginBottom:8 }}>{pkg.title}</div>
@@ -523,7 +532,7 @@ export default function CoachPackagePage() {
                           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4px 16px' }}>
                             {pkg.includes.map((inc,i)=>(
                               <div key={i} style={{ display:'flex', alignItems:'center', gap:6 }}>
-                                <span style={{ color:'#4ade80', fontSize:9, flexShrink:0 }}>✓</span>
+                                <Icon icon={Solar.check} width={11} height={11} style={{ color:'#4ade80', flexShrink:0 }} />
                                 <span style={{ fontFamily:'Barlow, sans-serif', fontSize:11, color:'rgba(255,255,255,.45)' }}>{inc}</span>
                               </div>
                             ))}
@@ -574,7 +583,7 @@ export default function CoachPackagePage() {
                 {COACH.allowCustomRequests && !isOwnProfile && (
                   <div style={{ background:'rgba(240,170,26,.05)', border:'1px dashed rgba(240,170,26,.25)', borderRadius:12, padding:'18px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap' }}>
                     <div>
-                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:16, color:'#F0AA1A', letterSpacing:.4, marginBottom:4 }}>✨ I Want Something Custom</div>
+                      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:16, color:'#F0AA1A', letterSpacing:.4, marginBottom:4, display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.sparkles} width={18} height={18} style={{ color: '#F0AA1A', flexShrink: 0 }} /> I Want Something Custom</div>
                       <div style={{ fontFamily:'Barlow, sans-serif', fontSize:12, color:'rgba(255,255,255,.4)' }}>Describe what you need and the coach will create a tailored package for you.</div>
                     </div>
                     <button onClick={() => setCustomReq(true)} style={{ background:'rgba(240,170,26,.15)', border:'1px solid rgba(240,170,26,.35)', borderRadius:8, padding:'8px 18px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, letterSpacing:.6, color:'#F0AA1A', cursor:'pointer', whiteSpace:'nowrap' }}>
@@ -618,7 +627,7 @@ export default function CoachPackagePage() {
                   {REVIEWS.map((r,i)=>(
                     <div key={i} style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.07)', borderRadius:12, padding:'16px 20px' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-                        <div style={{ width:34, height:34, borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17 }}>{r.buyerEmoji}</div>
+                        <div style={{ width:34, height:34, borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center' }}><EmojiSolar emoji={r.buyerEmoji || '👤'} size={20} inline={false} /></div>
                         <div style={{ flex:1 }}>
                           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2, flexWrap:'wrap' }}>
                             <span style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:13, color:'#fff' }}>{r.buyer}</span>
@@ -630,8 +639,8 @@ export default function CoachPackagePage() {
                       </div>
                       <p style={{ fontFamily:'Barlow, sans-serif', fontSize:12, color:'rgba(255,255,255,.5)', lineHeight:1.75, margin:'0 0 10px' }}>"{r.text}"</p>
                       <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                        <button style={{ background:'none', border:'1px solid rgba(255,255,255,.1)', borderRadius:5, padding:'3px 10px', fontSize:10, color:'rgba(255,255,255,.3)', fontFamily:'Rajdhani, sans-serif', fontWeight:700, cursor:'pointer', letterSpacing:.3 }}>
-                          👍 Helpful ({r.helpful})
+                        <button type="button" style={{ background:'none', border:'1px solid rgba(255,255,255,.1)', borderRadius:5, padding:'3px 10px', fontSize:10, color:'rgba(255,255,255,.3)', fontFamily:'Rajdhani, sans-serif', fontWeight:700, cursor:'pointer', letterSpacing:.3, display:'inline-flex', alignItems:'center', gap:5 }}>
+                          <Icon icon={Solar.like} width={12} height={12} style={{ opacity: 0.7 }} /> Helpful ({r.helpful})
                         </button>
                       </div>
                     </div>
@@ -660,9 +669,9 @@ export default function CoachPackagePage() {
                     >
                       <div>
                         <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:2 }}>
-                          <span style={{ fontSize:11 }}>{TYPE_ICONS[pkg.type]}</span>
+                          <Icon icon={TYPE_ICONS[pkg.type]} width={14} height={14} style={{ flexShrink: 0, opacity: 0.85 }} />
                           <span style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.7)' }}>{pkg.title}</span>
-                          {pkg.popular&&<span style={{ fontSize:8, color:'#ff8080' }}>🔥</span>}
+                          {pkg.popular&&<Icon icon={Solar.fire} width={12} height={12} style={{ color:'#ff8080', flexShrink: 0 }} />}
                         </div>
                         <div style={{ fontSize:9, color:'rgba(255,255,255,.25)', fontFamily:'Barlow, sans-serif' }}>{pkg.deliveryDays}d delivery</div>
                       </div>
@@ -682,13 +691,13 @@ export default function CoachPackagePage() {
             {/* Trust indicators */}
             <div style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.07)', borderRadius:12, padding:'14px 16px' }}>
               {[
-                { icon:'🔒', label:'Secure Payments',   sub:'No charge until offer is confirmed' },
-                { icon:'↩️', label:'Revision Policy',   sub:'Revisions included in most packages' },
-                { icon:'⚡', label:'Fast Response',     sub:`Usually replies in ${COACH.responseTime}` },
-                { icon:'✓',  label:'Verified Coach',    sub:'Identity & credentials confirmed' },
+                { icon: Solar.lock, label:'Secure Payments',   sub:'No charge until offer is confirmed' },
+                { icon: Solar.reply, label:'Revision Policy',   sub:'Revisions included in most packages' },
+                { icon: Solar.bolt, label:'Fast Response',     sub:`Usually replies in ${COACH.responseTime}` },
+                { icon: Solar.check,  label:'Verified Coach',    sub:'Identity & credentials confirmed' },
               ].map((t,i)=>(
                 <div key={i} style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom:i<3?12:0 }}>
-                  <span style={{ fontSize:14, lineHeight:1.4 }}>{t.icon}</span>
+                  <Icon icon={t.icon} width={16} height={16} style={{ flexShrink: 0, marginTop: 1, opacity: 0.9 }} />
                   <div>
                     <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.6)', marginBottom:1 }}>{t.label}</div>
                     <div style={{ fontFamily:'Barlow, sans-serif', fontSize:10, color:'rgba(255,255,255,.25)' }}>{t.sub}</div>

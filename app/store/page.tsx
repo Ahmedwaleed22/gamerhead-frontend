@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { storeApi, walletApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { sendActivity } from '@/lib/socket'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 // ─── UPDATED CATEGORIES (no Profile Badges, no Cash, no Accessories, no Gift Cards) ──
 const categories = ['Tickets', 'Premium Membership']
@@ -49,8 +51,8 @@ function ModalTop({ title, onBack, onClose }: { title: React.ReactNode; onBack?:
           {title}
         </span>
       </div>
-      <button onClick={onClose} style={{ background:'var(--bg-4)', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:'50%', width:28, height:28, fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-        ✕
+      <button type="button" onClick={onClose} style={{ background:'var(--bg-4)', border:'1px solid var(--border)', borderRadius:'50%', width:32, height:32, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }} aria-label="Close">
+        <Icon icon={Solar.close} width={16} height={16} style={{ color: 'rgba(255,255,255,0.72)' }} />
       </button>
     </div>
   )
@@ -87,8 +89,8 @@ function ItemCard({
     >
       {/* Added-to-cart flash */}
       {flashing && (
-        <div style={{ position:'absolute', inset:0, background:'rgba(74,222,128,0.12)', border:'1px solid rgba(74,222,128,0.4)', borderRadius:12, zIndex:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:34, color:'#4ade80', fontWeight:900, animation:'gh-fadeout 1.1s ease forwards' }}>
-          ✓
+        <div style={{ position:'absolute', inset:0, background:'rgba(74,222,128,0.12)', border:'1px solid rgba(74,222,128,0.4)', borderRadius:12, zIndex:10, display:'flex', alignItems:'center', justifyContent:'center', color:'#4ade80', animation:'gh-fadeout 1.1s ease forwards' }}>
+          <Icon icon={Solar.checkRead} width={40} height={40} />
         </div>
       )}
 
@@ -439,7 +441,7 @@ export default function StorePage() {
             {/* ── SUCCESS ── */}
             {step === 'success' && (
               <div style={{ padding:52, display:'flex', flexDirection:'column', alignItems:'center', gap:18, textAlign:'center' }}>
-                <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(39,174,96,0.12)', border:'2px solid rgba(39,174,96,0.45)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, animation:'gh-scalein .4s cubic-bezier(.34,1.56,.64,1)' }}>✓</div>
+                <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(39,174,96,0.12)', border:'2px solid rgba(39,174,96,0.45)', display:'flex', alignItems:'center', justifyContent:'center', animation:'gh-scalein .4s cubic-bezier(.34,1.56,.64,1)' }}><Icon icon={Solar.checkRead} width={40} height={40} /></div>
                 <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:28, fontWeight:900, textTransform:'uppercase', color:'#4ade80', letterSpacing:1 }}>Purchase Complete!</div>
                 <p style={{ fontSize:13, color:'var(--text-muted)', lineHeight:1.7, maxWidth:290 }}>
                   Thank you for your purchase. Your items have been added to your account.
@@ -451,7 +453,7 @@ export default function StorePage() {
             {/* ── FAIL ── */}
             {step === 'fail' && (
               <div style={{ padding:52, display:'flex', flexDirection:'column', alignItems:'center', gap:18, textAlign:'center' }}>
-                <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(184,44,44,0.12)', border:'2px solid rgba(184,44,44,0.45)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, animation:'gh-scalein .4s cubic-bezier(.34,1.56,.64,1)' }}>✕</div>
+                <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(184,44,44,0.12)', border:'2px solid rgba(184,44,44,0.45)', display:'flex', alignItems:'center', justifyContent:'center', animation:'gh-scalein .4s cubic-bezier(.34,1.56,.64,1)' }}><Icon icon={Solar.close} width={40} height={40} /></div>
                 <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:28, fontWeight:900, textTransform:'uppercase', color:'var(--red)', letterSpacing:1 }}>Something's Wrong</div>
                 <p style={{ fontSize:13, color:'var(--text-muted)', lineHeight:1.7, maxWidth:290 }}>
                   Your payment could not be processed. Please check your details and try again.
@@ -476,14 +478,46 @@ export default function StorePage() {
             {step === 'cart' && (
               <>
                 <ModalTop
-                  title={<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{marginRight:6,verticalAlign:'middle'}}><circle cx="9" cy="21" r="1" fill="#fff"/><circle cx="20" cy="21" r="1" fill="#fff"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>Cart{totalItems > 0 && <span style={{ background:'var(--red)', color:'#fff', fontSize:10, fontWeight:800, padding:'2px 7px', borderRadius:10, marginLeft:8 }}>{totalItems}</span>}</>}
+                  title={<>
+                    <Icon icon={Solar.cart} width={22} height={22} style={{ marginRight: 10, flexShrink: 0, opacity: 0.95 }} />
+                    Cart
+                    {totalItems > 0 && <span style={{ background:'var(--red)', color:'#fff', fontSize:10, fontWeight:800, padding:'2px 7px', borderRadius:10, marginLeft:8 }}>{totalItems}</span>}
+                  </>}
                   onClose={closeModal}
                 />
                 {cart.length === 0 ? (
-                  <div style={{ padding:'44px 24px', textAlign:'center' }}>
-                    <div style={{ marginBottom:14 }}><svg width="44" height="44" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="21" r="1" fill="#4A5568"/><circle cx="20" cy="21" r="1" fill="#4A5568"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" stroke="#4A5568" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-                    <div style={{ fontSize:14, color:'var(--text-muted)', marginBottom:18 }}>Your cart is empty</div>
-                    <button className="btn-primary" onClick={closeModal}>Browse Store</button>
+                  <div style={{
+                    padding: '40px 20px 44px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    minHeight: 300,
+                    justifyContent: 'center',
+                  }}>
+                    <div style={{
+                      width: 96,
+                      height: 96,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(145deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 28,
+                    }}>
+                      <Icon icon={Solar.cart} width={48} height={48} style={{ opacity: 0.5, color: 'rgba(255,255,255,0.9)' }} />
+                    </div>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 900, letterSpacing: 0.6, textTransform: 'uppercase', color: '#fff', marginBottom: 10 }}>
+                      Your cart is empty
+                    </div>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.55, maxWidth: 300, margin: '0 0 28px' }}>
+                      Add tickets or premium from the store — they&apos;ll show up here.
+                    </p>
+                    <button className="btn-primary text-center flex justify-center align-center" onClick={closeModal} style={{ minWidth: 220 }}>
+                      Browse store
+                    </button>
                   </div>
                 ) : (
                   <>
@@ -503,9 +537,9 @@ export default function StorePage() {
                             <button onClick={() => changeQty(item.id,+1)} style={{ width:22, height:22, background:'var(--bg-4)', border:'1px solid var(--border)', borderRadius:4, color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
                           </div>
                           <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:15, fontWeight:800, color:'#f0c040', minWidth:54, textAlign:'right', flexShrink:0 }}>${(item.price*item.qty).toFixed(2)}</div>
-                          <button onClick={() => removeFromCart(item.id)} style={{ background:'none', border:'none', color:'var(--text-dim)', fontSize:14, cursor:'pointer', padding:'2px 4px' }}
+                          <button type="button" onClick={() => removeFromCart(item.id)} style={{ background:'none', border:'none', color:'var(--text-dim)', cursor:'pointer', padding:'2px 4px', display:'flex', alignItems:'center' }}
                             onMouseEnter={e=>(e.currentTarget.style.color='var(--red)')}
-                            onMouseLeave={e=>(e.currentTarget.style.color='var(--text-dim)')}>✕</button>
+                            onMouseLeave={e=>(e.currentTarget.style.color='var(--text-dim)')} aria-label="Remove"><Icon icon={Solar.close} width={14} height={14} /></button>
                         </div>
                       ))}
                     </div>
@@ -515,7 +549,7 @@ export default function StorePage() {
                           onChange={e=>{ setCoupon(e.target.value); setCouponError('') }}
                           className="site-input" style={{ flex:1, fontSize:12, height:34 }} />
                         <button onClick={applyCoupon} style={{ padding:'0 16px', background: couponApplied ? 'rgba(39,174,96,0.15)' : 'var(--bg-3)', border:`1px solid ${couponApplied ? 'rgba(39,174,96,0.4)' : 'var(--border)'}`, borderRadius:4, color: couponApplied ? '#4ade80' : 'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer', textTransform:'uppercase', letterSpacing:.4, whiteSpace:'nowrap' }}>
-                          {couponApplied ? '✓ Applied' : 'Apply'}
+                          {couponApplied ? (<span style={{ display:'inline-flex', alignItems:'center', gap:4 }}><Icon icon={Solar.checkRead} width={12} height={12} /> Applied</span>) : 'Apply'}
                         </button>
                       </div>
                       {couponError   && <p style={{ fontSize:11, color:'var(--red)',   marginTop:5 }}>{couponError}</p>}
@@ -579,7 +613,7 @@ export default function StorePage() {
                           borderRadius:10, cursor:'pointer', transition:'all .15s', position:'relative',
                         }}>
                           {payMethod===m.key && (
-                            <div style={{ position:'absolute', top:10, right:10, width:18, height:18, borderRadius:'50%', background:'var(--red)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#fff', fontWeight:900 }}>✓</div>
+                            <div style={{ position:'absolute', top:10, right:10, width:18, height:18, borderRadius:'50%', background:'var(--red)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}><Icon icon={Solar.checkRead} width={10} height={10} /></div>
                           )}
                           <div style={{ marginBottom:8 }}>{m.icon === 'wallet' ? <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="15" rx="3" stroke="#4ade80" strokeWidth="2"/><path d="M2 9h20" stroke="#4ade80" strokeWidth="2"/><circle cx="17" cy="14" r="1.5" fill="#4ade80"/></svg> : m.icon === 'pp' ? <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#5b9bd5" strokeWidth="2"/><text x="12" y="16" textAnchor="middle" fill="#5b9bd5" fontSize="12" fontWeight="900" fontFamily="Arial">P</text></svg> : <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="3" stroke="#9CA3AF" strokeWidth="2"/><path d="M1 10h22" stroke="#9CA3AF" strokeWidth="2"/></svg>}</div>
                           <div style={{ fontSize:13, fontWeight:700, color: payMethod===m.key ? '#fff' : 'var(--text-muted)', marginBottom:4 }}>{m.label}</div>
@@ -646,7 +680,7 @@ export default function StorePage() {
                     </div>
                   ) : (
                     <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(39,174,96,0.08)', border:'1px solid rgba(39,174,96,0.2)', borderRadius:7, padding:'10px 14px', fontSize:12, color:'#4ade80' }}>
-                      ✓ Coupon EMPIRE10 applied — 10% off
+                      <Icon icon={Solar.checkRead} width={14} height={14} /> Coupon EMPIRE10 applied — 10% off
                     </div>
                   )}
 

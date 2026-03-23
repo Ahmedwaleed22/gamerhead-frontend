@@ -7,6 +7,7 @@ import SearchFilter from '../components/SearchFilter'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
 import StatCard from '../components/StatCard'
+import { Solar } from '@/lib/solar-duotone'
 
 type Tab = 'Overview' | 'Transactions' | 'Withdrawals' | 'Deposits' | 'Prize Claims'
 
@@ -53,11 +54,11 @@ function OverviewTab() {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-      <StatCard icon="🪙" label="Tickets in Circulation" value={summary.totalCredits?.toLocaleString()} />
-      <StatCard icon="💵" label="Total Cash Held" value={`$${((summary.totalCash || 0) / 100).toFixed(2)}`} color="#22c55e" />
-      <StatCard icon="⏳" label="Pending Withdrawals" value={`$${((summary.pendingWithdrawals || 0) / 100).toFixed(2)}`} color="#f59e0b" sub={`${summary.pendingWithdrawalCount || 0} requests`} />
-      <StatCard icon="📤" label="Lifetime Payouts" value={`$${((summary.lifetimePayouts || 0) / 100).toFixed(2)}`} />
-      <StatCard icon="💰" label="Pending Payout (Users)" value={`$${((summary.totalPending || 0) / 100).toFixed(2)}`} color="#8890A4" />
+      <StatCard icon={Solar.coin} label="Tickets in Circulation" value={summary.totalCredits?.toLocaleString()} />
+      <StatCard icon={Solar.bill} label="Total Cash Held" value={`$${((summary.totalCash || 0) / 100).toFixed(2)}`} color="#22c55e" />
+      <StatCard icon={Solar.hourglass} label="Pending Withdrawals" value={`$${((summary.pendingWithdrawals || 0) / 100).toFixed(2)}`} color="#f59e0b" sub={`${summary.pendingWithdrawalCount || 0} requests`} />
+      <StatCard icon={Solar.upload} label="Lifetime Payouts" value={`$${((summary.lifetimePayouts || 0) / 100).toFixed(2)}`} />
+      <StatCard icon={Solar.tickets} label="Pending Payout (Users)" value={`$${((summary.totalPending || 0) / 100).toFixed(2)}`} color="#8890A4" />
     </div>
   )
 }

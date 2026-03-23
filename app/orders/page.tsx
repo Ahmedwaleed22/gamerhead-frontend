@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { storeApi, coachingApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 const STATUS_COLOR: Record<string,string> = { Delivered:'#4ade80', Processing:'#F39C12', Cancelled:'#E74C3C', Refunded:'#9CA3AF', Shipped:'#3498DB', completed:'#4ade80', pending:'#F39C12', cancelled:'#E74C3C', refunded:'#9CA3AF', active:'#4ade80', delivered:'#A78BFA', revision:'#60A5FA' }
@@ -135,7 +137,7 @@ export default function OrdersPage() {
                     const totalQty = o.items?.reduce((s: number, i: any) => s + (i.qty || 1), 0) || 1
                     return (
                       <div key={o._id || o.orderId} style={{ display:'grid', gridTemplateColumns:'50px 1fr 100px 90px 110px 130px 80px', padding:'16px 24px', borderTop:'1px solid #25252C', alignItems:'center', gap:12 }}>
-                        <div style={{ width:38, height:38, background:'#25252C', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>📦</div>
+                        <div style={{ width:38, height:38, background:'#25252C', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.package} width={22} height={22} /></div>
                         <div>
                           <div style={{ ...R, fontWeight:700, fontSize:14, color:'#fff' }}>{itemName}</div>
                           <div style={{ ...R, fontSize:11, color:'#4A5568', marginTop:2 }}>{o.orderId || o._id}</div>
@@ -167,7 +169,7 @@ export default function OrdersPage() {
               <div>
                 {coachingOrders.length === 0 ? (
                   <div style={{ background:'#18181C', borderRadius:12, padding:'48px 24px', textAlign:'center' }}>
-                    <div style={{ fontSize:40, marginBottom:12 }}>🎓</div>
+                    <div style={{ marginBottom:12, display:'flex', justifyContent:'center' }}><Icon icon={Solar.diploma} width={40} height={40} /></div>
                     <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'#fff', marginBottom:6 }}>No Coaching Orders Yet</div>
                     <div style={{ ...R, fontSize:13, color:'#9CA3AF', marginBottom:20 }}>Browse our coaches and book your first session</div>
                     <Link href="/coaching" style={{ background:'#B22D2D', borderRadius:8, padding:'10px 24px', textDecoration:'none', ...R, fontWeight:700, fontSize:12, color:'#fff' }}>Browse Coaches →</Link>
@@ -181,7 +183,7 @@ export default function OrdersPage() {
                       return (
                         <div key={o._id || o.orderId} style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.07)', borderRadius:10, padding:'16px 20px' }}>
                           <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-                            <div style={{ width:40, height:40, borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>🎓</div>
+                            <div style={{ width:40, height:40, borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.diploma} width={22} height={22} /></div>
                             <div style={{ flex:1, minWidth:0 }}>
                               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
                                 <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'#fff' }}>{o.packageTitle || 'Coaching Session'}</span>
@@ -189,7 +191,12 @@ export default function OrdersPage() {
                               </div>
                               <div style={{ ...R, fontSize:12, color:'#9CA3AF' }}>
                                 Coach: {o.coachName || '—'} · {o.orderId || o._id}
-                                {o.scheduledAt && <> · 📅 {new Date(o.scheduledAt).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}</>}
+                                {o.scheduledAt && (
+                                  <> · <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, verticalAlign: 'middle' }}>
+                                    <Icon icon={Solar.calendar} width={14} height={14} style={{ flexShrink: 0, opacity: 0.85 }} />
+                                    {new Date(o.scheduledAt).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}
+                                  </span></>
+                                )}
                               </div>
                             </div>
                             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'#4ade80', flexShrink:0 }}>${o.price || 0}</div>
@@ -227,12 +234,14 @@ export default function OrdersPage() {
                                   <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                                     <span style={{ ...R, fontSize:11, fontWeight:700, color:'rgba(255,255,255,.5)', marginRight:4 }}>Rating:</span>
                                     {[1,2,3,4,5].map(star=>(
-                                      <button key={star}
+                                      <button key={star} type="button"
                                         onMouseEnter={()=>setHoverRating(star)}
                                         onMouseLeave={()=>setHoverRating(0)}
                                         onClick={()=>setReviewRating(star)}
-                                        style={{ background:'none', border:'none', cursor:'pointer', fontSize:22, padding:0, lineHeight:1, color:(hoverRating||reviewRating)>=star?'#F0AA1A':'rgba(255,255,255,.15)', transition:'color .1s' }}
-                                      >&#9733;</button>
+                                        style={{ background:'none', border:'none', cursor:'pointer', padding:0, lineHeight:1, display:'inline-flex', alignItems:'center', opacity:(hoverRating||reviewRating)>=star?1:0.35, transition:'opacity .1s' }}
+                                      >
+                                        <Icon icon={Solar.star} width={24} height={24} style={{ color: (hoverRating||reviewRating)>=star ? '#F0AA1A' : 'rgba(255,255,255,0.35)' }} />
+                                      </button>
                                     ))}
                                     {reviewRating>0&&<span style={{ ...R, fontSize:12, fontWeight:700, color:'#F0AA1A', marginLeft:4 }}>{reviewRating}/5</span>}
                                   </div>
@@ -273,8 +282,10 @@ export default function OrdersPage() {
                           )}
                           {status==='completed'&&o.isReviewed&&(
                             <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:12, paddingTop:12, borderTop:'1px solid rgba(255,255,255,.06)' }}>
-                              <span style={{ ...R, fontSize:11, color:'#F0AA1A', fontWeight:700 }}>
-                                {'★'.repeat(o.reviewRating||0)}{'☆'.repeat(5-(o.reviewRating||0))}
+                              <span style={{ ...R, fontSize:11, color:'#F0AA1A', fontWeight:700, display:'inline-flex', alignItems:'center', gap: 2 }}>
+                                {[1,2,3,4,5].map(s => (
+                                  <Icon key={s} icon={Solar.star} width={14} height={14} style={{ color: s <= (o.reviewRating || 0) ? '#F0AA1A' : 'rgba(255,255,255,0.2)' }} />
+                                ))}
                               </span>
                               <span style={{ ...R, fontSize:11, color:'rgba(255,255,255,.4)' }}>Review submitted</span>
                             </div>

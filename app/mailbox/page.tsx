@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { mailboxApi, usersApi } from '@/lib/api'
 import { sendActivity } from '@/lib/socket'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 type Message = { id?: string; side: string; initials: string; color: string; date: string; time: string; body: string; editedAt?: string | null }
 type Thread  = { id: string; from: string; fromSlug: string; initials: string; color: string; subject: string; date: string; time: string; unread: boolean; preview: string }
@@ -286,7 +288,7 @@ function MailboxPage() {
                   {t.unread && <div style={{ width:7, height:7, background:'#C0392B', borderRadius:'50%', flexShrink:0, marginTop:4 }} />}
 
                   {/* Delete on hover */}
-                  <button onClick={e => deleteThread(t.id, e)} className="thread-delete-btn" style={{ position:'absolute', top:8, right:8, background:'rgba(255,255,255,0.06)', border:'none', color:'#6B7280', fontSize:11, cursor:'pointer', padding:'2px 5px', borderRadius:4, opacity:0, transition:'opacity 0.15s' }}>✕</button>
+                  <button type="button" onClick={e => deleteThread(t.id, e)} className="thread-delete-btn" aria-label="Delete thread" style={{ position:'absolute', top:8, right:8, background:'rgba(255,255,255,0.06)', border:'none', color:'#6B7280', cursor:'pointer', padding:'4px 6px', borderRadius:4, opacity:0, transition:'opacity 0.15s', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.close} width={14} height={14} /></button>
                 </div>
               ))}
             </div>

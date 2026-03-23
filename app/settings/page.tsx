@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { usersApi, authApi, linkedAccountsApi } from '@/lib/api'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const COLOR_PRESETS = [
   '#E74C3C','#C0392B','#E67E22','#F39C12','#F1C40F',
@@ -487,7 +489,7 @@ function SettingsPage() {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16, marginTop: 28 }}>
-                  {saved && <span style={{ ...R, fontSize: 12, color: '#4ade80' }}>✓ Settings saved</span>}
+                  {saved && <span style={{ ...R, fontSize: 12, color: '#4ade80', display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.checkRead} width={14} height={14} /> Settings saved</span>}
                   <button onClick={handleSave} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '9px 28px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: 'pointer' }}>Save Changes</button>
                 </div>
               </>
@@ -507,18 +509,18 @@ function SettingsPage() {
 
                   {/* Name Change */}
                   <div style={{ background: '#25252C', borderRadius: 10, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ fontSize: 28 }}>✏️</div>
+                    <div><Icon icon={Solar.pen} width={28} height={28} /></div>
                     <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>Name Change</div>
                     <div style={{ ...R, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: '14px' }}>Change your Display Name</div>
                     <div style={{ background: 'rgba(243,156,18,0.12)', border: '1px solid rgba(243,156,18,0.35)', borderRadius: 20, padding: '2px 9px', ...R, fontWeight: 700, fontSize: 10, color: '#F39C12' }}>
-                      {user.isPremium ? '★ Free (Premium)' : '🪙 5 Tickets'}
+                      {user.isPremium ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.star} width={12} height={12} /> Free (Premium)</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.coin} width={12} height={12} /> 5 Tickets</span>)}
                     </div>
                     <button onClick={() => { setNameModalOpen(true); setNewDisplayName(''); setNameError(''); setNameSuccess(false) }} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '7px 20px', ...R, fontWeight: 600, fontSize: 11, color: '#fff', cursor: 'pointer', width: '100%', marginTop: 'auto' }}>Change Name</button>
                   </div>
 
                   {/* Tournament Entry */}
                   <div style={{ background: '#25252C', borderRadius: 10, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ fontSize: 28 }}>🪙</div>
+                    <div><Icon icon={Solar.coin} width={28} height={28} /></div>
                     <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>Tickets</div>
                     <div style={{ ...R, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: '14px' }}>Free tournament entry</div>
                     <div style={{ background: 'rgba(243,156,18,0.12)', border: '1px solid rgba(243,156,18,0.35)', borderRadius: 20, padding: '2px 9px', ...R, fontWeight: 700, fontSize: 10, color: '#F39C12' }}>
@@ -529,11 +531,11 @@ function SettingsPage() {
 
                   {/* 2XP Token */}
                   <div style={{ background: '#25252C', borderRadius: 10, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, border: isXpBoostActive ? '1px solid rgba(74,222,128,0.4)' : '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ fontSize: 28 }}>⚡</div>
+                    <div><Icon icon={Solar.bolt} width={28} height={28} /></div>
                     <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>2XP Token</div>
                     <div style={{ ...R, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: '14px' }}>2x XP for 24 hours</div>
                     <div style={{ background: 'rgba(243,156,18,0.12)', border: '1px solid rgba(243,156,18,0.35)', borderRadius: 20, padding: '2px 9px', ...R, fontWeight: 700, fontSize: 10, color: '#F39C12' }}>
-                      🪙 2 Tickets
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.coin} width={12} height={12} /> 2 Tickets</span>
                     </div>
                     <div style={{ ...R, fontSize: 11, color: '#4ade80', fontWeight: 600 }}>Owned: {doubleXpTokens}</div>
                     {isXpBoostActive && doubleXpExpiresAt && (
@@ -551,11 +553,11 @@ function SettingsPage() {
 
                   {/* Username Color */}
                   <div style={{ background: '#25252C', borderRadius: 10, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ fontSize: 28 }}>🎨</div>
+                    <div><Icon icon={Solar.palette} width={28} height={28} /></div>
                     <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>Name Color</div>
                     <div style={{ ...R, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: '14px' }}>Change your name color</div>
                     <div style={{ background: 'rgba(243,156,18,0.12)', border: '1px solid rgba(243,156,18,0.35)', borderRadius: 20, padding: '2px 9px', ...R, fontWeight: 700, fontSize: 10, color: '#F39C12' }}>
-                      {user.isPremium ? '★ Free (Premium)' : '🪙 1 Credit'}
+                      {user.isPremium ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.star} width={12} height={12} /> Free (Premium)</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.coin} width={12} height={12} /> 1 Credit</span>)}
                     </div>
                   </div>
                 </div>
@@ -565,7 +567,7 @@ function SettingsPage() {
                 {/* XP Boost Timer */}
                 {(user as any).xpBoostExpiresAt && new Date((user as any).xpBoostExpiresAt) > new Date() && (
                   <div style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: 10, padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <span style={{ fontSize: 22 }}>⚡</span>
+                    <Icon icon={Solar.bolt} width={22} height={22} />
                     <div>
                       <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#A855F7' }}>{(user as any).xpBoostMultiplier || 2}x XP Boost Active</div>
                       <XpBoostTimer expiresAt={(user as any).xpBoostExpiresAt} />
@@ -589,7 +591,7 @@ function SettingsPage() {
                     <div style={{ width: 52, height: 8, background: hexColor, borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
                     <input style={{ ...INPUT, width: 120, fontFamily: 'monospace', letterSpacing: 1 }} value={hexColor} onChange={e => setHexColor(e.target.value)} placeholder="#E74C3C" maxLength={7} />
                     <button onClick={handleColorSave} style={{ background: '#C0392B', border: 'none', borderRadius: 5, padding: '7px 20px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: 'pointer' }}>
-                      {colorSaved ? '✓ Applied' : 'Apply Color'}
+                      {colorSaved ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.checkRead} width={14} height={14} /> Applied</span>) : 'Apply Color'}
                     </button>
                   </div>
                   {colorMsg && <div style={{ ...R, fontSize: 12, color: colorMsg.includes('Applied') ? '#4ade80' : '#E74C3C', marginTop: 10 }}>{colorMsg}</div>}
@@ -634,7 +636,7 @@ function SettingsPage() {
                     return (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#303034', borderRadius: 8, padding: '8px 12px' }}>
                         <div style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {plat?.icon || <span style={{ fontSize: 14 }}>🔗</span>}
+                          {plat?.icon || <Icon icon={Solar.link} width={16} height={16} />}
                         </div>
                         <select
                           style={{ ...INPUT, width: 120, flexShrink: 0, cursor: 'pointer' }}
@@ -650,7 +652,7 @@ function SettingsPage() {
                           value={s.url}
                           onChange={e => { const n = [...socials]; n[i] = { ...n[i], url: e.target.value }; setSocials(n) }}
                         />
-                        <button onClick={() => setSocials(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', color: '#E74C3C', cursor: 'pointer', fontSize: 16, fontWeight: 700, padding: '4px 8px' }} title="Remove">✕</button>
+                        <button type="button" onClick={() => setSocials(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', color: '#E74C3C', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center' }} title="Remove"><Icon icon={Solar.close} width={16} height={16} /></button>
                       </div>
                     )
                   })}
@@ -661,7 +663,7 @@ function SettingsPage() {
                 </button>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 28 }}>
-                  {saved && <span style={{ ...R, fontSize: 12, color: '#4ade80', marginRight: 14 }}>✓ Saved</span>}
+                  {saved && <span style={{ ...R, fontSize: 12, color: '#4ade80', marginRight: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.checkRead} width={14} height={14} /> Saved</span>}
                   <button onClick={handleSaveSocials} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '9px 28px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: 'pointer' }}>
                     Save Socials
                   </button>
@@ -673,7 +675,7 @@ function SettingsPage() {
                 {linkToast && (
                   <div style={{ background: linkToast.type === 'success' ? 'rgba(74,222,128,0.12)' : 'rgba(231,76,60,0.12)', border: `1px solid ${linkToast.type === 'success' ? 'rgba(74,222,128,0.3)' : 'rgba(231,76,60,0.3)'}`, borderRadius: 8, padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ ...R, fontSize: 12, color: linkToast.type === 'success' ? '#4ade80' : '#E74C3C' }}>
-                      {linkToast.type === 'success' ? '✓' : '✕'} {linkToast.platform} — {linkToast.message || (linkToast.type === 'success' ? 'Linked successfully!' : 'Failed to link')}
+                      <Icon icon={linkToast.type === 'success' ? Solar.checkRead : Solar.close} width={14} height={14} /> {linkToast.platform} — {linkToast.message || (linkToast.type === 'success' ? 'Linked successfully!' : 'Failed to link')}
                     </span>
                   </div>
                 )}
@@ -716,7 +718,7 @@ function SettingsPage() {
                         </div>
                         {linked ? (
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                            <span style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 20, padding: '2px 10px', ...R, fontWeight: 700, fontSize: 10, color: '#4ade80' }}>Linked ✓</span>
+                            <span style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 20, padding: '2px 10px', ...R, fontWeight: 700, fontSize: 10, color: '#4ade80', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Linked <Icon icon={Solar.checkRead} width={10} height={10} /></span>
                             <button
                               onClick={() => handleUnlink(p.id)}
                               disabled={unlinkingPlatform === p.id}
@@ -782,7 +784,7 @@ function SettingsPage() {
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 14, marginTop: 24 }}>
-                  {saved && <span style={{ ...R, fontSize: 12, color: '#4ade80' }}>✓ Saved</span>}
+                  {saved && <span style={{ ...R, fontSize: 12, color: '#4ade80', display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.checkRead} width={14} height={14} /> Saved</span>}
                   <button onClick={handleSaveNotifications} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '9px 28px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: 'pointer' }}>Save Preferences</button>
                 </div>
               </>
@@ -806,7 +808,7 @@ function SettingsPage() {
                     <input style={INPUT} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" />
                   </div>
                   {pwError && <div style={{ ...R, fontSize: 12, color: '#E74C3C' }}>{pwError}</div>}
-                  {pwSaved && <div style={{ ...R, fontSize: 12, color: '#4ade80' }}>✓ Password changed successfully</div>}
+                  {pwSaved && <div style={{ ...R, fontSize: 12, color: '#4ade80', display: 'flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.checkRead} width={14} height={14} /> Password changed successfully</div>}
                   <button onClick={handleChangePassword} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '9px 28px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: 'pointer', width: 'fit-content' }}>Change Password</button>
                 </div>
               </>

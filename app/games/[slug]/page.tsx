@@ -9,6 +9,8 @@ import { useApi, useMutation } from '@/lib/use-api'
 import { gamesApi, powApi, teamsApi, matchesApi, supportApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { MatchesTab } from '@/app/components/GameMatchesTab'
+import { Icon } from '@iconify/react'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
 
 const NAV_ITEMS = [
   { label: 'Overview',     tab: 'overview' },
@@ -51,7 +53,9 @@ function SupportTab({ gameName }: { gameName: string }) {
       </div>
       {success ? (
         <div style={{ marginTop: 20, textAlign: 'center', padding: '40px 20px' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+          <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
+            <Icon icon={Solar.check} width={44} height={44} style={{ color: '#22c55e' }} />
+          </div>
           <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 20, color: '#fff', marginBottom: 8 }}>Ticket Submitted!</div>
           <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>Your support ticket has been created. You can track it in the Support Center.</div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
@@ -108,7 +112,7 @@ function Modal({ onClose, children }: { onClose: () => void; children: React.Rea
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()}>
-        <button className="modal-close-btn" onClick={onClose}>✕</button>
+        <button type="button" className="modal-close-btn" onClick={onClose} aria-label="Close"><Icon icon={Solar.close} width={18} height={18} /></button>
         <div className="modal-inner">{children}</div>
       </div>
     </div>
@@ -174,12 +178,14 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
   return (
     <Modal onClose={onClose}>
       <div className="popup-game-header">
-        <div className="popup-game-icon">{game.emoji || '🎮'}</div>
+        <div className="popup-game-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <EmojiSolar emoji={game.emoji || '🎮'} size={28} inline={false} />
+        </div>
         <div>
           <div className="popup-game-name">{game.name}</div>
           <div className="popup-game-sub">Format: {(game.platforms || []).join(' & ')}</div>
         </div>
-        <button className="popup-close-x" onClick={onClose}>✕</button>
+        <button type="button" className="popup-close-x" onClick={onClose} aria-label="Close"><Icon icon={Solar.close} width={18} height={18} /></button>
       </div>
       <div className="popup-divider" />
       <div className="popup-section-label">Joining: <span style={{ color: 'var(--red)' }}>{ladder.name}</span></div>
@@ -310,9 +316,15 @@ function OverviewTab({ game, xpLadders, cashLadders }: { game: any; xpLadders: a
           <span className={`ladder-type-badge ${isXp ? 'xp' : 'cash'}`}>{isXp ? 'XP' : 'CASH'}</span>
         </div>
         <div className="ladder-card-meta">
-          <span>🌍 {l.region}</span>
-          <span>{l.teamSize === 'Solo' ? '🧍' : '👥'} {teamSizeLabel(l.teamSize)}</span>
-          <span>🎯 {l.teamsJoined}/{l.totalSlots} teams</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <Icon icon={Solar.globe} width={14} height={14} style={{ flexShrink: 0, opacity: 0.9 }} /> {l.region}
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <Icon icon={l.teamSize === 'Solo' ? Solar.user : Solar.users} width={14} height={14} style={{ flexShrink: 0, opacity: 0.9 }} /> {teamSizeLabel(l.teamSize)}
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <Icon icon={Solar.target} width={14} height={14} style={{ flexShrink: 0, opacity: 0.9 }} /> {l.teamsJoined}/{l.totalSlots} teams
+          </span>
         </div>
         <div className="ladder-join-bar">
           <div className="ladder-join-fill" style={{ width: `${(l.teamsJoined / l.totalSlots) * 100}%`, background: color }} />
@@ -369,7 +381,7 @@ function OverviewTab({ game, xpLadders, cashLadders }: { game: any; xpLadders: a
                 {selectedLadder.standings.map((row: any, i: number) => (
                   <tr key={i}>
                     <td style={{ color: i===0?'#f0c040':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--text-muted)', fontWeight: 700, width: 40 }}>
-                      {i === 0 ? '👑' : row.position}
+                      {i === 0 ? <Icon icon={Solar.crown} width={16} height={16} style={{ display: 'inline-block', verticalAlign: 'middle', color: '#f0c040' }} /> : row.position}
                     </td>
                     <td style={{ color: '#fff', fontWeight: 600 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -379,7 +391,7 @@ function OverviewTab({ game, xpLadders, cashLadders }: { game: any; xpLadders: a
                     </td>
                     <td style={{ color: '#4ade80', fontWeight: 700 }}>{row.wins}</td>
                     <td style={{ color: 'var(--red)', fontWeight: 700 }}>{row.losses}</td>
-                    <td>{row.winStreak > 0 ? <span className="streak-badge">🔥 {row.winStreak}</span> : <span style={{ color: 'var(--text-dim)', fontSize: 12 }}>—</span>}</td>
+                    <td>{row.winStreak > 0 ? <span className="streak-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.fire} width={13} height={13} /> {row.winStreak}</span> : <span style={{ color: 'var(--text-dim)', fontSize: 12 }}>—</span>}</td>
                     {selectedLadder.type === 'cash' && <td style={{ color: '#f0c040', fontWeight: 700 }}>${(row.cashEarned / 100).toFixed(2)}</td>}
                   </tr>
                 ))}
@@ -430,7 +442,7 @@ function TopLadderStandings({ xpLadders, cashLadders }: { xpLadders: any[]; cash
   return (
     <div className="gp-sidebar-card">
       <div className="gp-sidebar-card-header">
-        <span style={{ fontSize: 20 }}>🏆</span>
+        <Icon icon={Solar.trophy} width={22} height={22} style={{ color: '#f0c040', flexShrink: 0 }} />
         <div className="gp-sidebar-title">Top Ladder Standings</div>
       </div>
       <div className="gp-sidebar-divider" />
@@ -444,12 +456,12 @@ function TopLadderStandings({ xpLadders, cashLadders }: { xpLadders: any[]; cash
       </select>
       {standings.length > 0 ? (
         <table className="gp-sidebar-stats-table">
-          <thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th>🔥</th></tr></thead>
+          <thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th style={{ whiteSpace: 'nowrap' }}><Icon icon={Solar.fire} width={12} height={12} style={{ verticalAlign: 'middle' }} /></th></tr></thead>
           <tbody>
             {standings.slice(0, 7).map((row: any, i: number) => (
               <tr key={i}>
                 <td style={{ color: i===0?'#f0c040':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--text-muted)', fontWeight: 700 }}>
-                  {i === 0 ? '👑' : row.position}
+                  {i === 0 ? <Icon icon={Solar.crown} width={14} height={14} style={{ display: 'inline-block', verticalAlign: 'middle', color: '#f0c040' }} /> : row.position}
                 </td>
                 <td style={{ fontSize: 11 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -459,7 +471,7 @@ function TopLadderStandings({ xpLadders, cashLadders }: { xpLadders: any[]; cash
                 </td>
                 <td style={{ color: '#4ade80', fontWeight: 700 }}>{row.wins}</td>
                 <td style={{ color: 'var(--red)', fontWeight: 700 }}>{row.losses}</td>
-                <td>{row.winStreak > 0 ? <span style={{ color: '#ff9500', fontSize: 11, fontWeight: 700 }}>🔥{row.winStreak}</span> : <span style={{ color: 'var(--text-dim)', fontSize: 11 }}>—</span>}</td>
+                <td>{row.winStreak > 0 ? <span style={{ color: '#ff9500', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon icon={Solar.fire} width={12} height={12} />{row.winStreak}</span> : <span style={{ color: 'var(--text-dim)', fontSize: 11 }}>—</span>}</td>
               </tr>
             ))}
           </tbody>
@@ -497,7 +509,7 @@ export default function GameProfilePage() {
 
   if (error || !game) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontSize: 32 }}>⚠️</div>
+      <Icon icon={Solar.warning} width={36} height={36} style={{ color: '#f59e0b' }} />
       <div style={{ color: 'var(--text-muted)' }}>Game not found.</div>
       <Link href="/games" style={{ color: 'var(--red)', fontSize: 13 }}>← Back to Games</Link>
     </div>
@@ -514,7 +526,7 @@ export default function GameProfilePage() {
               <div className="game-cover-card" style={{ borderColor: (game.accentColor || '#e8000d') + '55', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d1520' }}>
                 {game.bannerUrl
                   ? <img src={game.bannerUrl} alt={game.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                  : <div style={{ fontSize: 64, textAlign: 'center' }}>🎮</div>}
+                  : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon icon={Solar.gamepad} width={56} height={56} style={{ opacity: 0.45 }} /></div>}
               </div>
             </div>
             <div className="game-banner-info">
@@ -595,7 +607,7 @@ export default function GameProfilePage() {
           <div className="game-profile-sidebar">
             <div className="gp-sidebar-card">
               <div className="gp-sidebar-card-header">
-                <span style={{ fontSize: 20 }}>👑</span>
+                <Icon icon={Solar.crown} width={22} height={22} style={{ color: '#f0c040', flexShrink: 0 }} />
                 <div>
                   <div className="gp-sidebar-update">Updates weekly</div>
                   <div className="gp-sidebar-title">Player of the Week</div>
@@ -606,7 +618,7 @@ export default function GameProfilePage() {
                 <>
                   <div className="gp-player-of-week">
                     <div className="gp-potw-avatar" style={{ position: 'relative' }}>
-                      {pow.avatarUrl ? <img src={pow.avatarUrl} alt={pow.username} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : '👤'}
+                      {pow.avatarUrl ? <img src={pow.avatarUrl} alt={pow.username} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : <Icon icon={Solar.user} width={28} height={28} style={{ opacity: 0.5 }} />}
                       <span className="potw-level-badge">Lv.{pow.level}</span>
                     </div>
                     <Link href={`/profile/${pow.slug}`} className="gp-potw-name" style={{ color: '#fff', textDecoration: 'none' }}

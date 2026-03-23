@@ -1,13 +1,15 @@
 'use client'
 
 import Link from 'next/link'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const features = [
-  { icon: '⚡', name: 'Premium Match Multiplier', desc: 'Earn more XP during your matches. Premium access rewards you with a 1.25x XP boost on every match!' },
-  { icon: '🚫', name: 'Absolutely No Ads', desc: 'Annoyed of seeing ads around the site? Premium access removes all ads across the entire platform.' },
-  { icon: '✏️', name: 'Username Change', desc: 'Thought of a new name? Premium access rewards you one username change token per month.' },
-  { icon: '🎫', name: 'Priority Support', desc: 'Want to be first in the queue? Premium access allows your tickets to be bumped up in the support queue.' },
-  { icon: '🎨', name: 'Ultra Profile Customization', desc: 'Want your page to stand out? Premium access unlocks special profile customizations and hex color themes.' },
+  { icon: Solar.bolt, name: 'Premium Match Multiplier', desc: 'Earn more XP during your matches. Premium access rewards you with a 1.25x XP boost on every match!' },
+  { icon: Solar.forbidden, name: 'Absolutely No Ads', desc: 'Annoyed of seeing ads around the site? Premium access removes all ads across the entire platform.' },
+  { icon: Solar.pen, name: 'Username Change', desc: 'Thought of a new name? Premium access rewards you one username change token per month.' },
+  { icon: Solar.ticket, name: 'Priority Support', desc: 'Want to be first in the queue? Premium access allows your tickets to be bumped up in the support queue.' },
+  { icon: Solar.palette, name: 'Ultra Profile Customization', desc: 'Want your page to stand out? Premium access unlocks special profile customizations and hex color themes.' },
 ]
 
 const freeFeatures = [
@@ -42,7 +44,7 @@ export default function PremiumPage() {
         <div className="premium-hero-glow" />
         <div className="premium-hero-left">
           <div className="hero-badge" style={{ marginBottom: 20 }}>
-            <span>⭐</span> Premium Membership
+            <Icon icon={Solar.star} width={18} height={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} /> Premium Membership
           </div>
           <h1 className="premium-hero-title">Making a <span>Difference.</span></h1>
           <p className="premium-hero-sub">
@@ -55,7 +57,7 @@ export default function PremiumPage() {
         </div>
         <div className="premium-hero-right">
           <div className="premium-hero-badge-mockup">
-            <div className="premium-mockup-icon">⭐</div>
+            <div className="premium-mockup-icon"><Icon icon={Solar.star} width={28} height={28} /></div>
             <div className="premium-mockup-name">Premium Player</div>
             <div className="premium-mockup-tag">GamerHead</div>
             <div className="premium-mockup-perks">
@@ -76,7 +78,7 @@ export default function PremiumPage() {
         <div className="premium-features-grid">
           {features.map((f, i) => (
             <div className="premium-feature-card" key={i}>
-              <div className="premium-feature-icon">{f.icon}</div>
+              <div className="premium-feature-icon"><Icon icon={f.icon} width={28} height={28} /></div>
               <div>
                 <h3 className="premium-feature-name">{f.name}</h3>
                 <p className="premium-feature-desc">{f.desc}</p>
@@ -112,7 +114,9 @@ export default function PremiumPage() {
             <div className="premium-plan-features">
               {freeFeatures.map((f, i) => (
                 <div key={i} className={`premium-plan-feature${f.included ? '' : ' excluded'}`}>
-                  <span className="premium-plan-feature-icon">{f.included ? '✅' : '❌'}</span>
+                  <span className="premium-plan-feature-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <Icon icon={f.included ? Solar.check : Solar.xCircle} width={18} height={18} style={{ display: 'block' }} />
+                  </span>
                   <span>{f.text}</span>
                 </div>
               ))}
@@ -140,7 +144,9 @@ export default function PremiumPage() {
             <div className="premium-plan-features">
               {premiumFeatures.map((f, i) => (
                 <div key={i} className="premium-plan-feature">
-                  <span className="premium-plan-feature-icon">✅</span>
+                  <span className="premium-plan-feature-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <Icon icon={Solar.check} width={18} height={18} />
+                  </span>
                   <span>{f.text}</span>
                 </div>
               ))}

@@ -4,6 +4,8 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { matchesApi, supportApi } from '@/lib/api'
+import { Icon } from '@iconify/react'
+import { Solar, EmojiSolar } from '@/lib/solar-duotone'
 
 // ─── ACCENT COLOR: Blue / Tournament ─────────────────────
 const ACCENT     = '#5A9FD4'
@@ -130,6 +132,14 @@ function PlayerRow({ player, side }: { player:Player; side:'left'|'right' }) {
   )
 }
 
+function TeamLogoSlot({ logoUrl, emoji }: { logoUrl?: string; emoji: string }) {
+  const [err, setErr] = useState(false)
+  if (logoUrl && !err) {
+    return <img src={logoUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} onError={() => setErr(true)} />
+  }
+  return <EmojiSolar emoji={emoji} size={28} />
+}
+
 function TeamBanner({ team, side }: { team:Team; side:'left'|'right' }) {
   const isR = side === 'right'
   const [hover, setHover] = useState(false)
@@ -139,8 +149,8 @@ function TeamBanner({ team, side }: { team:Team; side:'left'|'right' }) {
       {team.bannerUrl && <img src={team.bannerUrl} alt="" style={{ position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:.45 }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />}
       <div style={{ position:'absolute',inset:0,background:'linear-gradient(180deg,transparent 0%,rgba(15,15,24,.96) 100%)' }} />
       <div style={{ position:'absolute',inset:0,display:'flex',alignItems:'flex-end',padding:'0 16px 10px',flexDirection:isR?'row-reverse':'row',gap:12 }}>
-        <div style={{ width:54,height:54,background:'#13131E',border:`2px solid ${team.teamBorder}`,boxShadow:`0 0 14px ${team.teamBorder}66`,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0,overflow:'hidden' }}>
-          {team.logoUrl ? <img src={team.logoUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';e.currentTarget.parentElement!.textContent=team.emoji}} /> : team.emoji}
+        <div style={{ width:54,height:54,background:'#13131E',border:`2px solid ${team.teamBorder}`,boxShadow:`0 0 14px ${team.teamBorder}66`,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,overflow:'hidden' }}>
+          <TeamLogoSlot logoUrl={team.logoUrl} emoji={team.emoji} />
         </div>
         <div style={{ flex:1,textAlign:isR?'right':'left' }}>
           <Link href={`/teams/${team.slug}`} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
@@ -492,7 +502,7 @@ export default function TournamentMatchPage({
                 return (
                   <div key={idx} style={{ display:'grid', gridTemplateColumns:'22px 26px 1fr auto', gap:6, alignItems:'center', padding:'5px 0', borderBottom: idx < (bestOf === 'BO5' ? 4 : bestOf === 'BO3' ? 2 : 0) ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
                     <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, color:'#4F5568', textAlign:'center' }}>{idx + 1}</span>
-                    <div style={{ width:24, height:24, background:`linear-gradient(135deg,${hostColor}40,${hostColor}14)`, border:`1px solid ${hostColor}4D`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12 }}>🗺️</div>
+                    <div style={{ width:24, height:24, background:`linear-gradient(135deg,${hostColor}40,${hostColor}14)`, border:`1px solid ${hostColor}4D`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.map} width={14} height={14} /></div>
                     <div>
                       <div style={{ fontSize:11, fontWeight:700, color: mapName === 'Pending' ? '#4F5568' : '#DDE0EA', fontFamily:'Rajdhani, sans-serif', lineHeight:1.2 }}>{mapName}</div>
                       <div style={{ fontSize:9, color:'#4F5568', marginTop:1 }}>{gamemode || 'Standard'}</div>

@@ -1,71 +1,49 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-
-const stats = [
-  { icon: '🎮', value: '+50,000', label: 'Simultaneous Players' },
-  { icon: '⚔️', value: '2,942,000', label: 'Matches Played' },
-  { icon: '🚫', value: '+10,000', label: 'Banished Players' },
-  { icon: '📣', value: '+100,000', label: 'On Our Social Networks' },
-  { icon: '💰', value: '$912,312', label: 'Premium Paid' },
-  { icon: '🏆', value: '+1,000', label: 'Active Tournaments' },
-]
-
-const tournaments = [
-  { emoji: '🎯', time: 'Feb 27, 1:00 AM EST', name: 'Call of Duty CUP #03', region: 'North America', mode: '4v4', slots: 32, filled: 60, prize: '$5,000' },
-  { emoji: '⚽', time: 'Feb 28, 3:00 PM EST', name: 'EA FC Championship #07', region: 'Cross-Platform', mode: '1v1', slots: 64, filled: 80, prize: '$2,500' },
-  { emoji: '🔫', time: 'Mar 1, 6:00 PM EST', name: 'Fortnite Open #12', region: 'North America', mode: 'Solo', slots: 100, filled: 45, prize: '$10,000' },
-  { emoji: '🎮', time: 'Mar 2, 8:00 PM EST', name: 'Warzone Invitational', region: 'Cross-Platform', mode: '3v3', slots: 24, filled: 90, prize: '$3,000' },
-]
-
-const games = [
-  { emoji: '🔫', title: 'Call of Duty' },
-  { emoji: '⚽', title: 'FIFA / EA FC' },
-  { emoji: '🎯', title: 'Fortnite' },
-  { emoji: '💣', title: 'Warzone' },
-  { emoji: '🏎️', title: 'Rocket League' },
-  { emoji: '🎮', title: 'More Games' },
-]
-
-const streamers = [
-  { name: 'ProSniper99', title: 'COD WARZONE — WAGER MATCH LIVE', game: 'Call of Duty: Warzone', views: '24,871', tags: ['FPS', 'Shooter'] },
-  { name: 'GoalKing07', title: 'FIFA 25 — RANKED TOURNAMENT', game: 'EA FC 25', views: '8,432', tags: ['Sports'] },
-  { name: 'FortKing', title: 'FORTNITE — $500 WAGER MATCH', game: 'Fortnite', views: '15,209', tags: ['BR', 'Solo'] },
-  { name: 'IceWarden', title: 'WARZONE — TEAM LADDER MATCH', game: 'Warzone', views: '6,711', tags: ['FPS', 'Team'] },
-]
+import { Icon } from "@iconify/react";
+import { motion } from "motion/react";
+import LandingPageStats from '@/components/LandingPageStats'
+import LandingPageGamesSection from '@/components/LandingPageGamesSection'
+import LandingPageTournamentsSection from '@/components/LandingPageTournamentsSection'
+import LandingPageStreamersSection from '@/components/LandingPageStreamersSection'
+import { HoverCard } from '@/components/HoverCard'
 
 const leaderboards = [
   {
-    title: 'Tournament Wins', subtitle: 'in any game',
+    title: 'Top Tournament Champions', subtitle: 'Globally Ranked',
+    icon: 'solar:cup-star-bold-duotone',
     players: [
-      { name: 'ProSniper99', level: 47, wins: 297, xp: 92 },
-      { name: 'ShadowBlade', level: 38, wins: 241, xp: 83 },
-      { name: 'GoalKing07', level: 35, wins: 198, xp: 81 },
-      { name: 'FortKing', level: 29, wins: 172, xp: 78 },
-      { name: 'IceWarden', level: 27, wins: 143, xp: 73 },
+      { name: 'Astroyx', level: 94, wins: 412, xp: 88 },
+      { name: 'KylianR', level: 89, wins: 384, xp: 65 },
+      { name: 'Zenithi', level: 85, wins: 341, xp: 42 },
+      { name: 'JukaZ', level: 81, wins: 298, xp: 76 },
+      { name: 'M3rcy', level: 78, wins: 275, xp: 12 },
     ],
-    statLabel: 'Wins', isMoney: false,
+    statLabel: 'Victories', isMoney: false,
   },
   {
-    title: 'Match Wins', subtitle: 'in any game',
+    title: 'Most Matches Won', subtitle: 'This Week',
+    icon: 'solar:gamepad-bold-duotone',
     players: [
-      { name: 'GhostRider', level: 52, wins: 891, xp: 87 },
-      { name: 'NightHawk', level: 44, wins: 744, xp: 83 },
-      { name: 'ProSniper99', level: 47, wins: 701, xp: 81 },
-      { name: 'ZeroX', level: 40, wins: 633, xp: 79 },
-      { name: 'Vortex', level: 33, wins: 512, xp: 75 },
+      { name: 'Slyxx', level: 76, wins: 124, xp: 92 },
+      { name: 'Vortex', level: 72, wins: 118, xp: 45 },
+      { name: 'Kraken', level: 68, wins: 105, xp: 33 },
+      { name: 'Nimble', level: 64, wins: 92, xp: 87 },
+      { name: 'Rin', level: 61, wins: 84, xp: 55 },
     ],
-    statLabel: 'Wins', isMoney: false,
+    statLabel: 'Matches', isMoney: false,
   },
   {
-    title: 'Highest Earnings', subtitle: 'all time',
+    title: 'Highest Earners', subtitle: 'All Time Legends',
+    icon: 'solar:wallet-money-bold-duotone',
     players: [
-      { name: 'ProSniper99', level: 47, wins: 12400, xp: 95 },
-      { name: 'GhostRider', level: 52, wins: 9800, xp: 88 },
-      { name: 'ShadowBlade', level: 38, wins: 7200, xp: 72 },
-      { name: 'FortKing', level: 29, wins: 5500, xp: 55 },
-      { name: 'NightHawk', level: 44, wins: 4100, xp: 41 },
+      { name: 'Astroyx', level: 94, wins: 28500, xp: 88 },
+      { name: 'JukaZ', level: 81, wins: 24200, xp: 76 },
+      { name: 'KylianR', level: 89, wins: 19800, xp: 65 },
+      { name: 'Zenithi', level: 85, wins: 15400, xp: 42 },
+      { name: 'Slyxx', level: 76, wins: 11200, xp: 92 },
     ],
     statLabel: 'Earned', isMoney: true,
   },
@@ -73,13 +51,43 @@ const leaderboards = [
 
 const heroSlides = [
   { title: 'The Future of', highlight: 'Competitive', sub: 'Gaming starts here.' },
-  { title: 'Win Real', highlight: 'Cash', sub: 'in wager matches and tournaments.' },
+  { title: 'Win Real', highlight: 'Cash Prizes', sub: 'in wager matches and tournaments.' },
   { title: 'Rise Up The', highlight: 'Ladder', sub: "and prove you're the best." },
-  { title: 'Build Your', highlight: 'Team', sub: 'and dominate together.' },
+  { title: 'Build Your', highlight: 'Dream Team', sub: 'and dominate together.' },
 ]
+
+const SLIDE_INTERVAL = 4000
 
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0)
+  const [animating, setAnimating] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => {
+      setAnimating(true)
+      setTimeout(() => {
+        setActiveSlide(prev => (prev + 1) % heroSlides.length)
+        setAnimating(false)
+      }, 300)
+    }, SLIDE_INTERVAL)
+  }
+
+  const goToSlide = (index: number) => {
+    if (animating || index === activeSlide) return
+    setAnimating(true)
+    setTimeout(() => {
+      setActiveSlide(index)
+      setAnimating(false)
+    }, 300)
+    startTimer()
+  }
+
+  useEffect(() => {
+    startTimer()
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [])
 
   return (
     <>
@@ -88,106 +96,75 @@ export default function HomePage() {
         <div className="hero-bg-pattern" />
         <div className="hero-glow" />
         <div className="container" style={{ width: '100%' }}>
-          <div className="hero-content">
-            <div className="hero-badge">
-              <span>🔴</span> Live Tournaments Running Now
-            </div>
-            <h1 className="hero-title">
-              {heroSlides[activeSlide].title}{' '}
-              <span>{heroSlides[activeSlide].highlight}</span>
-            </h1>
-            <p className="hero-subtext">
-              {heroSlides[activeSlide].sub}<br />
-              Join thousands of players competing for real cash prizes across
-              Call of Duty, Fortnite, FIFA and more.
-            </p>
-            <div className="hero-buttons">
+          <motion.div 
+            className="hero-content"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
+            }}
+          >
+            <motion.div 
+              className="hero-badge"
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+            >
+              <Icon icon="fluent:live-24-filled" width="20" height="20" /> Live Tournaments Running Now
+            </motion.div>
+            <motion.div 
+              className="hero-text-area"
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+            >
+              <h1
+                className={`hero-title md:text-8xl! text-6xl! hero-slide-text${animating ? ' hero-slide-out' : ' hero-slide-in'}`}
+              >
+                {heroSlides[activeSlide].title}{' '}
+                <span>{heroSlides[activeSlide].highlight}</span>
+              </h1>
+              <p
+                className={`hero-subtext hero-slide-text${animating ? ' hero-slide-out' : ' hero-slide-in'}`}
+              >
+                {heroSlides[activeSlide].sub}<br />
+                Join thousands of players competing for real cash prizes across
+                Call of Duty, Fortnite, FIFA and more.
+              </p>
+            </motion.div>
+            <motion.div 
+              className="hero-buttons"
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+            >
               <Link href="/register" className="btn-primary">Register for Free</Link>
               <Link href="/tournaments" className="btn-secondary">Our Championships</Link>
-            </div>
-            <div className="carousel-dots">
+            </motion.div>
+            <motion.div 
+              className="carousel-dots"
+              variants={{ hidden: { opacity: 0, scale: 0.8 }, visible: { opacity: 1, scale: 1 } }}
+            >
               {heroSlides.map((_, i) => (
                 <button
                   key={i}
                   className={`carousel-dot${activeSlide === i ? ' active' : ''}`}
-                  onClick={() => setActiveSlide(i)}
+                  onClick={() => goToSlide(i)}
                 />
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
 
       <div className="container">
 
         {/* ── STATS ── */}
-        <section className="stats-section">
-          <div className="stats-grid">
-            {stats.map((s, i) => (
-              <div className="stat-card" key={i}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
-                <div className="stat-value">{s.value}</div>
-                <div className="stat-label">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <LandingPageStats />
 
         {/* ── FEATURED TOURNAMENTS ── */}
-        <section className="tournaments-section">
-          <div className="section-header">
-            <h2 className="section-title">Featured <span>Tournaments</span></h2>
-            <p className="section-subtitle">Compete for real cash prizes — pick your game, platform, and enter today.</p>
-          </div>
-          <div className="tournaments-grid">
-            {tournaments.map((t, i) => (
-              <div className="tournament-card" key={i}>
-                <div className="tournament-card-header">
-                  <div className="tournament-card-header-placeholder">{t.emoji}</div>
-                </div>
-                <div className="tournament-card-body">
-                  <div className="tournament-meta-row">
-                    <div className="tournament-game-icon">{t.emoji}</div>
-                    <div>
-                      <div className="tournament-time">{t.time}</div>
-                      <div className="tournament-name">{t.name}</div>
-                    </div>
-                  </div>
-                  <div className="progress-bar-wrapper">
-                    <div className="progress-bar-fill" style={{ width: `${t.filled}%` }} />
-                  </div>
-                  <div className="tournament-footer">
-                    <div className="tournament-footer-info">
-                      {t.region} · {t.mode} · {t.slots} slots
-                    </div>
-                    <div className="tournament-prize">{t.prize}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <LandingPageTournamentsSection />
 
         {/* ── GAMES ── */}
-        <section className="games-section">
-          <div className="section-header">
-            <h2 className="section-title">Search <span>Games</span></h2>
-            <p className="section-subtitle">Compete across the biggest titles in esports</p>
-          </div>
-          <div className="games-grid">
-            {games.map((g, i) => (
-              <div className="game-card" key={i}>
-                <div className="game-card-image">{g.emoji}</div>
-                <div className="game-card-overlay">
-                  <div className="game-card-title">{g.title}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <LandingPageGamesSection />
 
         {/* ── CTA BANNER ── */}
-        <div className="cta-section">
+        <HoverCard className="cta-section">
           <div className="cta-glow" />
           <h2 className="cta-title">The Future of <span>Competitive</span></h2>
           <p className="cta-subtitle">
@@ -198,52 +175,24 @@ export default function HomePage() {
             <Link href="/register" className="btn-primary">Register for Free</Link>
             <Link href="/tournaments" className="btn-secondary">Our Championships</Link>
           </div>
-        </div>
+        </HoverCard>
 
         {/* ── STREAMERS ── */}
-        <section className="streamers-section">
-          <div className="section-header">
-            <h2 className="section-title">Our <span>Streamers</span></h2>
-            <p className="section-subtitle">Watch live and receive prizes</p>
-          </div>
-          <div className="streamers-grid">
-            {streamers.map((s, i) => (
-              <div className="streamer-card" key={i}>
-                <div className="streamer-card-header">
-                  <div style={{ fontSize: 40 }}>📺</div>
-                  <div className="live-badge">
-                    <span className="live-dot" /> Live
-                  </div>
-                </div>
-                <div className="streamer-card-body">
-                  <div className="streamer-name">{s.name}</div>
-                  <div className="streamer-title">{s.title}</div>
-                  <div className="streamer-game">Game: {s.game}</div>
-                  <div className="streamer-footer">
-                    <span className="streamer-views">{s.views} viewers</span>
-                    <div className="streamer-tags">
-                      {s.tags.map((tag, j) => (
-                        <span className="streamer-tag" key={j}>{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <LandingPageStreamersSection />
 
         {/* ── LEADERBOARD ── */}
         <section className="leaderboard-section">
           <div className="section-header">
-            <h2 className="section-title">Player of the <span>Week</span></h2>
-            <p className="section-subtitle">Top players across all games this week</p>
+            <h2 className="section-title">Hall of <span>Fame</span></h2>
+            <p className="section-subtitle">The most elite players dominating the leaderboards</p>
           </div>
           <div className="leaderboard-grid">
             {leaderboards.map((board, bi) => (
-              <div className="leaderboard-card" key={bi}>
+              <HoverCard className="leaderboard-card" key={bi} delay={bi * 0.1}>
                 <div className="leaderboard-card-header">
-                  <span style={{ fontSize: 24 }}>🥇</span>
+                  <div className="leaderboard-icon-wrapper">
+                    <Icon icon={board.icon} width="28" height="28" />
+                  </div>
                   <div>
                     <div className="leaderboard-card-title">{board.title}</div>
                     <div className="leaderboard-card-subtitle">{board.subtitle}</div>
@@ -252,11 +201,11 @@ export default function HomePage() {
                 {board.players.map((p, pi) => (
                   <div className="leaderboard-row" key={pi}>
                     <div className={`leaderboard-rank${pi === 0 ? ' top1' : pi === 1 ? ' top2' : pi === 2 ? ' top3' : ''}`}>
-                      {pi + 1}
+                      {pi === 0 ? <Icon icon="solar:crown-bold-duotone" width="24" height="24" className="crown-icon" /> : pi + 1}
                     </div>
                     <div className="player-avatar-wrapper">
-                      <div className="player-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                        👤
+                      <div className="player-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                        <Icon icon="solar:user-bold-duotone" width="24" height="24" />
                       </div>
                       <span className="player-level">{p.level}</span>
                     </div>
@@ -274,7 +223,7 @@ export default function HomePage() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </HoverCard>
             ))}
           </div>
         </section>

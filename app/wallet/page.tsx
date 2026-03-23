@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Icon } from '@iconify/react'
 import { useAuth } from '@/lib/auth-context'
 import { walletApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
+import { Solar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 const STATUS_COLOR: Record<string,string> = { completed:'#4ade80', pending:'#F39C12', failed:'#E74C3C', ready:'#F39C12', claimed:'#4A5568', Completed:'#4ade80', Pending:'#F39C12', Failed:'#E74C3C', Ready:'#F39C12', Claimed:'#4A5568' }
@@ -104,12 +106,12 @@ export default function WalletPage() {
             {/* Balance cards */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:24 }}>
               {[
-                { label:'Available Cash',  value:`$${cashVal}`,    sub:'Ready to use or withdraw',       color:'#4ade80', icon:'💵' },
-                { label:'Pending Payouts', value:'—',              sub:'Processing, 1–3 business days',  color:'#F39C12', icon:'⏳' },
-                { label:'CE Tickets',      value:`${credits}`,     sub:'Platform tickets balance',       color:'#E74C3C', icon:'🪙' },
+                { label:'Available Cash',  value:`$${cashVal}`,    sub:'Ready to use or withdraw',       color:'#4ade80', icon: Solar.bill },
+                { label:'Pending Payouts', value:'—',              sub:'Processing, 1–3 business days',  color:'#F39C12', icon: Solar.hourglass },
+                { label:'CE Tickets',      value:`${credits}`,     sub:'Platform tickets balance',       color:'#E74C3C', icon: Solar.coin },
               ].map((b,i) => (
                 <div key={i} style={{ background:'#18181C', borderRadius:12, padding:'22px 24px', border:`1px solid ${b.color}20`, position:'relative', overflow:'hidden' }}>
-                  <div style={{ position:'absolute', right:20, top:14, fontSize:30, opacity:0.12 }}>{b.icon}</div>
+                  <div style={{ position:'absolute', right:20, top:14, opacity:0.12 }}><Icon icon={b.icon} width={36} height={36} /></div>
                   <div style={{ ...R, fontSize:12, color:'#9CA3AF', marginBottom:8 }}>{b.label}</div>
                   <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, color:b.color, lineHeight:1 }}>{b.value}</div>
                   <div style={{ ...R, fontSize:11, color:'#4A5568', marginTop:6 }}>{b.sub}</div>
@@ -201,7 +203,7 @@ export default function WalletPage() {
                         <div style={{ ...R, fontSize:12, color:'#9CA3AF' }}>Available to withdraw</div>
                         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:34, color:'#4ade80', lineHeight:1, marginTop:4 }}>${cashVal}</div>
                       </div>
-                      <div style={{ fontSize:36, opacity:0.4 }}>💸</div>
+                      <div style={{ opacity:0.4 }}><Icon icon={Solar.moneySend} width={36} height={36} /></div>
                     </div>
                     <div style={{ marginBottom:20 }}>
                       <label style={{ ...R, fontWeight:700, fontSize:11, color:'#9CA3AF', marginBottom:8, display:'block', textTransform:'uppercase', letterSpacing:0.5 }}>Withdraw Amount (USD)</label>
@@ -227,7 +229,7 @@ export default function WalletPage() {
                           const statusCap = status.charAt(0).toUpperCase() + status.slice(1)
                           return (
                             <div key={pId} style={{ background:'#0C0C11', border:'1px solid #25252C', borderRadius:12, padding:'20px 24px', display:'flex', alignItems:'center', gap:18 }}>
-                              <div style={{ width:50, height:50, background:'rgba(243,156,18,0.1)', border:'1px solid rgba(243,156,18,0.2)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, flexShrink:0 }}>🏆</div>
+                              <div style={{ width:50, height:50, background:'rgba(243,156,18,0.1)', border:'1px solid rgba(243,156,18,0.2)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Icon icon={Solar.trophy} width={28} height={28} /></div>
                               <div style={{ flex:1 }}>
                                 <div style={{ ...R, fontWeight:700, fontSize:15, color:'#fff' }}>{p.tournament || p.description || 'Prize'}</div>
                                 <div style={{ ...R, fontSize:12, color:'#9CA3AF', marginTop:3 }}>Prize: <span style={{ color:'#F39C12', fontWeight:700, fontSize:14 }}>${((p.amount || 0) / 100).toFixed(2)}</span> - Earned: {p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US') : '—'}</div>
