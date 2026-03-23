@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Icon } from '@iconify/react'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
 
 /* ─── TYPES ─────────────────────────────────────────── */
 interface StaffMember {
@@ -304,7 +306,7 @@ export default function AboutPage() {
                 textDecoration: 'none',
                 transition: 'all 0.2s',
               }}>
-                🏆 Start Competing
+                <Icon icon={Solar.trophy} width={16} height={16} /> Start Competing
               </Link>
               <Link href="/forum" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -315,7 +317,7 @@ export default function AboutPage() {
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 textDecoration: 'none',
               }}>
-                💬 Join the Forum
+                <Icon icon={Solar.chat} width={16} height={16} /> Join the Forum
               </Link>
             </div>
           </div>
@@ -399,7 +401,9 @@ export default function AboutPage() {
                   onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(232,0,13,0.35)')}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                 >
-                  <div style={{ fontSize: 24, marginBottom: 10 }}>{v.icon}</div>
+                  <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center' }}>
+                    <EmojiSolar emoji={v.icon} size={24} inline={false} />
+                  </div>
                   <div style={{
                     fontFamily: "'Barlow Condensed', sans-serif",
                     fontWeight: 800, fontSize: 14,
@@ -485,7 +489,9 @@ export default function AboutPage() {
                     borderRadius: 10,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 22, marginBottom: 18, marginLeft: 12,
-                  }}>{p.icon}</div>
+                  }}>
+                    <EmojiSolar emoji={p.icon} size={22} inline={false} />
+                  </div>
 
                   <h3 style={{
                     fontFamily: "'Barlow Condensed', sans-serif",
@@ -573,7 +579,9 @@ export default function AboutPage() {
                           maxWidth: 320, width: '100%',
                           textAlign: 'right',
                         }}>
-                          <div style={{ fontSize: 24, marginBottom: 8, textAlign: 'right' }}>{m.icon}</div>
+                          <div style={{ marginBottom: 8, textAlign: 'right', display: 'flex', justifyContent: 'flex-end' }}>
+                            <EmojiSolar emoji={m.icon} size={24} inline={false} />
+                          </div>
                           <div style={{
                             fontFamily: "'Barlow Condensed', sans-serif",
                             fontWeight: 800, fontSize: 16,
@@ -627,7 +635,9 @@ export default function AboutPage() {
                           borderRadius: 10, padding: '20px 24px',
                           maxWidth: 320, width: '100%',
                         }}>
-                          <div style={{ fontSize: 24, marginBottom: 8 }}>{m.icon}</div>
+                          <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+                            <EmojiSolar emoji={m.icon} size={24} inline={false} />
+                          </div>
                           <div style={{
                             fontFamily: "'Barlow Condensed', sans-serif",
                             fontWeight: 800, fontSize: 16,
@@ -728,7 +738,9 @@ export default function AboutPage() {
                       border: `2px solid ${member.accentColor}50`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 32,
-                    }}>{member.emoji}</div>
+                    }}>
+                      <EmojiSolar emoji={member.emoji} size={32} inline={false} />
+                    </div>
 
                     {/* Photo replace hint */}
                     {!isOpen2 && (
@@ -811,10 +823,10 @@ export default function AboutPage() {
                           <a href={member.socials.twitter} style={socialBtnStyle}>𝕏</a>
                         )}
                         {member.socials.twitch && (
-                          <a href={member.socials.twitch} style={socialBtnStyle}>📺</a>
+                          <a href={member.socials.twitch} style={socialBtnStyle}><Icon icon={Solar.tv} width={14} height={14} /></a>
                         )}
                         {member.socials.discord && (
-                          <a href={member.socials.discord} style={socialBtnStyle}>🎮</a>
+                          <a href={member.socials.discord} style={socialBtnStyle}><Icon icon={Solar.gamepad} width={14} height={14} /></a>
                         )}
                       </div>
                     ) : (
@@ -889,7 +901,9 @@ export default function AboutPage() {
               pointerEvents: 'none',
             }} />
             <div style={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
-              <div style={{ fontSize: 48, marginBottom: 20 }}>🛡️</div>
+              <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'center' }}>
+                <Icon icon={Solar.shield} width={48} height={48} />
+              </div>
               <h2 style={{
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontSize: 'clamp(32px, 4vw, 52px)',
@@ -925,7 +939,9 @@ export default function AboutPage() {
                     background: 'var(--bg-3)',
                     padding: '20px 16px', textAlign: 'center',
                   }}>
-                    <div style={{ fontSize: 22, marginBottom: 8 }}>{f.icon}</div>
+                    <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}>
+                      <EmojiSolar emoji={f.icon} size={22} inline={false} />
+                    </div>
                     <div style={{
                       fontFamily: "'Barlow Condensed', sans-serif",
                       fontWeight: 800, fontSize: 14,
@@ -946,7 +962,7 @@ export default function AboutPage() {
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 textDecoration: 'none',
               }}>
-                📋 Read Our Rules & Policies
+                <Icon icon={Solar.clipboard} width={16} height={16} /> Read Our Rules & Policies
               </Link>
             </div>
           </div>
@@ -1013,7 +1029,7 @@ export default function AboutPage() {
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 textDecoration: 'none',
               }}>
-                🏆 Join a Tournament
+                <Icon icon={Solar.trophy} width={16} height={16} /> Join a Tournament
               </Link>
               <Link href="/forum" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -1024,7 +1040,7 @@ export default function AboutPage() {
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 textDecoration: 'none',
               }}>
-                💬 Explore the Forum
+                <Icon icon={Solar.chat} width={16} height={16} /> Explore the Forum
               </Link>
               <Link href="/coaching" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -1035,7 +1051,7 @@ export default function AboutPage() {
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 textDecoration: 'none',
               }}>
-                🎙️ Find a Coach
+                <Icon icon={Solar.microphone} width={16} height={16} /> Find a Coach
               </Link>
             </div>
 
@@ -1045,7 +1061,7 @@ export default function AboutPage() {
               gap: 12, marginTop: 48,
             }}>
               <div style={{ display: 'flex' }}>
-                {['🧑‍💻', '🎮', '🏆', '🎨', '⚔️'].map((e, i) => (
+                {[Solar.user, Solar.gamepad, Solar.trophy, Solar.palette, Solar.sword].map((icon, i) => (
                   <div key={i} style={{
                     width: 32, height: 32, borderRadius: '50%',
                     background: 'var(--bg-3)',
@@ -1053,7 +1069,7 @@ export default function AboutPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 14, marginLeft: i === 0 ? 0 : -8,
                     zIndex: 5 - i,
-                  }}>{e}</div>
+                  }}><Icon icon={icon} width={14} height={14} /></div>
                 ))}
               </div>
               <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>

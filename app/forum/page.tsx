@@ -159,47 +159,53 @@ export default function ForumPage() {
 
       {/* ── FULL-WIDTH PAGE HEADER ── */}
       <div style={{
-        background: 'linear-gradient(135deg, #0f0f18, #130d16)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        padding: '32px 0 28px',
-        /* Bleed out of parent container to full viewport width */
-        width: '100vw',
         position: 'relative',
+        padding: '48px 0 36px',
+        width: '100vw',
         left: '50%',
         right: '50%',
         marginLeft: '-50vw',
         marginRight: '-50vw',
+        background: 'var(--bg-2)',
+        borderBottom: '1px solid var(--border)',
+        overflow: 'hidden'
       }}>
-        <div className="container">
-          <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
+        {/* Background effects */}
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 20% 0%, rgba(232,0,13,0.12) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.6, pointerEvents: 'none', maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)' }} />
+
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', flexWrap:'wrap', gap:20 }}>
             <div>
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-                <Icon icon={Solar.chat} width={34} height={34} style={{ flexShrink: 0 }} />
-                <h1 style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:36, fontWeight:900, textTransform:'uppercase', color:'#fff', margin:0, lineHeight:1 }}>Forum</h1>
+              <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:12 }}>
+                <div style={{ width: 48, height: 48, background: 'linear-gradient(135deg, rgba(232,0,13,0.2), rgba(232,0,13,0.05))', border: '1px solid rgba(232,0,13,0.3)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(232,0,13,0.2)' }}>
+                  <Icon icon={Solar.chat} width={28} height={28} style={{ color: 'var(--red)' }} />
+                </div>
+                <h1 style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:42, fontWeight:900, textTransform:'uppercase', color:'#fff', margin:0, lineHeight:1, letterSpacing: 1 }}>Forum</h1>
               </div>
-              <p style={{ fontFamily:'Barlow, sans-serif', fontSize:13, color:'var(--text-muted)', margin:0 }}>
+              <p style={{ fontFamily:'Barlow, sans-serif', fontSize:14, color:'var(--text-muted)', margin:0, maxWidth: 600 }}>
                 Discuss strategy, find teammates, share clips & connect with the CE community.
               </p>
             </div>
-            <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.2)', borderRadius:8, padding:'8px 14px' }}>
-              <Icon icon={Solar.online} width={16} height={16} style={{ flexShrink: 0, color: '#4ade80' }} />
-              <span style={{ fontSize:12, fontWeight:700, color:'#4ade80' }}>{FORUM_STATS.online.toLocaleString()} online now</span>
+            <div style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.2)', borderRadius:10, padding:'10px 16px', boxShadow: '0 4px 12px rgba(39,174,96,0.05)' }}>
+              <Icon icon={Solar.online} width={18} height={18} style={{ flexShrink: 0, color: '#4ade80' }} />
+              <span style={{ fontSize:13, fontWeight:700, color:'#4ade80' }}>{FORUM_STATS.online.toLocaleString()} online now</span>
             </div>
           </div>
 
           {/* Welcome bar */}
-          <div style={{ marginTop:20, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, padding:'12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <div style={{ width:36, height:36, background:'rgba(232,0,13,0.15)', border:'1px solid rgba(232,0,13,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
-                {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{ width:36, height:36, borderRadius:8, objectFit:'cover' }} /> : <Icon icon={Solar.user} width={22} height={22} style={{ opacity: 0.7 }} />}
+          <div style={{ marginTop:32, background:'rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)', border:'1px solid rgba(255,255,255,0.05)', borderRadius:12, padding:'16px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              <div style={{ width:44, height:44, background:'rgba(232,0,13,0.15)', border:'1px solid rgba(232,0,13,0.25)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+                {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{ width:44, height:44, borderRadius:10, objectFit:'cover' }} /> : <Icon icon={Solar.user} width={24} height={24} style={{ opacity: 0.7, color: 'var(--red)' }} />}
               </div>
               <div>
-                <div style={{ fontSize:13, fontWeight:700, color:user?.usernameColor || '#e74c3c' }}>Welcome back, {user?.username || 'Guest'}</div>
-                <div style={{ fontSize:11, color:'var(--text-muted)' }}>Join the conversation and connect with the community</div>
+                <div style={{ fontSize:15, fontWeight:700, color:user?.usernameColor || '#e74c3c', marginBottom: 2 }}>Welcome back, {user?.username || 'Guest'}</div>
+                <div style={{ fontSize:12, color:'var(--text-muted)' }}>Join the conversation and connect with the community</div>
               </div>
             </div>
-            <div style={{ display:'flex', gap:8 }}>
-              <button style={{ padding:'6px 14px', background:'rgba(255,255,255,0.05)', border:'1px solid var(--border)', borderRadius:6, color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'Barlow, sans-serif', textTransform:'uppercase', letterSpacing:0.3 }}>Mark All Read</button>
+            <div style={{ display:'flex', gap:12 }}>
+              <button style={{ padding:'8px 16px', background:'rgba(255,255,255,0.03)', border:'1px solid var(--border)', borderRadius:8, color:'var(--text-muted)', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'Barlow, sans-serif', textTransform:'uppercase', letterSpacing:0.5, transition: 'all 0.2s' }} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)'; e.currentTarget.style.color='#fff'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.03)'; e.currentTarget.style.color='var(--text-muted)'}}>Mark All Read</button>
             </div>
           </div>
         </div>
@@ -216,63 +222,75 @@ export default function ForumPage() {
             {CATEGORIES.map(cat => {
               const isCollapsed = collapsed[cat.name]
               return (
-                <div key={cat.name} style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
+                <div key={cat.name} style={{ marginBottom: 24 }}>
                   <button
                     onClick={() => toggle(cat.name)}
-                    style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', background:'var(--bg-3)', border:'none', cursor:'pointer', textAlign:'left', borderBottom:isCollapsed?'none':'1px solid var(--border)', transition:'background 0.15s' }}
-                    onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-4)')}
-                    onMouseLeave={e=>(e.currentTarget.style.background='var(--bg-3)')}
+                    style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'0 0 12px 0', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', borderBottom:'1px solid rgba(255,255,255,0.05)', marginBottom: 16 }}
                   >
-                    <EmojiSolar emoji={cat.emoji} size={18} inline={false} />
-                    <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:16, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', flex:1 }}>{cat.name}</span>
-                    <span style={{ fontSize:9, color:'var(--text-dim)', fontWeight:700, letterSpacing:0.3 }}>{cat.boards.reduce((a,b)=>a+b.threads,0).toLocaleString()} threads</span>
-                    <span style={{ fontSize:11, color:'var(--text-dim)', marginLeft:8 }}>{isCollapsed?'▼':'▲'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <EmojiSolar emoji={cat.emoji} size={16} inline={false} />
+                    </div>
+                    <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:20, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', flex:1 }}>{cat.name}</span>
+                    <span style={{ fontSize:11, color:'var(--text-dim)', fontWeight:600, letterSpacing:0.5, textTransform: 'uppercase' }}>{cat.boards.reduce((a,b)=>a+b.threads,0).toLocaleString()} threads</span>
+                    <span style={{ fontSize:12, color:'var(--text-dim)', marginLeft:8, transition: 'transform 0.2s', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▼</span>
                   </button>
 
-                  {!isCollapsed && cat.boards.map((board, bi) => (
-                    <div
-                      key={board.slug}
-                      style={{ display:'grid', gridTemplateColumns:'1fr 90px 90px 180px', borderBottom:bi<cat.boards.length-1?'1px solid var(--border)':'none', transition:'background 0.15s' }}
-                      onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.02)')}
-                      onMouseLeave={e=>(e.currentTarget.style.background='transparent')}
-                    >
-                      <Link href={`/forum/board/${board.slug}`} style={{ display:'flex', alignItems:'center', gap:12, padding:'14px 18px', textDecoration:'none' }}>
-                        <span style={{ flexShrink:0, width:28, display:'flex', justifyContent:'center' }}><EmojiSolar emoji={board.emoji} size={22} inline={false} /></span>
-                        <div>
-                          <div style={{ fontFamily:'Barlow, sans-serif', fontSize:13, fontWeight:700, color:'#f0f0f0', marginBottom:3 }}>{board.name}</div>
-                          <div style={{ fontSize:11, color:'var(--text-dim)', lineHeight:1.4 }}>{board.description}</div>
-                        </div>
-                      </Link>
+                  {!isCollapsed && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {cat.boards.map((board, bi) => (
+                        <div
+                          key={board.slug}
+                          style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 12, transition: 'all 0.2s ease', position: 'relative', overflow: 'hidden' }}
+                          onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'}}
+                          onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='none'}}
+                        >
+                          <div style={{ display:'flex', alignItems:'center', padding:'16px 20px' }}>
+                            <Link href={`/forum/board/${board.slug}`} style={{ display:'flex', alignItems:'center', gap:16, textDecoration:'none', flex: 1, minWidth: 0 }}>
+                              <div style={{ flexShrink:0, width:46, height:46, background:'linear-gradient(135deg, var(--bg-3), var(--bg-4))', border:'1px solid var(--border)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
+                                <EmojiSolar emoji={board.emoji} size={24} inline={false} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily:'Barlow, sans-serif', fontSize:15, fontWeight:700, color:'#fff', marginBottom:4 }}>{board.name}</div>
+                                <div style={{ fontSize:12, color:'var(--text-dim)', lineHeight:1.4, maxWidth: '95%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{board.description}</div>
+                              </div>
+                            </Link>
 
-                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'14px 8px', borderLeft:'1px solid var(--border)' }}>
-                        <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:17, fontWeight:800, color:'#fff' }}>{formatNumber(board.threads)}</span>
-                        <span style={{ fontSize:9, color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:0.4, marginTop:1 }}>threads</span>
-                      </div>
+                            <div style={{ display:'flex', alignItems:'center', gap: 32, flexShrink: 0, marginLeft: 20 }}>
+                              <div style={{ display:'flex', gap: 24, textAlign: 'right' }}>
+                                <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', width: 50 }}>
+                                  <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:18, fontWeight:800, color:'#fff' }}>{formatNumber(board.threads)}</span>
+                                  <span style={{ fontSize:10, color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:0.5, marginTop:1 }}>threads</span>
+                                </div>
+                                <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', width: 50 }}>
+                                  <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:18, fontWeight:800, color:'#fff' }}>{formatNumber(board.posts)}</span>
+                                  <span style={{ fontSize:10, color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:0.5, marginTop:1 }}>posts</span>
+                                </div>
+                              </div>
 
-                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'14px 8px', borderLeft:'1px solid var(--border)' }}>
-                        <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:17, fontWeight:800, color:'#fff' }}>{formatNumber(board.posts)}</span>
-                        <span style={{ fontSize:9, color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:0.4, marginTop:1 }}>posts</span>
-                      </div>
+                              <div style={{ width: 1, height: 32, background: 'var(--border)' }}></div>
 
-                      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'14px 14px', borderLeft:'1px solid var(--border)', minWidth:0 }}>
-                        {board.lastPost.title === '—' || !board.lastPost.title ? (
-                          <span style={{ fontSize:11, color:'var(--text-dim)' }}>-</span>
-                        ) : (<>
-                          <div style={{ fontSize:11, color:'#e0e0e8', fontWeight:600, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', marginBottom:3 }}>{board.lastPost.title}</div>
-                          <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                            {board.lastPost.authorSlug ? (
-                              <span role="link" onClick={e=>{e.preventDefault();e.stopPropagation();router.push(`/profile/${board.lastPost.authorSlug}`)}} style={{ fontSize:11, fontWeight:700, color:board.lastPost.authorColor || ROLE_COLORS[board.lastPost.authorRole] || '#888', textDecoration:'none', cursor:'pointer' }}
-                                onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')} onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{board.lastPost.author}</span>
-                            ) : (
-                              <span style={{ fontSize:11, fontWeight:700, color:board.lastPost.authorColor || ROLE_COLORS[board.lastPost.authorRole] || '#888' }}>{board.lastPost.author}</span>
-                            )}
-                            <RoleBadge role={board.lastPost.authorRole} />
-                            <span style={{ fontSize:10, color:'var(--text-dim)' }}>· {board.lastPost.time}</span>
+                              <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', width: 200, minWidth: 200 }}>
+                                {board.lastPost.title === '—' || !board.lastPost.title ? (
+                                  <span style={{ fontSize:12, color:'var(--text-dim)', fontStyle: 'italic' }}>No posts yet</span>
+                                ) : (<>
+                                  <div style={{ fontSize:12, color:'#e0e0e8', fontWeight:600, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', marginBottom:4 }}>{board.lastPost.title}</div>
+                                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                                    {board.lastPost.authorSlug ? (
+                                      <span role="link" onClick={e=>{e.preventDefault();e.stopPropagation();router.push(`/profile/${board.lastPost.authorSlug}`)}} style={{ fontSize:11, fontWeight:700, color:board.lastPost.authorColor || ROLE_COLORS[board.lastPost.authorRole] || '#888', textDecoration:'none', cursor:'pointer' }}
+                                        onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')} onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{board.lastPost.author}</span>
+                                    ) : (
+                                      <span style={{ fontSize:11, fontWeight:700, color:board.lastPost.authorColor || ROLE_COLORS[board.lastPost.authorRole] || '#888' }}>{board.lastPost.author}</span>
+                                    )}
+                                    <span style={{ fontSize:10, color:'var(--text-dim)' }}>· {board.lastPost.time}</span>
+                                  </div>
+                                </>)}
+                              </div>
+                            </div>
                           </div>
-                        </>)}
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               )
             })}
@@ -280,90 +298,106 @@ export default function ForumPage() {
           </div>
 
           {/* RIGHT SIDEBAR */}
-          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
             {/* Forum Stats */}
-            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.chart} width={18} height={18} /> Forum Stats</div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1, background:'var(--border)' }}>
+            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:12, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:16, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8, marginBottom: 12 }}>
+                <Icon icon={Solar.chart} width={18} height={18} style={{ color: 'var(--red)' }} /> Forum Stats
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                 {[{label:'Members',value:formatNumber(FORUM_STATS.members),color:'#fff'},{label:'Threads',value:formatNumber(FORUM_STATS.threads),color:'#fff'},{label:'Posts',value:formatNumber(FORUM_STATS.posts),color:'#fff'},{label:'Online',value:formatNumber(FORUM_STATS.online),color:'#4ade80'}].map(s=>(
-                  <div key={s.label} style={{ background:'var(--bg-2)', padding:'12px 14px', textAlign:'center' }}>
-                    <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:20, fontWeight:800, color:s.color }}>{s.value}</div>
-                    <div style={{ fontSize:10, color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:0.4, marginTop:2 }}>{s.label}</div>
+                  <div key={s.label} style={{ background:'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, padding:'12px', textAlign:'center' }}>
+                    <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:22, fontWeight:800, color:s.color, lineHeight: 1 }}>{s.value}</div>
+                    <div style={{ fontSize:10, color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:0.5, marginTop:4, fontWeight: 600 }}>{s.label}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Top Posters */}
-            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-                <Icon icon={Solar.medal} width={18} height={18} /> Top Posters <span style={{ fontSize:10, color:'var(--text-dim)', fontWeight:400, textTransform:'none', letterSpacing:0 }}>this week</span>
+            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:12, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:16, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8, marginBottom: 12, flexWrap:'wrap' }}>
+                <Icon icon={Solar.medal} width={18} height={18} style={{ color: '#f0c040' }} /> Top Posters <span style={{ fontSize:10, color:'var(--text-dim)', fontWeight:600, textTransform:'uppercase', letterSpacing:0.5, marginLeft: 'auto' }}>This Week</span>
               </div>
-              {TOP_POSTERS.map((p,i)=>(
-                <div key={p.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderBottom:i<TOP_POSTERS.length-1?'1px solid var(--border)':'none' }}>
-                  <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:14, fontWeight:900, color:i===0?'#f0c040':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--text-dim)', width:18, textAlign:'center', flexShrink:0 }}>{i+1}</span>
-                  <span style={{ display:'flex', alignItems:'center' }}>{p.pfp && String(p.pfp).startsWith('http') ? <img src={p.pfp} alt="" style={{ width:28, height:28, borderRadius:6, objectFit:'cover' }} /> : <EmojiSolar emoji={p.pfp || '👤'} size={22} />}</span>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    {p.slug ? (
-                      <Link href={`/profile/${p.slug}`} style={{ fontSize:12, fontWeight:700, color:p.usernameColor || ROLE_COLORS[p.role], textDecoration:'none' }}
-                        onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')}
-                        onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{p.name}</Link>
-                    ) : (
-                      <div style={{ fontSize:12, fontWeight:700, color:p.usernameColor || ROLE_COLORS[p.role] }}>{p.name}</div>
-                    )}
-                    <RoleBadge role={p.role} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {TOP_POSTERS.map((p,i)=>(
+                  <div key={p.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8 }}>
+                    <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:14, fontWeight:900, color:i===0?'#f0c040':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--text-dim)', width:16, textAlign:'center', flexShrink:0 }}>{i+1}</span>
+                    <span style={{ display:'flex', alignItems:'center' }}>{p.pfp && String(p.pfp).startsWith('http') ? <img src={p.pfp} alt="" style={{ width:28, height:28, borderRadius:6, objectFit:'cover' }} /> : <EmojiSolar emoji={p.pfp || '👤'} size={22} />}</span>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      {p.slug ? (
+                        <Link href={`/profile/${p.slug}`} style={{ fontSize:13, fontWeight:700, color:p.usernameColor || ROLE_COLORS[p.role], textDecoration:'none', display: 'block', marginBottom: 2 }}
+                          onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')}
+                          onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{p.name}</Link>
+                      ) : (
+                        <div style={{ fontSize:13, fontWeight:700, color:p.usernameColor || ROLE_COLORS[p.role], marginBottom: 2 }}>{p.name}</div>
+                      )}
+                      <RoleBadge role={p.role} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                      <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:16, fontWeight:800, color:'#fff', lineHeight: 1 }}>{p.posts.toLocaleString()}</span>
+                      <span style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>Posts</span>
+                    </div>
                   </div>
-                  <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:14, fontWeight:800, color:'#fff' }}>{p.posts.toLocaleString()}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Recent Activity */}
-            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.bolt} width={18} height={18} /> Recent Activity</div>
-              {RECENT_ACTIVITY.map((a,i)=>(
-                <Link key={i} href={a.boardSlug && a.threadId ? `/forum/board/${a.boardSlug}/${a.threadId}` : '#'} style={{ display:'block', padding:'9px 14px', borderBottom:i<RECENT_ACTIVITY.length-1?'1px solid var(--border)':'none', cursor:'pointer', transition:'background 0.15s', textDecoration:'none' }}
-                  onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-3)')}
-                  onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-                  <div style={{ fontSize:11, color:'#e0e0e8', fontWeight:500, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', marginBottom:3 }}>{a.title}</div>
-                  <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                    {a.authorSlug ? (
-                      <span role="link" onClick={e=>{e.preventDefault();e.stopPropagation();router.push(`/profile/${a.authorSlug}`)}} style={{ fontSize:10, fontWeight:700, color:a.authorColor || ROLE_COLORS[a.role], textDecoration:'none', cursor:'pointer' }}
-                        onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')} onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{a.author}</span>
-                    ) : (
-                      <span style={{ fontSize:10, fontWeight:700, color:a.authorColor || ROLE_COLORS[a.role] }}>{a.author}</span>
-                    )}
-                    <RoleBadge role={a.role} />
-                    <span style={{ fontSize:10, color:'var(--text-dim)' }}>in</span>
-                    <span style={{ fontSize:10, color:'var(--red)', fontWeight:600 }}>{a.board}</span>
-                    <span style={{ fontSize:10, color:'var(--text-dim)', marginLeft:'auto', flexShrink:0 }}>{a.time}</span>
-                  </div>
-                </Link>
-              ))}
+            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:12, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:16, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8, marginBottom: 12 }}>
+                <Icon icon={Solar.bolt} width={18} height={18} style={{ color: '#38bdf8' }} /> Recent Activity
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {RECENT_ACTIVITY.map((a,i)=>(
+                  <Link key={i} href={a.boardSlug && a.threadId ? `/forum/board/${a.boardSlug}/${a.threadId}` : '#'} style={{ display:'block', padding:'10px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, cursor:'pointer', transition:'all 0.15s', textDecoration:'none' }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.transform='translateY(-1px)'}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.transform='none'}}>
+                    <div style={{ fontSize:12, color:'#fff', fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', marginBottom:6 }}>{a.title}</div>
+                    <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap: 'wrap' }}>
+                      {a.authorSlug ? (
+                        <span role="link" onClick={e=>{e.preventDefault();e.stopPropagation();router.push(`/profile/${a.authorSlug}`)}} style={{ fontSize:11, fontWeight:700, color:a.authorColor || ROLE_COLORS[a.role], textDecoration:'none', cursor:'pointer' }}
+                          onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')} onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{a.author}</span>
+                      ) : (
+                        <span style={{ fontSize:11, fontWeight:700, color:a.authorColor || ROLE_COLORS[a.role] }}>{a.author}</span>
+                      )}
+                      <span style={{ fontSize:10, color:'var(--text-dim)' }}>in</span>
+                      <span style={{ fontSize:10, color:'var(--red)', fontWeight:600 }}>{a.board}</span>
+                      <span style={{ fontSize:10, color:'var(--text-dim)', marginLeft:'auto', flexShrink:0 }}>{a.time}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
 
-            {/* User Roles — Admin / Premium / Coach / Member */}
-            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.user} width={18} height={18} /> User Roles</div>
-              <div style={{ padding:'10px 14px', display:'flex', flexDirection:'column', gap:8 }}>
+            {/* User Roles */}
+            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:12, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:16, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8, marginBottom: 12 }}>
+                <Icon icon={Solar.user} width={18} height={18} style={{ color: 'var(--text-muted)' }} /> User Roles
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                 {Object.entries(ROLE_COLORS).map(([role,color])=>(
-                  <div key={role} style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <span style={{ width:8, height:8, background:color, borderRadius:'50%', display:'inline-block', flexShrink:0 }} />
-                    <span style={{ fontSize:12, fontWeight:700, color }}>{ROLE_LABELS[role]}</span>
+                  <div key={role} style={{ display:'flex', alignItems:'center', gap:10, padding: '8px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8 }}>
+                    <span style={{ width:10, height:10, background:color, borderRadius:'50%', display:'inline-block', flexShrink:0, boxShadow: `0 0 8px ${color}80` }} />
+                    <span style={{ fontSize:13, fontWeight:700, color }}>{ROLE_LABELS[role]}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Thread Status Legend */}
-            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ padding:'11px 16px', background:'var(--bg-3)', borderBottom:'1px solid var(--border)', fontFamily:'Barlow Condensed, sans-serif', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8 }}><Icon icon={Solar.clipboard} width={18} height={18} /> Thread Status</div>
-              <div style={{ padding:'10px 14px', display:'flex', flexDirection:'column', gap:8 }}>
+            <div style={{ background:'var(--bg-2)', border:'1px solid var(--border)', borderRadius:12, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:16, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', display:'flex', alignItems:'center', gap:8, marginBottom: 12 }}>
+                <Icon icon={Solar.clipboard} width={18} height={18} style={{ color: 'var(--text-muted)' }} /> Thread Status
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                 {[[Solar.fire,'Hot','#f97316'],[Solar.pin,'Pinned','#f0c040'],[Solar.shield,'Official','#38bdf8'],[Solar.lock,'Locked','#888'],[Solar.chat,'Normal','var(--text-muted)']].map(([icon,label,color])=>(
-                  <div key={label} style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <Icon icon={icon} width={16} height={16} style={{ flexShrink: 0, color }} />
-                    <span style={{ fontSize:12, fontWeight:700, color }}>{label}</span>
+                  <div key={label} style={{ display:'flex', alignItems:'center', gap:10, padding: '8px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8 }}>
+                    <div style={{ width: 24, height: 24, background: `rgba(${color === '#f97316' ? '249,115,22' : color === '#f0c040' ? '240,192,64' : color === '#38bdf8' ? '56,189,248' : color === '#888' ? '136,136,136' : '136,136,136'}, 0.1)`, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon icon={icon} width={14} height={14} style={{ flexShrink: 0, color }} />
+                    </div>
+                    <span style={{ fontSize:13, fontWeight:700, color }}>{label}</span>
                   </div>
                 ))}
               </div>

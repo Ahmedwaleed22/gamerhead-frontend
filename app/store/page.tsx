@@ -75,13 +75,13 @@ function ItemCard({
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: '#0F0F1C',
-        border: `1px solid ${hov ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}`,
+        background: 'var(--bg-2)',
+        border: `1px solid ${hov ? 'rgba(255,255,255,0.15)' : 'var(--border)'}`,
         borderRadius: 12,
         overflow: 'hidden',
-        transition: 'all 0.18s',
-        transform: hov ? 'translateY(-3px)' : 'none',
-        boxShadow: hov ? '0 12px 32px rgba(0,0,0,0.4)' : 'none',
+        transition: 'all 0.2s ease',
+        transform: hov ? 'translateY(-2px)' : 'none',
+        boxShadow: hov ? '0 8px 24px rgba(0,0,0,0.2)' : '0 4px 12px rgba(0,0,0,0.1)',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -95,28 +95,29 @@ function ItemCard({
       )}
 
       {/* Product image */}
-      <div style={{ position: 'relative', aspectRatio: '4/3', background: '#14141F', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', aspectRatio: '4/3', background: 'linear-gradient(135deg, var(--bg-3), var(--bg-4))', overflow: 'hidden', borderBottom: '1px solid var(--border)' }}>
         <img
           src={item.image}
           alt={item.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: hov ? 1 : 0.85, transition: 'opacity 0.18s' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: hov ? 1 : 0.85, transition: 'opacity 0.2s ease, transform 0.3s ease', transform: hov ? 'scale(1.05)' : 'scale(1)' }}
           onError={e => {
             // Fallback gradient if image not found
             const el = e.currentTarget
             el.style.display = 'none'
             const parent = el.parentElement!
-            parent.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
-            parent.innerHTML += `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.3"><svg width="42" height="42" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" stroke="#6B7280" stroke-width="2"/><path d="M3 6h18M16 10a4 4 0 01-8 0" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/></svg></div>`
+            parent.style.background = 'linear-gradient(135deg, var(--bg-3) 0%, var(--bg-4) 100%)'
+            parent.innerHTML += `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.3"><svg width="42" height="42" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" stroke="currentColor" stroke-width="2"/><path d="M3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>`
           }}
         />
         {/* Badge */}
         {item.badge && (
           <div style={{
-            position: 'absolute', top: 10, left: 10,
+            position: 'absolute', top: 12, left: 12,
             background: 'var(--red)', color: '#fff',
             fontFamily: "'Rajdhani', sans-serif", fontWeight: 800,
-            fontSize: 9, letterSpacing: '0.08em',
-            padding: '3px 8px', borderRadius: 4,
+            fontSize: 10, letterSpacing: '0.08em',
+            padding: '4px 10px', borderRadius: 6,
+            boxShadow: '0 2px 8px rgba(232,0,13,0.3)'
           }}>
             {item.badge}
           </div>
@@ -124,11 +125,11 @@ function ItemCard({
         {/* In-cart indicator */}
         {inCart && (
           <div style={{
-            position: 'absolute', top: 10, right: 10,
+            position: 'absolute', top: 12, right: 12,
             background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)',
-            borderRadius: 4, padding: '2px 7px',
+            borderRadius: 6, padding: '4px 10px',
             fontFamily: "'Rajdhani', sans-serif", fontWeight: 800,
-            fontSize: 9, color: '#4ade80',
+            fontSize: 10, color: '#4ade80', backdropFilter: 'blur(4px)'
           }}>
             ×{inCart.qty} IN CART
           </div>
@@ -136,46 +137,49 @@ function ItemCard({
       </div>
 
       {/* Card body */}
-      <div style={{ padding: '14px 16px 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 15, color: '#fff', lineHeight: 1.2, marginBottom: 4 }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 18, color: '#fff', lineHeight: 1.2, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             {item.name}
           </div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 18, color: '#F0C040' }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 22, color: '#F0C040' }}>
             ${item.price.toFixed(2)}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 7, marginTop: 'auto' }}>
+        <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
           <button
             onClick={onViewCart}
             style={{
-              flex: 1, padding: '8px 0',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 7, cursor: 'pointer',
+              flex: 1, padding: '10px 0',
+              background: 'var(--bg-3)',
+              border: '1px solid var(--border)',
+              borderRadius: 8, cursor: 'pointer',
               fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,0.55)',
+              fontWeight: 700, fontSize: 13, color: 'var(--text-muted)',
               letterSpacing: '0.04em', textTransform: 'uppercase',
               transition: 'all 0.15s',
             }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-4)'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-3)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
           >
             View
           </button>
           <button
             onClick={onAdd}
             style={{
-              flex: 2, padding: '8px 0',
+              flex: 2, padding: '10px 0',
               background: hov ? 'var(--red)' : 'rgba(232,0,13,0.12)',
               border: `1px solid ${hov ? 'var(--red)' : 'rgba(232,0,13,0.3)'}`,
-              borderRadius: 7, cursor: 'pointer',
+              borderRadius: 8, cursor: 'pointer',
               fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 800, fontSize: 12, color: hov ? '#fff' : '#ff8080',
+              fontWeight: 800, fontSize: 13, color: hov ? '#fff' : 'var(--red)',
               letterSpacing: '0.04em', textTransform: 'uppercase',
               transition: 'all 0.15s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
             }}
           >
-            + Add to Cart
+            <Icon icon={Solar.cart} width={14} height={14} /> Add to Cart
           </button>
         </div>
       </div>
@@ -289,10 +293,22 @@ export default function StorePage() {
   }
 
   return (
-    <div className="container" style={{ paddingBottom: 60 }}>
+    <div style={{ paddingBottom: 60 }}>
 
-      {/* ── HERO BANNER — smaller height, no 'Badges' slide ── */}
-      <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 28, marginTop: 24, height: 180 }}>
+      {/* ── FULL-WIDTH HERO BANNER ── */}
+      <div style={{
+        position: 'relative',
+        width: '100vw',
+        left: '50%',
+        right: '50%',
+        marginLeft: '-50vw',
+        marginRight: '-50vw',
+        height: 280,
+        background: 'var(--bg-2)',
+        borderBottom: '1px solid var(--border)',
+        overflow: 'hidden',
+        marginBottom: 32
+      }}>
         {/* Background image */}
         <img
           src={slide.image}
@@ -301,24 +317,25 @@ export default function StorePage() {
           onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0' }}
         />
         {/* Gradient overlay */}
-        <div style={{ position:'absolute', inset:0, background:`linear-gradient(90deg, rgba(8,8,16,0.95) 30%, rgba(8,8,16,0.4) 100%)` }} />
+        <div style={{ position:'absolute', inset:0, background:`linear-gradient(90deg, rgba(8,8,16,0.95) 20%, rgba(8,8,16,0.6) 50%, rgba(8,8,16,0.2) 100%)` }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.6, pointerEvents: 'none', maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)' }} />
 
         {/* Content */}
-        <div style={{ position:'relative', zIndex:1, padding:'0 36px', height:'100%', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div className="container" style={{ position:'relative', zIndex:1, height:'100%', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div>
             <div style={{
               fontFamily:"'Barlow Condensed', sans-serif",
-              fontWeight:900, fontSize:28, color:'#fff',
-              letterSpacing:'0.02em', lineHeight:1, marginBottom:8,
+              fontWeight:900, fontSize:48, color:'#fff',
+              letterSpacing:'0.02em', lineHeight:1, marginBottom:12, textTransform: 'uppercase'
             }}>
               {slide.title}
             </div>
-            <p style={{ fontFamily:"'Barlow', sans-serif", fontSize:13, color:'rgba(255,255,255,0.55)', margin:'0 0 16px', maxWidth:380, lineHeight:1.5 }}>
+            <p style={{ fontFamily:"'Barlow', sans-serif", fontSize:15, color:'rgba(255,255,255,0.65)', margin:'0 0 24px', maxWidth:480, lineHeight:1.5 }}>
               {slide.sub}
             </p>
             <button
               className="btn-primary"
-              style={{ padding:'8px 22px', fontSize:12 }}
+              style={{ padding:'10px 28px', fontSize:13, borderRadius: 8, boxShadow: '0 4px 12px rgba(232,0,13,0.2)' }}
               onClick={() => { setActiveCategory(slide.cat); openModal('payment') }}
             >
               Shop Now
@@ -326,17 +343,17 @@ export default function StorePage() {
           </div>
 
           {/* Slide dots */}
-          <div style={{ display:'flex', gap:6 }}>
+          <div style={{ display:'flex', gap:8, alignSelf: 'flex-end', paddingBottom: 32 }}>
             {heroSlides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setHeroSlide(i)}
                 style={{
-                  width: heroSlide === i ? 20 : 7,
-                  height: 7, borderRadius: 4,
+                  width: heroSlide === i ? 24 : 8,
+                  height: 8, borderRadius: 4,
                   background: heroSlide === i ? 'var(--red)' : 'rgba(255,255,255,0.2)',
                   border: 'none', cursor: 'pointer',
-                  transition: 'all 0.25s', padding: 0,
+                  transition: 'all 0.3s ease', padding: 0,
                 }}
               />
             ))}
@@ -345,7 +362,8 @@ export default function StorePage() {
       </div>
 
       {/* ── LAYOUT ── */}
-      <div className="store-layout">
+      <div className="container">
+        <div className="store-layout">
 
         {/* ── SIDEBAR — no Games section ── */}
         <aside className="store-sidebar">
@@ -419,6 +437,7 @@ export default function StorePage() {
             ))}
           </div>
         </div>
+      </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════

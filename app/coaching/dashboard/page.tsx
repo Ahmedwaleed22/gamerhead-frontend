@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { coachingApi, gamesApi } from '@/lib/api'
+import { Icon } from '@iconify/react'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -89,7 +91,11 @@ function Stars({ n, size=11 }: { n:number; size?:number }) {
 }
 
 const TYPE_ICONS: Record<PackageType, string> = {
-  vod:'🎬', session:'🎙️', drills:'⚙️', team:'👥', custom:'✨',
+  vod: Solar.clapperboard,
+  session: Solar.microphone,
+  drills: Solar.tools,
+  team: Solar.users,
+  custom: Solar.sparkles,
 }
 
 // ─── PACKAGE EDITOR MODAL ─────────────────────────────────────────────────────
@@ -152,7 +158,10 @@ function PackageEditorModal({ pkg, onClose, onSave }: { pkg: Package|null; onClo
           <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
             {(Object.entries(TYPE_LABELS) as [PackageType, typeof TYPE_LABELS['vod']][]).map(([key,t])=>(
               <button key={key} onClick={() => setPkgType(key)} style={{ background:key===pkgType?t.bg:'rgba(255,255,255,.05)', border:`1px solid ${key===pkgType?t.color:'rgba(255,255,255,.1)'}`, borderRadius:6, padding:'5px 12px', fontSize:11, fontWeight:700, color:key===pkgType?t.color:'rgba(255,255,255,.4)', fontFamily:'Rajdhani, sans-serif', cursor:'pointer', letterSpacing:.3 }}>
-                {TYPE_ICONS[key]} {t.label}
+                <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+                  <Icon icon={TYPE_ICONS[key]} width={13} height={13} style={{ flexShrink: 0, color: key===pkgType ? t.color : 'rgba(255,255,255,.45)' }} />
+                  {t.label}
+                </span>
               </button>
             ))}
           </div>
@@ -387,7 +396,7 @@ export default function CoachDashboard() {
               <img src={COACH.avatarUrl} alt={COACH.name} style={{ width:56, height:56, borderRadius:12, objectFit:'cover', border:'2px solid rgba(178,45,45,.4)', flexShrink:0 }}/>
             ) : (
               <div style={{ width:56, height:56, borderRadius:12, background:'linear-gradient(135deg,#B22D2D,#7a1a1a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, flexShrink:0, border:'2px solid rgba(178,45,45,.4)' }}>
-                {COACH.emoji}
+                <EmojiSolar emoji={COACH.emoji || '🎯'} size={26} inline={false} />
               </div>
             )}
 
@@ -493,14 +502,14 @@ export default function CoachDashboard() {
 
                     {/* Buyer */}
                     <div style={{ width:36, height:36, borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>
-                      {order.buyerEmoji}
+                      <EmojiSolar emoji={order.buyerEmoji || '👤'} size={18} inline={false} />
                     </div>
 
                     {/* Info */}
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
                         <span style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:13, color:'#fff' }}>{order.buyer}</span>
-                        <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'1px 7px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>{TYPE_ICONS[order.type]} {tp.label}</span>
+                        <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'1px 7px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, display:'inline-flex', alignItems:'center', gap:5 }}><Icon icon={TYPE_ICONS[order.type]} width={11} height={11} style={{ flexShrink: 0, color: tp.color }} /> {tp.label}</span>
                         <span style={{ background:st.bg, border:`1px solid ${st.border}`, borderRadius:4, padding:'1px 7px', fontSize:9, fontWeight:700, color:st.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>{st.label}</span>
                         {order.unread&&<span style={{ fontSize:9, fontWeight:700, color:'#ff6b6b', fontFamily:'Rajdhani, sans-serif' }}>● NEW MESSAGE</span>}
                       </div>
@@ -589,7 +598,7 @@ export default function CoachDashboard() {
                     <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
                       <div>
                         <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:5 }}>
-                          <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>{TYPE_ICONS[pkg.type]} {tp.label}</span>
+                          <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, display:'inline-flex', alignItems:'center', gap:5 }}><Icon icon={TYPE_ICONS[pkg.type]} width={11} height={11} style={{ flexShrink: 0, color: tp.color }} /> {tp.label}</span>
                           {!pkg.active&&<span style={{ background:'rgba(107,114,128,.12)', border:'1px solid rgba(107,114,128,.25)', borderRadius:4, padding:'2px 7px', fontSize:9, fontWeight:700, color:'#6B7280', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>PAUSED</span>}
                         </div>
                         <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:17, color:'#fff', letterSpacing:.3 }}>{pkg.title}</div>

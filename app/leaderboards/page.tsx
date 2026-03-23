@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Icon } from '@iconify/react'
 import { leaderboardsApi } from '@/lib/api'
-import { Solar } from '@/lib/solar-duotone'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
 
 const FILTER_TABS = ['Wins', 'Cash', 'XP', 'Trophies']
 const PER_PAGE    = 10
@@ -345,7 +345,12 @@ export default function LeaderboardsPage() {
                             background: 'rgba(255,255,255,0.06)',
                             border: `1px solid ${p.rank === 1 ? 'rgba(240,192,64,0.35)' : p.rank === 2 ? 'rgba(192,192,192,0.25)' : p.rank === 3 ? 'rgba(205,127,50,0.25)' : 'rgba(255,255,255,0.1)'}`,
                             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
-                          }}>{p.avatar}</div>
+                          }}>
+                            {p.avatar && (String(p.avatar).startsWith('http') || String(p.avatar).startsWith('/') || String(p.avatar).startsWith('data:image'))
+                              ? <img src={p.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: 8, objectFit: 'cover' }} />
+                              : <EmojiSolar emoji={p.avatar || '👤'} size={16} inline={false} />
+                            }
+                          </div>
                           <span
                             style={{
                               fontFamily: "'Barlow Condensed', sans-serif",

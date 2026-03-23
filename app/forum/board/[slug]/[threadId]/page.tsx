@@ -468,48 +468,69 @@ export default function ThreadPage() {
     <div style={{ paddingBottom: 60 }}>
 
       {/* ── THREAD HEADER ── */}
-      <div style={{ background: 'linear-gradient(135deg, #0f0f18, #130d16)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '28px 0 0' }}>
-        <div className="container">
+      <div style={{
+        position: 'relative',
+        padding: '32px 0 0',
+        width: '100vw',
+        left: '50%',
+        right: '50%',
+        marginLeft: '-50vw',
+        marginRight: '-50vw',
+        background: 'var(--bg-2)',
+        borderBottom: '1px solid var(--border)',
+        overflow: 'hidden'
+      }}>
+        {/* Background effects */}
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 20% 0%, rgba(232,0,13,0.12) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.6, pointerEvents: 'none', maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)' }} />
+
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
 
           {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, marginBottom: 16 }}>
-            <Link href="/forum" style={{ color: 'var(--text-muted)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.color = 'var(--red)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}>Forum</Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, marginBottom: 24 }}>
+            <Link href="/forum" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}>Forum</Link>
             <span style={{ color: 'var(--text-dim)' }}>›</span>
-            <Link href={`/forum/board/${thread.boardSlug}`} style={{ color: 'var(--text-muted)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.color = 'var(--red)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}>{thread.board}</Link>
+            <Link href={`/forum/board/${thread.boardSlug}`} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}>{thread.board}</Link>
             <span style={{ color: 'var(--text-dim)' }}>›</span>
-            <span style={{ color: 'var(--red)', fontWeight: 600, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', maxWidth: 320 }}>{thread.title}</span>
+            <span style={{ color: 'var(--red)', fontWeight: 700, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', maxWidth: 320 }}>{thread.title}</span>
           </div>
 
           {/* Title row */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', paddingBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap', paddingBottom: 32 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               {/* Badges */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-                {thread.hot && <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(232,100,13,0.12)', border: '1px solid rgba(232,100,13,0.3)', color: '#f97316', padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: 0.4 }}>🔥 Hot</span>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                {thread.hot && <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(232,100,13,0.12)', border: '1px solid rgba(232,100,13,0.3)', color: '#f97316', padding: '4px 10px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: 0.5, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.fire} width={12} height={12} /> Hot</span>}
                 {thread.tags.map(tag => (
-                  <span key={tag} style={{ fontSize: 10, fontWeight: 600, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 4 }}>{tag}</span>
+                  <span key={tag} style={{ fontSize: 11, fontWeight: 600, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: 6 }}>{tag}</span>
                 ))}
-                <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(39,174,96,0.1)', border: '1px solid rgba(39,174,96,0.2)', color: '#4ade80', padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: 0.4, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(39,174,96,0.1)', border: '1px solid rgba(39,174,96,0.2)', color: '#4ade80', padding: '4px 10px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: 0.5, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                   <Icon icon={Solar.online} width={12} height={12} style={{ flexShrink: 0, color: thread.status === 'open' ? '#4ade80' : '#888' }} />
                   {thread.status === 'open' ? 'Open' : 'Locked'}
                 </span>
               </div>
-              <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 26, fontWeight: 900, textTransform: 'uppercase', color: '#fff', margin: '0 0 10px', lineHeight: 1.2 }}>
+              <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 36, fontWeight: 900, textTransform: 'uppercase', color: '#fff', margin: '0 0 16px', lineHeight: 1.2, letterSpacing: 0.5 }}>
                 {thread.title}
               </h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  <strong style={{ color: '#fff' }}>{thread.replies}</strong> replies
-                </span>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  <strong style={{ color: '#fff' }}>{thread.views.toLocaleString()}</strong> views
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-3)', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <Icon icon={Solar.chat} width={14} height={14} style={{ color: 'var(--text-muted)' }} />
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>
+                    <strong style={{ color: '#fff' }}>{thread.replies}</strong> replies
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-3)', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <Icon icon={Solar.eye} width={14} height={14} style={{ color: 'var(--text-muted)' }} />
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>
+                    <strong style={{ color: '#fff' }}>{thread.views.toLocaleString()}</strong> views
+                  </span>
+                </div>
                 <Pagination />
               </div>
             </div>
 
             {/* Action buttons */}
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', gap: 10, flexShrink: 0, alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <button
                 onClick={async () => {
                   try {
@@ -517,9 +538,12 @@ export default function ThreadPage() {
                     setSubscribed((res as any).subscribed)
                   } catch (err) { console.error('Subscribe failed:', err) }
                 }}
-                style={{ padding: '7px 14px', background: subscribed ? 'rgba(232,0,13,0.12)' : 'var(--bg-3)', border: `1px solid ${subscribed ? 'rgba(232,0,13,0.3)' : 'var(--border)'}`, borderRadius: 6, color: subscribed ? 'var(--red)' : 'var(--text-muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Barlow, sans-serif', textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                style={{ padding: '9px 16px', background: subscribed ? 'rgba(232,0,13,0.12)' : 'var(--bg-3)', border: `1px solid ${subscribed ? 'rgba(232,0,13,0.3)' : 'var(--border)'}`, borderRadius: 8, color: subscribed ? 'var(--red)' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Barlow, sans-serif', textTransform: 'uppercase', letterSpacing: 0.5, transition: 'all 0.2s', boxShadow: subscribed ? '0 0 12px rgba(232,0,13,0.1)' : 'none' }}
+                onMouseEnter={e => { if(!subscribed) { e.currentTarget.style.background = 'var(--bg-4)'; e.currentTarget.style.color = '#fff'; } }}
+                onMouseLeave={e => { if(!subscribed) { e.currentTarget.style.background = 'var(--bg-3)'; e.currentTarget.style.color = 'var(--text-muted)'; } }}
+              >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <Icon icon={Solar.bell} width={13} height={13} />
+                  <Icon icon={Solar.bell} width={14} height={14} />
                   {subscribed ? 'Subscribed' : 'Subscribe'}
                 </span>
               </button>
@@ -530,27 +554,32 @@ export default function ThreadPage() {
                     setBookmarked((res as any).bookmarked)
                   } catch (err) { console.error('Bookmark failed:', err) }
                 }}
-                style={{ padding: '7px 14px', background: bookmarked ? 'rgba(240,192,64,0.12)' : 'var(--bg-3)', border: `1px solid ${bookmarked ? 'rgba(240,192,64,0.3)' : 'var(--border)'}`, borderRadius: 6, color: bookmarked ? '#f0c040' : 'var(--text-muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Barlow, sans-serif', textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                style={{ padding: '9px 16px', background: bookmarked ? 'rgba(240,192,64,0.12)' : 'var(--bg-3)', border: `1px solid ${bookmarked ? 'rgba(240,192,64,0.3)' : 'var(--border)'}`, borderRadius: 8, color: bookmarked ? '#f0c040' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Barlow, sans-serif', textTransform: 'uppercase', letterSpacing: 0.5, transition: 'all 0.2s', boxShadow: bookmarked ? '0 0 12px rgba(240,192,64,0.1)' : 'none' }}
+                onMouseEnter={e => { if(!bookmarked) { e.currentTarget.style.background = 'var(--bg-4)'; e.currentTarget.style.color = '#fff'; } }}
+                onMouseLeave={e => { if(!bookmarked) { e.currentTarget.style.background = 'var(--bg-3)'; e.currentTarget.style.color = 'var(--text-muted)'; } }}
+              >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <Icon icon={Solar.bookmark} width={13} height={13} />
+                  <Icon icon={Solar.bookmark} width={14} height={14} />
                   {bookmarked ? 'Bookmarked' : 'Bookmark'}
                 </span>
               </button>
-              <button className="btn-primary" style={{ fontSize: 11, padding: '7px 16px' }}
+              <button className="btn-primary" style={{ fontSize: 13, padding: '9px 20px', borderRadius: 8, boxShadow: '0 4px 12px rgba(232,0,13,0.2)' }}
                 onClick={() => document.getElementById('reply-box')?.scrollIntoView({ behavior: 'smooth' })}>
-                <Icon icon={Solar.pen} width={13} height={13} /> Reply
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Icon icon={Solar.pen} width={14} height={14} /> Reply
+                </span>
               </button>
               {user?.role === 'admin' && (
                 <>
-                  <button onClick={handleLockThread} style={{ padding:'7px 14px', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, color: thread.status === 'locked' ? '#f0c040' : 'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'Barlow, sans-serif', textTransform:'uppercase', letterSpacing:0.3 }}>
+                  <button onClick={handleLockThread} style={{ padding:'9px 16px', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:8, color: thread.status === 'locked' ? '#f0c040' : 'var(--text-muted)', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'Barlow, sans-serif', textTransform:'uppercase', letterSpacing:0.5, transition: 'all 0.2s' }} onMouseEnter={e=>{e.currentTarget.style.background='var(--bg-4)'; e.currentTarget.style.color='#fff'}} onMouseLeave={e=>{e.currentTarget.style.background='var(--bg-3)'; e.currentTarget.style.color=thread.status === 'locked' ? '#f0c040' : 'var(--text-muted)'}}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <Icon icon={Solar.lock} width={13} height={13} />
+                      <Icon icon={Solar.lock} width={14} height={14} />
                       {thread.status === 'locked' ? 'Unlock' : 'Lock'}
                     </span>
                   </button>
-                  <button onClick={handleDeleteThread} style={{ padding:'7px 14px', background:'rgba(232,0,13,0.1)', border:'1px solid rgba(232,0,13,0.3)', borderRadius:6, color:'var(--red)', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'Barlow, sans-serif', textTransform:'uppercase', letterSpacing:0.3 }}>
+                  <button onClick={handleDeleteThread} style={{ padding:'9px 16px', background:'rgba(232,0,13,0.1)', border:'1px solid rgba(232,0,13,0.3)', borderRadius:8, color:'var(--red)', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'Barlow, sans-serif', textTransform:'uppercase', letterSpacing:0.5, transition: 'all 0.2s' }} onMouseEnter={e=>{e.currentTarget.style.background='rgba(232,0,13,0.2)'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(232,0,13,0.1)'}}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <Icon icon={Solar.trash} width={13} height={13} />
+                      <Icon icon={Solar.trash} width={14} height={14} />
                       Delete
                     </span>
                   </button>
