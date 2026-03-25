@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { coachingApi, gamesApi } from '@/lib/api'
 import { Icon } from '@iconify/react'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -396,7 +396,7 @@ export default function CoachDashboard() {
               <img src={COACH.avatarUrl} alt={COACH.name} style={{ width:56, height:56, borderRadius:12, objectFit:'cover', border:'2px solid rgba(178,45,45,.4)', flexShrink:0 }}/>
             ) : (
               <div style={{ width:56, height:56, borderRadius:12, background:'linear-gradient(135deg,#B22D2D,#7a1a1a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, flexShrink:0, border:'2px solid rgba(178,45,45,.4)' }}>
-                <EmojiSolar emoji={COACH.emoji || '🎯'} size={26} inline={false} />
+                <Icon icon={Solar.target} width={26} height={26} style={{ display: 'block' }} />
               </div>
             )}
 
@@ -502,7 +502,7 @@ export default function CoachDashboard() {
 
                     {/* Buyer */}
                     <div style={{ width:36, height:36, borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>
-                      <EmojiSolar emoji={order.buyerEmoji || '👤'} size={18} inline={false} />
+                      <Icon icon={Solar.user} width={18} height={18} style={{ display: 'block' }} />
                     </div>
 
                     {/* Info */}

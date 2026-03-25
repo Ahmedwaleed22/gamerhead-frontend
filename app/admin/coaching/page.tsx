@@ -5,7 +5,7 @@ import { adminApi } from '@/lib/api'
 import DataTable, { Column } from '../components/DataTable'
 import SearchFilter from '../components/SearchFilter'
 import ActionBtn from '../components/ActionBtn'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 import { Icon } from '@iconify/react'
 
 type Tab = 'Coaches' | 'Orders' | 'Reviews'
@@ -94,7 +94,7 @@ function CoachesTab() {
     { key: 'displayName', label: 'Coach', width: '2fr',
       render: (row: any) => (
         <div>
-          <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}><EmojiSolar emoji={row.emoji || '🎯'} size={14} inline={false} /> {row.displayName}</span>
+          <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.target} width={14} height={14} style={{ display: 'block' }} /> {row.displayName}</span>
           {row.isVerified && <span style={{ marginLeft: 6, fontSize: 8, color: '#22c55e', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.checkRead} width={10} height={10} /> VERIFIED</span>}
         </div>
       ),

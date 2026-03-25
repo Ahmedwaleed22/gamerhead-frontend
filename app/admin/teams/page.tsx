@@ -6,7 +6,8 @@ import DataTable, { Column } from '../components/DataTable'
 import SearchFilter from '../components/SearchFilter'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
-import { EmojiSolar } from '@/lib/solar-duotone'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
@@ -140,7 +141,7 @@ export default function AdminTeamsPage() {
     { key: 'name', label: 'Team', width: '1.5fr',
       render: (row: any) => (
         <span style={{ cursor: 'pointer', fontWeight: 700 }} onClick={() => viewDetail(row._id)}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><EmojiSolar emoji={row.emoji || '🛡️'} size={14} inline={false} /> {row.name}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.shield} width={14} height={14} style={{ display: 'block' }} /> {row.name}</span>
         </span>
       ),
     },

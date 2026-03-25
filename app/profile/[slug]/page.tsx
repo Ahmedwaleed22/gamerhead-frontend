@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation'
 import { usersApi } from '@/lib/api'
 import { sendActivity } from '@/lib/socket'
 import { Icon } from '@iconify/react'
-import { Solar, EmojiSolar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 // Adjust this import to match your auth context
 let useAuth: () => { user: { slug: string } | null }
@@ -52,7 +52,7 @@ function GameIconCell({ icon, size = 18 }: { icon?: string; size?: number }) {
   if (isUrl && !imgErr) {
     return <img src={icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgErr(true)} />
   }
-  return <EmojiSolar emoji={icon || '🎮'} size={size} />
+  return <Icon icon={Solar.gamepad} width={size} height={size} />
 }
 
 function matchHref(m: any) {
@@ -1042,7 +1042,7 @@ export default function ProfilePage() {
                 <div style={{ padding: '14px 20px', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   {profile.forumReactions.breakdown.map((r: any) => (
                     <div key={r.emoji} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '8px 14px' }}>
-                      <EmojiSolar emoji={r.emoji} size={20} />
+                      <Icon icon={Solar.gamepad} width={20} height={20} />
                       <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 18, color: '#F0F0F8' }}>{r.count}</span>
                     </div>
                   ))}

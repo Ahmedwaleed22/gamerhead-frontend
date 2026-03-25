@@ -5,7 +5,7 @@ import { Icon } from '@iconify/react'
 import { useApi, useMutation } from '@/lib/use-api'
 import { invitesApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 
@@ -43,7 +43,7 @@ function InviteDetailModal({ invite, onClose, onRespond }: { invite: any; onClos
             {invite.logo && String(invite.logo).startsWith('http') ? (
               <img src={invite.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 14 }} />
             ) : (
-              <EmojiSolar emoji={invite.logo || '🎮'} size={36} inline={false} />
+              <Icon icon={Solar.gamepad} width={36} height={36} style={{ display: 'block' }} />
             )}
           </div>
           <div>
@@ -159,7 +159,7 @@ export default function InvitesPage() {
                         {inv.logo && String(inv.logo).startsWith('http') ? (
                           <img src={inv.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
-                          <EmojiSolar emoji={inv.logo || '🎮'} size={28} inline={false} />
+                          <Icon icon={Solar.gamepad} width={28} height={28} style={{ display: 'block' }} />
                         )}
                       </div>
 

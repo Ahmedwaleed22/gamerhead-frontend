@@ -147,28 +147,11 @@ function ItemCard({
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-          <button
-            onClick={onViewCart}
-            style={{
-              flex: 1, padding: '10px 0',
-              background: 'var(--bg-3)',
-              border: '1px solid var(--border)',
-              borderRadius: 8, cursor: 'pointer',
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 700, fontSize: 13, color: 'var(--text-muted)',
-              letterSpacing: '0.04em', textTransform: 'uppercase',
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-4)'; e.currentTarget.style.color = '#fff'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-3)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
-          >
-            View
-          </button>
+        <div style={{ marginTop: 'auto' }}>
           <button
             onClick={onAdd}
             style={{
-              flex: 2, padding: '10px 0',
+              width: '100%', padding: '10px 0',
               background: hov ? 'var(--red)' : 'rgba(232,0,13,0.12)',
               border: `1px solid ${hov ? 'var(--red)' : 'rgba(232,0,13,0.3)'}`,
               borderRadius: 8, cursor: 'pointer',
@@ -395,7 +378,7 @@ export default function StorePage() {
           {/* Categories — updated list */}
           <div className="store-sidebar-card">
             <button className="store-sidebar-collapse-header" onClick={() => setCatOpen(!catOpen)}>
-              <span>Categories</span><span>{catOpen ? '▲' : '▼'}</span>
+              <span>Categories</span><Icon icon={catOpen ? 'solar:alt-arrow-up-bold-duotone' : 'solar:alt-arrow-down-bold-duotone'} width={14} height={14} style={{ color: 'var(--text-muted)' }} />
             </button>
             {catOpen && (
               <div className="store-sidebar-links">
@@ -421,9 +404,8 @@ export default function StorePage() {
 
         {/* ── ITEMS GRID — real images ── */}
         <div className="store-main">
-          <div className="store-main-header">
-            <p className="store-results-count">{filtered.length} items found</p>
-          </div>
+          <div className="store-main-header" />
+
           <div className="store-items-grid">
             {filtered.map(item => (
               <ItemCard

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Icon } from '@iconify/react'
 import { leaderboardsApi } from '@/lib/api'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 const FILTER_TABS = ['Wins', 'Cash', 'XP', 'Trophies']
 const PER_PAGE    = 10
@@ -135,8 +135,6 @@ function Cell({ colKey, player }: { colKey: ColKey; player: any }) {
 // ─── PAGE ────────────────────────────────────────────────────────────────────
 export default function LeaderboardsPage() {
   const [activeTab,      setActiveTab]      = useState('Wins')
-  const [regionOpen,     setRegionOpen]     = useState(true)
-  const [gamesOpen,      setGamesOpen]      = useState(true)
   const [selectedRegion, setSelectedRegion] = useState('All Regions')
   const [selectedGame,   setSelectedGame]   = useState('All Games')
   const [page,           setPage]           = useState(1)
@@ -216,51 +214,45 @@ export default function LeaderboardsPage() {
 
       <div className="lb-layout">
 
-        {/* ── SIDEBAR ── */}
+        {/* ── FILTERS ── */}
         <aside className="lb-sidebar">
 
           <div className="lb-sidebar-card">
-            <button className="lb-sidebar-header" onClick={() => setRegionOpen(!regionOpen)}>
-              <span>Region</span>
-              <span className="lb-sidebar-arrow">{regionOpen ? '▲' : '▼'}</span>
-            </button>
-            {regionOpen && (
-              <div className="lb-sidebar-body">
-                {regions.map(r => (
-                  <button key={r} className={`lb-sidebar-link${selectedRegion === r ? ' active' : ''}`} onClick={() => handleRegion(r)}>{r}</button>
-                ))}
-              </div>
-            )}
+            <div className="lb-sidebar-header" style={{ cursor: 'default' }}><span>Region</span></div>
+            <div className="lb-sidebar-body" style={{ padding: '8px 12px' }}>
+              <select
+                value={selectedRegion}
+                onChange={e => handleRegion(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, color: '#fff', fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13, outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23999\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+              >
+                {regions.map(r => <option key={r} value={r} style={{ background: 'var(--bg-1)', color: '#fff' }}>{r}</option>)}
+              </select>
+            </div>
           </div>
 
           <div className="lb-sidebar-card">
-            <button className="lb-sidebar-header" onClick={() => setGamesOpen(!gamesOpen)}>
-              <span>Games</span>
-              <span className="lb-sidebar-arrow">{gamesOpen ? '▲' : '▼'}</span>
-            </button>
-            {gamesOpen && (
-              <div className="lb-sidebar-body">
-                {games.map(g => (
-                  <button key={g} className={`lb-sidebar-link${selectedGame === g ? ' active' : ''}`} onClick={() => handleGame(g)}>{g}</button>
-                ))}
-              </div>
-            )}
+            <div className="lb-sidebar-header" style={{ cursor: 'default' }}><span>Games</span></div>
+            <div className="lb-sidebar-body" style={{ padding: '8px 12px' }}>
+              <select
+                value={selectedGame}
+                onChange={e => handleGame(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, color: '#fff', fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13, outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23999\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+              >
+                {games.map(g => <option key={g} value={g} style={{ background: 'var(--bg-1)', color: '#fff' }}>{g}</option>)}
+              </select>
+            </div>
           </div>
 
           <div className="lb-sidebar-card">
             <div className="lb-sidebar-header" style={{ cursor: 'default' }}><span>Filter by</span></div>
-            <div className="lb-sidebar-body">
-              {FILTER_TABS.map(t => (
-                <button key={t} className={`lb-sidebar-link${activeTab === t ? ' active' : ''}`} onClick={() => handleTab(t)} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Icon
-                    icon={t === 'Wins' ? Solar.trophy : t === 'Cash' ? Solar.bill : t === 'XP' ? Solar.star : Solar.medal}
-                    width={16}
-                    height={16}
-                    style={{ flexShrink: 0, opacity: 0.9 }}
-                  />
-                  {t}
-                </button>
-              ))}
+            <div className="lb-sidebar-body" style={{ padding: '8px 12px' }}>
+              <select
+                value={activeTab}
+                onChange={e => handleTab(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, color: '#fff', fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13, outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23999\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+              >
+                {FILTER_TABS.map(t => <option key={t} value={t} style={{ background: 'var(--bg-1)', color: '#fff' }}>{t}</option>)}
+              </select>
             </div>
           </div>
 
@@ -345,20 +337,22 @@ export default function LeaderboardsPage() {
                             background: 'rgba(255,255,255,0.06)',
                             border: `1px solid ${p.rank === 1 ? 'rgba(240,192,64,0.35)' : p.rank === 2 ? 'rgba(192,192,192,0.25)' : p.rank === 3 ? 'rgba(205,127,50,0.25)' : 'rgba(255,255,255,0.1)'}`,
                             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
+                            overflow: 'hidden',
                           }}>
-                            {p.avatar && (String(p.avatar).startsWith('http') || String(p.avatar).startsWith('/') || String(p.avatar).startsWith('data:image'))
-                              ? <img src={p.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: 8, objectFit: 'cover' }} />
-                              : <EmojiSolar emoji={p.avatar || '👤'} size={16} inline={false} />
+                            {p.profilePicture
+                              ? <img src={p.profilePicture} alt="" style={{ width: '100%', height: '100%', borderRadius: 8, objectFit: 'cover' }} />
+                              : <Icon icon={Solar.user} width={16} height={16} style={{ color: 'var(--text-dim)' }} />
                             }
                           </div>
                           <span
                             style={{
                               fontFamily: "'Barlow Condensed', sans-serif",
-                              fontWeight: 800, fontSize: 15, color: '#fff',
+                              fontWeight: 800, fontSize: 15,
+                              color: p.usernameColor || '#fff',
                               letterSpacing: '0.02em', transition: 'color 0.15s',
                             }}
                             onMouseEnter={e => (e.currentTarget.style.color = 'var(--red)')}
-                            onMouseLeave={e => (e.currentTarget.style.color = '#fff')}
+                            onMouseLeave={e => (e.currentTarget.style.color = p.usernameColor || '#fff')}
                           >
                             {p.name}
                           </span>

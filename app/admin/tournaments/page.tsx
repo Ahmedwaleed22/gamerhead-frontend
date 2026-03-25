@@ -6,7 +6,8 @@ import DataTable, { Column } from '../components/DataTable'
 import ActionBtn from '../components/ActionBtn'
 import SearchFilter from '../components/SearchFilter'
 import Modal from '../components/Modal'
-import { EmojiSolar } from '@/lib/solar-duotone'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const STATUS_COLORS: Record<string, string> = {
   draft: '#4F5568', open: '#3b82f6', checkin: '#f59e0b', live: '#22c55e', completed: '#8890A4', cancelled: '#e8000d',
@@ -146,7 +147,7 @@ export default function AdminTournamentsPage() {
         {r.bannerUrl || r.gameEmoji?.startsWith('/') ? (
           <img src={r.bannerUrl || r.gameEmoji} alt="" style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'cover' }} />
         ) : (
-          <EmojiSolar emoji={r.gameEmoji || '🎯'} size={18} inline={false} />
+          <Icon icon={Solar.gamepad} width={18} height={18} style={{ display: 'block' }} />
         )}
         <span
           style={{
@@ -255,7 +256,7 @@ export default function AdminTournamentsPage() {
                   {detailModal.registeredEntries.map((e: any, i: number) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
                       <span style={{ fontSize: 10, color: '#4F5568', width: 20 }}>#{e.seed || i + 1}</span>
-                      <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}><EmojiSolar emoji={e.emoji || '🎮'} size={14} inline={false} /> {e.name}</span>
+                      <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.gamepad} width={14} height={14} style={{ display: 'block' }} /> {e.name}</span>
                       <span style={{ marginLeft: 'auto', fontSize: 9, color: e.checkedIn ? '#22c55e' : '#4F5568' }}>{e.checkedIn ? 'CHECKED IN' : 'NOT CHECKED'}</span>
                     </div>
                   ))}

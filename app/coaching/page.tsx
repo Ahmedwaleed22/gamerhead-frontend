@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { coachingApi, gamesApi } from '@/lib/api'
 import { Icon } from '@iconify/react'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type PackageType = 'vod' | 'session' | 'drills' | 'team'
@@ -264,7 +264,7 @@ function CoachCard({ coach, serviceFilter }: { coach: CoachListing; serviceFilte
                   border: `1px solid ${coach.accentColor}33`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <EmojiSolar emoji={coach.emoji || '🎯'} size={26} inline={false} />
+                  <Icon icon={Solar.target} width={26} height={26} style={{ display: 'block' }} />
                 </div>
               )}
               <div style={{

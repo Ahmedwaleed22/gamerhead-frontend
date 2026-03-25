@@ -7,7 +7,7 @@ import { Icon } from '@iconify/react'
 import { useAuth } from '@/lib/auth-context'
 import { forumApi } from '@/lib/api'
 import { sendActivity } from '@/lib/socket'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 interface Board {
   name: string; slug: string; emoji: string; description: string
@@ -228,7 +228,7 @@ export default function ForumPage() {
                     style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'0 0 12px 0', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', borderBottom:'1px solid rgba(255,255,255,0.05)', marginBottom: 16 }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, background: 'rgba(255,255,255,0.03)', borderRadius: 6, border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <EmojiSolar emoji={cat.emoji} size={16} inline={false} />
+                      <Icon icon={Solar.chat} width={16} height={16} style={{ display: 'block' }} />
                     </div>
                     <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:20, fontWeight:800, textTransform:'uppercase', letterSpacing:0.5, color:'#fff', flex:1 }}>{cat.name}</span>
                     <span style={{ fontSize:11, color:'var(--text-dim)', fontWeight:600, letterSpacing:0.5, textTransform: 'uppercase' }}>{cat.boards.reduce((a,b)=>a+b.threads,0).toLocaleString()} threads</span>
@@ -247,7 +247,7 @@ export default function ForumPage() {
                           <div style={{ display:'flex', alignItems:'center', padding:'16px 20px' }}>
                             <Link href={`/forum/board/${board.slug}`} style={{ display:'flex', alignItems:'center', gap:16, textDecoration:'none', flex: 1, minWidth: 0 }}>
                               <div style={{ flexShrink:0, width:46, height:46, background:'linear-gradient(135deg, var(--bg-3), var(--bg-4))', border:'1px solid var(--border)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
-                                <EmojiSolar emoji={board.emoji} size={24} inline={false} />
+                                <Icon icon={Solar.chat} width={24} height={24} style={{ display: 'block' }} />
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontFamily:'Barlow, sans-serif', fontSize:15, fontWeight:700, color:'#fff', marginBottom:4 }}>{board.name}</div>
@@ -324,7 +324,7 @@ export default function ForumPage() {
                 {TOP_POSTERS.map((p,i)=>(
                   <div key={p.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8 }}>
                     <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:14, fontWeight:900, color:i===0?'#f0c040':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--text-dim)', width:16, textAlign:'center', flexShrink:0 }}>{i+1}</span>
-                    <span style={{ display:'flex', alignItems:'center' }}>{p.pfp && String(p.pfp).startsWith('http') ? <img src={p.pfp} alt="" style={{ width:28, height:28, borderRadius:6, objectFit:'cover' }} /> : <EmojiSolar emoji={p.pfp || '👤'} size={22} />}</span>
+                    <span style={{ display:'flex', alignItems:'center' }}>{p.pfp && String(p.pfp).startsWith('http') ? <img src={p.pfp} alt="" style={{ width:28, height:28, borderRadius:6, objectFit:'cover' }} /> : <Icon icon={Solar.user} width={22} height={22} />}</span>
                     <div style={{ flex:1, minWidth:0 }}>
                       {p.slug ? (
                         <Link href={`/profile/${p.slug}`} style={{ fontSize:13, fontWeight:700, color:p.usernameColor || ROLE_COLORS[p.role], textDecoration:'none', display: 'block', marginBottom: 2 }}

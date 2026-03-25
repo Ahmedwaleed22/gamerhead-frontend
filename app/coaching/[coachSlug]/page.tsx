@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { coachingApi, walletApi } from '@/lib/api'
 import { Icon } from '@iconify/react'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type PackageType = 'vod' | 'session' | 'drills' | 'team' | 'custom'
@@ -412,7 +412,7 @@ export default function CoachPackagePage() {
                   <img src={COACH.avatarUrl} alt={COACH.name} style={{ width:72, height:72, borderRadius:16, objectFit:'cover', border:'2px solid rgba(178,45,45,.35)' }}/>
                 ) : (
                   <div style={{ width:72, height:72, borderRadius:16, background:'linear-gradient(135deg,#B22D2D,#7a1a1a)', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(178,45,45,.35)' }}>
-                    <EmojiSolar emoji={COACH.emoji || '🎯'} size={36} inline={false} />
+                    <Icon icon={Solar.target} width={36} height={36} style={{ display: 'block' }} />
                   </div>
                 )}
                 {/* Online dot */}
@@ -430,7 +430,7 @@ export default function CoachPackagePage() {
                 </div>
 
                 <div style={{ fontFamily:'Barlow, sans-serif', fontSize:13, color:'rgba(255,255,255,.45)', marginBottom:10 }}>
-                  {COACH.title}{COACH.title && COACH.game ? ' · ' : ''}{COACH.game && <Link href={`/games/${COACH.gameSlug}`} style={{ color:'rgba(255,255,255,.45)', textDecoration:'none', display:'inline-flex', alignItems:'center', gap:6 }}><EmojiSolar emoji={COACH.gameEmoji || '🎮'} size={14} /> {COACH.game}</Link>}
+                  {COACH.title}{COACH.title && COACH.game ? ' · ' : ''}{COACH.game && <Link href={`/games/${COACH.gameSlug}`} style={{ color:'rgba(255,255,255,.45)', textDecoration:'none', display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.gamepad} width={14} height={14} /> {COACH.game}</Link>}
                 </div>
 
                 {/* Quick stats row */}
@@ -627,7 +627,7 @@ export default function CoachPackagePage() {
                   {REVIEWS.map((r,i)=>(
                     <div key={i} style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.07)', borderRadius:12, padding:'16px 20px' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-                        <div style={{ width:34, height:34, borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center' }}><EmojiSolar emoji={r.buyerEmoji || '👤'} size={20} inline={false} /></div>
+                        <div style={{ width:34, height:34, borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.user} width={20} height={20} style={{ display: 'block' }} /></div>
                         <div style={{ flex:1 }}>
                           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2, flexWrap:'wrap' }}>
                             <span style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:13, color:'#fff' }}>{r.buyer}</span>

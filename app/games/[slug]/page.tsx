@@ -10,7 +10,7 @@ import { gamesApi, powApi, teamsApi, matchesApi, supportApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { MatchesTab } from '@/app/components/GameMatchesTab'
 import { Icon } from '@iconify/react'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 const NAV_ITEMS = [
   { label: 'Overview',     tab: 'overview' },
@@ -179,7 +179,7 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
     <Modal onClose={onClose}>
       <div className="popup-game-header">
         <div className="popup-game-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <EmojiSolar emoji={game.emoji || '🎮'} size={28} inline={false} />
+          <Icon icon={Solar.gamepad} width={28} height={28} style={{ display: 'block' }} />
         </div>
         <div>
           <div className="popup-game-name">{game.name}</div>
@@ -282,7 +282,7 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
 }
 
 // ─── OVERVIEW TAB ─────────────────────────────────────────────────────────────
-function OverviewTab({ game, xpLadders, cashLadders }: { game: any; xpLadders: any[]; cashLadders: any[] }) {
+function OverviewTab({ game, xpLadders }: { game: any; xpLadders: any[] }) {
   const { user } = useAuth()
   const [selectedLadder, setSelectedLadder] = useState<any>(null)
   const [showCreateTeam, setShowCreateTeam] = useState(false)
@@ -414,16 +414,7 @@ function OverviewTab({ game, xpLadders, cashLadders }: { game: any; xpLadders: a
         </div>
       </div>
 
-      <div className="ladder-section" style={{ marginTop: 24 }}>
-        <div className="ladder-section-title">
-          <span className="ladder-type-badge cash">$</span> Cash Ladders
-        </div>
-        <div className="ladder-cards">
-          {cashLadders.length === 0
-            ? <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No cash ladders active.</div>
-            : cashLadders.map(l => renderLadderCard(l, '#f0c040'))}
-        </div>
-      </div>
+
 
       {showCreateTeam && selectedLadder && (
         <CreateTeamModal game={game} ladder={selectedLadder} onClose={() => setShowCreateTeam(false)} />
@@ -533,8 +524,8 @@ export default function GameProfilePage() {
               <h1 className="game-banner-title">{game.name}</h1>
               <div className="game-banner-meta">
                 <div className="game-platform-tags">
-                  {(game.platformType === 'pc' ? ['PC'] : game.platformType === 'console' ? ['Xbox', 'PS'] : (game.platforms || ['PC', 'Xbox', 'PS'])).map((p: string, i: number) => <span key={i} className="game-platform-tag">{p}</span>)}
-                  {game.platformType === 'crossplay' || game.crossplay ? <span className="game-platform-tag" style={{ background: 'rgba(74,222,128,0.12)', color: '#4ade80', borderColor: 'rgba(74,222,128,0.25)' }}>Cross-play</span> : null}
+                  {(game.platformType === 'pc' ? ['PC'] : game.platformType === 'console' ? ['Xbox', 'PS'] : (game.platforms || ['PC', 'Xbox', 'PS'])).map((p: string, i: number) => <span key={i} className="game-platform-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={p === 'PC' ? 'solar:monitor-bold-duotone' : p === 'Xbox' ? 'mdi:microsoft-xbox' : 'mdi:sony-playstation'} width={14} height={14} />{p}</span>)}
+                  {game.platformType === 'crossplay' || game.crossplay ? <span className="game-platform-tag" style={{ background: 'rgba(74,222,128,0.12)', color: '#4ade80', borderColor: 'rgba(74,222,128,0.25)', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon='solar:link-bold-duotone' width={14} height={14} />Cross-play</span> : null}
                 </div>
               </div>
               <div className="game-banner-stats">
@@ -576,7 +567,7 @@ export default function GameProfilePage() {
         <div className="game-profile-layout">
 
           <div className="game-profile-main">
-            {activeTab === 'overview' && <OverviewTab game={game} xpLadders={xpLadders} cashLadders={cashLadders} />}
+            {activeTab === 'overview' && <OverviewTab game={game} xpLadders={xpLadders} />}
 
             {/* Matches tab — uses the same PostMatchModal as Teams page */}
             {activeTab === 'matches' && <MatchesTab game={game} xpLadders={xpLadders} cashLadders={cashLadders} />}

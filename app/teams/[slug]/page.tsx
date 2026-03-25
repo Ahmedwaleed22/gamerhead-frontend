@@ -10,7 +10,7 @@ import { teamsApi, matchesApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import PostMatchModal from '@/app/components/PostMatchModal'
 import { Icon } from '@iconify/react'
-import { Solar, EmojiSolar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 const BC: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif" }
@@ -421,7 +421,7 @@ export default function TeamProfilePage() {
                         <div style={{ fontSize: 9, color: '#4F5568', fontFamily: "'Roboto',sans-serif", marginBottom: 6 }}>#{liveMatch.matchId}</div>
                         {/* Teams VS */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontFamily: "'Barlow Condensed',sans-serif" }}>
-                          {(liveMatch.teamAEmoji || team.emoji) ? <EmojiSolar emoji={liveMatch.teamAEmoji || team.emoji} size={18} /> : null}
+                          {(liveMatch.teamAEmoji || team.emoji) ? <Icon icon={Solar.shield} width={18} height={18} /> : null}
                           <span style={{ fontWeight: 900, fontSize: 16, color: '#fff' }}>{liveMatch.teamAName || 'Team A'}</span>
                           <span style={{ fontWeight: 400, fontSize: 13, color: '#4F5568' }}>vs</span>
                           <span style={{ fontSize: 18 }}>{liveMatch.teamBEmoji || ''}</span>
@@ -489,7 +489,7 @@ export default function TeamProfilePage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           {/* Our team pfp */}
                           <div style={{ width: 22, height: 22, background: '#25252C', borderRadius: 5, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {teamLogo ? <img src={teamLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : <EmojiSolar emoji={team.emoji || '🎮'} size={14} />}
+                            {teamLogo ? <img src={teamLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : <Icon icon={Solar.shield} width={14} height={14} />}
                           </div>
                           <span style={{ ...BC, fontWeight: 800, fontSize: 14, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.name}</span>
                           <span style={{ ...R, fontSize: 12, color: '#4A5568', flexShrink: 0 }}>vs</span>

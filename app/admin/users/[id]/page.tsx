@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { adminApi } from '@/lib/api'
 import ActionBtn from '../../components/ActionBtn'
 import Modal from '../../components/Modal'
-import { EmojiSolar } from '@/lib/solar-duotone'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const TABS = ['Overview', 'Wallet & Finance', 'Match History', 'Teams', 'Badges'] as const
 type Tab = typeof TABS[number]
@@ -506,7 +507,7 @@ function TeamsTab({ teams, userId }: { teams: any[]; userId: string }) {
             display: 'flex', alignItems: 'center', gap: 14,
             padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.04)',
           }}>
-            <EmojiSolar emoji={t.emoji || '🛡️'} size={22} inline={false} />
+            <Icon icon={Solar.shield} width={22} height={22} style={{ display: 'block' }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#DDE0EA' }}>{t.name}</div>
               <div style={{ fontSize: 13, color: '#4F5568' }}>{t.game} · {member?.role || 'Member'}</div>

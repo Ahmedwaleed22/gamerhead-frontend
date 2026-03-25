@@ -6,7 +6,7 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { Icon } from '@iconify/react'
 import { useAuth } from '@/lib/auth-context'
 import { tournamentsApi } from '@/lib/api'
-import { Solar, EmojiSolar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 type TourneyEntryType = 'solo' | 'team' | 'both'
 type EntryStep = 'method' | 'solo-info' | 'create-team' | 'join-team' | 'processing' | 'success'
@@ -340,7 +340,7 @@ function MatchCard({ match, tournamentId, accent = '#1A5C9E' }: {
       }}>
         {/* Team emoji */}
         <div style={{ width:26, height:26, borderRadius:6, background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-          {team?.emoji ? <EmojiSolar emoji={team.emoji} size={16} /> : '?'}
+          {team?.emoji ? <Icon icon={Solar.shield} width={16} height={16} /> : '?'}
         </div>
         {/* Team name — link to team profile */}
         {team ? (
@@ -457,7 +457,7 @@ function WinnerSpot({ match }: { match?: BracketMatch }) {
         {winner ? (
           <>
             <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <EmojiSolar emoji={winner.emoji} size={18} />
+              <Icon icon={Solar.trophy} width={18} height={18} />
               <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:15, color:'#f0c040', textAlign:'center' }}>{winner.name}</span>
             </div>
             <span style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:1, color:'rgba(240,192,64,.6)', fontFamily:'Rajdhani, sans-serif' }}>Champion</span>
@@ -606,7 +606,7 @@ function TeamEmojiCell({ gameImgUrl, teamEmoji }: { gameImgUrl: string | null | 
   if (showImg) {
     return <img src={gameImgUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={() => setImgErr(true)} />
   }
-  return <EmojiSolar emoji={teamEmoji} size={22} />
+  return <Icon icon={Solar.shield} width={22} height={22} />
 }
 function EntryOptionBtn({ icon, title, sub, onClick }: { icon: ReactNode; title:string; sub:string; onClick:()=>void }) {
   return (
@@ -942,7 +942,7 @@ export default function TournamentOverviewPage() {
               {TOURNAMENT.gameEmoji && (TOURNAMENT.gameEmoji.startsWith('/') || TOURNAMENT.gameEmoji.startsWith('http')) ? (
                 <img src={TOURNAMENT.gameEmoji} alt={TOURNAMENT.game} style={{ width:80, height:80, borderRadius:14, objectFit:'cover', border:'1px solid rgba(26,92,158,.4)', flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }} />
               ) : (
-                <div style={{ width:80, height:80, background:'linear-gradient(135deg, rgba(26,92,158,.3), rgba(10,16,28,.9))', border:'1px solid rgba(26,92,158,.4)', borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }}><EmojiSolar emoji={TOURNAMENT.gameEmoji} size={40} /></div>
+                <div style={{ width:80, height:80, background:'linear-gradient(135deg, rgba(26,92,158,.3), rgba(10,16,28,.9))', border:'1px solid rgba(26,92,158,.4)', borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }}><Icon icon={Solar.gamepad} width={40} height={40} /></div>
               )}
               <div>
                 <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, flexWrap:'wrap' }}>

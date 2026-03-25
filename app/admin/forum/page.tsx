@@ -7,7 +7,8 @@ import DataTable, { Column } from '../components/DataTable'
 import ActionBtn from '../components/ActionBtn'
 import SearchFilter from '../components/SearchFilter'
 import Modal from '../components/Modal'
-import { EmojiSolar } from '@/lib/solar-duotone'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const STATUS_COLORS: Record<string, string> = { open: '#22c55e', locked: '#e8000d' }
 
@@ -211,7 +212,7 @@ export default function AdminForumPage() {
 
   // Board columns
   const boardColumns: Column[] = [
-    { key: 'emoji', label: '', width: '40px', render: (b: any) => <EmojiSolar emoji={b.emoji || '💬'} size={16} inline={false} /> },
+    { key: 'emoji', label: '', width: '40px', render: (b: any) => <Icon icon={Solar.chat} width={16} height={16} style={{ display: 'block' }} /> },
     { key: 'name', label: 'Name', width: '1fr', render: (b: any) => <span style={{ fontWeight: 700 }}>{b.name}</span> },
     { key: 'slug', label: 'Slug', width: '120px', render: (b: any) => <span style={{ fontSize: 9, color: '#8890A4', }}>{b.slug}</span> },
     { key: 'category', label: 'Category', width: '120px', render: (b: any) => <span style={{ color: '#4F5568' }}>{b.category}</span> },

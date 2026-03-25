@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { matchesApi, supportApi } from '@/lib/api'
 import { Icon } from '@iconify/react'
-import { Solar, EmojiSolar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 // ─── ACCENT COLOR: Blue / Tournament ─────────────────────
 const ACCENT     = '#5A9FD4'
@@ -137,7 +137,7 @@ function TeamLogoSlot({ logoUrl, emoji }: { logoUrl?: string; emoji: string }) {
   if (logoUrl && !err) {
     return <img src={logoUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} onError={() => setErr(true)} />
   }
-  return <EmojiSolar emoji={emoji} size={28} />
+  return <Icon icon={Solar.shield} width={28} height={28} />
 }
 
 function TeamBanner({ team, side }: { team:Team; side:'left'|'right' }) {

@@ -324,7 +324,7 @@ export default function ThreadPage() {
           user: {
             name: p.user?.name ?? p.user?.username ?? p.authorName ?? 'Unknown',
             slug: p.user?.slug ?? '',
-            pfp: p.user?.pfp ?? p.user?.avatarUrl ?? p.user?.avatarEmoji ?? '👤',
+            pfp: p.user?.pfp ?? p.user?.avatarUrl ?? '',
             role: p.user?.role ?? p.authorRole ?? 'member',
             posts: p.user?.posts ?? p.user?.forumPosts ?? 0,
             joined: p.user?.joined ?? '',
@@ -653,13 +653,7 @@ export default function ThreadPage() {
                     <span style={{ fontSize: 11, fontWeight: 600, color: '#c0c0d0' }}>{post.user.posts.toLocaleString()}</span>
                   </div>
 
-                  {/* K/D if present */}
-                  {post.user.kd && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-dim)' }}>K/D</span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#c0c0d0' }}>{post.user.kd}</span>
-                    </div>
-                  )}
+
 
                   {/* Divider */}
                   <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />
@@ -858,7 +852,7 @@ export default function ThreadPage() {
 
                 {/* Toolbar */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '8px 10px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: '6px 6px 0 0', borderBottom: 'none', flexWrap: 'wrap' }}>
-                  {['B', 'I', 'U', '—', '"', '🔗', '🖼️'].map((t, i) => (
+                  {['B', 'I', 'U', '—', '"', 'link', 'image'].map((t, i) => (
                     t === '—'
                       ? <span key={i} style={{ width: 1, height: 18, background: 'var(--border)', margin: '0 3px' }} />
                       : <button key={i} onClick={() => {
@@ -871,8 +865,8 @@ export default function ThreadPage() {
                           else if (t === 'I') wrap = `*${selected || 'italic text'}*`
                           else if (t === 'U') wrap = `__${selected || 'underlined text'}__`
                           else if (t === '"') wrap = `\n> ${selected || 'quoted text'}\n`
-                          else if (t === '🔗') wrap = `[${selected || 'link text'}](https://)`
-                          else if (t === '🖼️') wrap = `![${selected || 'image'}](https://image-url)`
+                          else if (t === 'link') wrap = `[${selected || 'link text'}](https://)`
+                          else if (t === 'image') wrap = `![${selected || 'image'}](https://image-url)`
                           if (wrap) {
                             setReplyText(replyText.substring(0, start) + wrap + replyText.substring(end))
                           }
@@ -880,7 +874,7 @@ export default function ThreadPage() {
                         style={{ width: 26, height: 26, background: 'transparent', border: 'none', borderRadius: 4, color: 'var(--text-muted)', fontSize: t.length > 1 ? 13 : 11, fontWeight: t === 'B' ? 800 : t === 'I' ? 400 : 700, fontStyle: t === 'I' ? 'italic' : 'normal', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-4)'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)' }}>
-                        {t}
+                        {t === 'link' ? <Icon icon={Solar.link} width={14} height={14} /> : t === 'image' ? <Icon icon={Solar.gallery} width={14} height={14} /> : t}
                       </button>
                   ))}
                 </div>
@@ -901,7 +895,7 @@ export default function ThreadPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 28, height: 28, background: 'rgba(232,0,13,0.15)', border: '1px solid rgba(232,0,13,0.25)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                      <Avatar src={user?.avatarUrl ?? '👤'} size={28} style={{ borderRadius: 6 }} />
+                      <Avatar src={user?.avatarUrl ?? ''} size={28} style={{ borderRadius: 6 }} />
                     </div>
                     <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Posting as <strong style={{ color: '#e74c3c' }}>{user?.username ?? 'Guest'}</strong></span>
                   </div>
@@ -923,7 +917,7 @@ export default function ThreadPage() {
                             user: {
                               name: user?.username ?? 'You',
                               slug: user?.slug ?? '',
-                              pfp: user?.avatarUrl ?? '👤',
+                              pfp: user?.avatarUrl ?? '',
                               role: user?.role ?? 'member',
                               posts: 0,
                               joined: '',
@@ -943,7 +937,7 @@ export default function ThreadPage() {
                         }
                       }}
                     >
-                      ✈️ Post Reply
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.plain} width={14} height={14} /> Post Reply</span>
                     </button>
                   </div>
                 </div>
@@ -1027,7 +1021,7 @@ export default function ThreadPage() {
                     </div>
                     <RoleBadge role={u.role} />
                     <span style={{ fontSize: 10, color: 'var(--text-dim)', flexShrink: 0 }}>
-                      {posts.filter(p => p.user.name === u.name).length}p
+                      {(() => { const count = posts.filter(p => p.user.name === u.name).length; return `${count} ${count === 1 ? 'Post' : 'Posts'}`; })()}
                     </span>
                   </div>
                 ))}

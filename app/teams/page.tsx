@@ -7,7 +7,7 @@ import { teamsApi, invitesApi, usersApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import DashSidebar from '@/app/components/DashSidebar'
 import { Icon } from '@iconify/react'
-import { Solar, EmojiSolar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 
@@ -115,7 +115,7 @@ function ManageTeamModal({ team, user, onClose, onUpdated }: { team: any; user: 
             <div style={{ width: 40, height: 40, background: '#25252C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, overflow: 'hidden' }}>
               {(team.logoUrl || team.bannerUrl) && ((team.logoUrl || team.bannerUrl).startsWith('http') || (team.logoUrl || team.bannerUrl).startsWith('/') || (team.logoUrl || team.bannerUrl).startsWith('data:image'))
                 ? <img src={team.logoUrl || team.bannerUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                : (team.emoji ? <EmojiSolar emoji={team.emoji} size={20} /> : team.name?.charAt(0).toUpperCase() || 'T')}
+                : (team.emoji ? <Icon icon={Solar.shield} width={20} height={20} /> : team.name?.charAt(0).toUpperCase() || 'T')}
             </div>
             <div>
               <div style={{ ...R, fontWeight: 700, fontSize: 16, color: '#fff' }}>{team.name}</div>
@@ -451,7 +451,7 @@ export default function MyTeamsPage() {
                         <div style={{ width: 56, height: 56, background: '#25252C', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                           {(team.logoUrl || team.bannerUrl) && ((team.logoUrl || team.bannerUrl).startsWith('http') || (team.logoUrl || team.bannerUrl).startsWith('/') || (team.logoUrl || team.bannerUrl).startsWith('data:image'))
                             ? <img src={team.logoUrl || team.bannerUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                            : (team.emoji ? <EmojiSolar emoji={team.emoji} size={26} /> : team.name?.charAt(0).toUpperCase() || 'T')}
+                            : (team.emoji ? <Icon icon={Solar.shield} width={26} height={26} /> : team.name?.charAt(0).toUpperCase() || 'T')}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>

@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { forumApi } from '@/lib/api'
 import { Icon } from '@iconify/react'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 type ThreadState = 'hot' | 'pinned' | 'locked' | 'official' | 'normal'
 
@@ -56,7 +56,7 @@ function Avatar({ src, size = 36, style }: { src: string; size?: number; style?:
   if (src && (src.startsWith('http') || src.startsWith('/') || src.startsWith('data:image'))) {
     return <img src={src} alt="" style={{ width: size, height: size, borderRadius: 8, objectFit: 'cover', ...style }} />
   }
-  return <EmojiSolar emoji={src || '👤'} size={Math.round(size * 0.65)} inline={false} style={style} />
+  return <Icon icon={Solar.user} width={Math.round(size * 0.65)} height={Math.round(size * 0.65)} style={style} />
 }
 
 function ThreadStateBadge({ state }: { state: ThreadState }) {
@@ -171,13 +171,13 @@ export default function ForumBoardPage() {
         authorSlug: t.authorSlug || '',
         authorRole: t.authorRole || t.author?.role || 'member',
         authorColor: t.authorColor || '',
-        authorPfp: t.authorAvatar || t.author?.avatar || t.authorPfp || '👤',
+        authorPfp: t.authorAvatar || t.author?.avatar || t.authorPfp || '',
         createdAt: t.createdAt ? timeAgo(t.createdAt) : '',
         lastReplyAt: t.lastReplyAt ? timeAgo(t.lastReplyAt) : '',
         lastReplyBy: t.lastReplyBy || t.lastReply?.username || '',
         lastReplyBySlug: t.lastReplyBySlug || '',
         lastReplyByColor: t.lastReplyByColor || '',
-        lastReplyByPfp: t.lastReplyByPfp || t.lastReply?.avatar || '👤',
+        lastReplyByPfp: t.lastReplyByPfp || t.lastReply?.avatar || '',
         lastReplyPreview: t.lastReplyPreview || '',
         replies: t.replies ?? t.replyCount ?? 0,
         views: t.views ?? t.viewCount ?? 0,
@@ -217,13 +217,13 @@ export default function ForumBoardPage() {
         authorSlug: user?.slug || '',
         authorRole: (user?.role as any) || 'member',
         authorColor: (user as any)?.usernameColor || '',
-        authorPfp: '👤',
+        authorPfp: '',
         createdAt: 'just now',
         lastReplyAt: 'just now',
         lastReplyBy: (user as any)?.displayName || user?.username || '',
         lastReplyBySlug: user?.slug || '',
         lastReplyByColor: (user as any)?.usernameColor || '',
-        lastReplyByPfp: '👤',
+        lastReplyByPfp: '',
         lastReplyPreview: '',
         replies: 0,
         views: 0,
@@ -310,7 +310,7 @@ export default function ForumBoardPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, justifyContent: 'space-between', flexWrap: 'wrap', paddingBottom: 32 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
               <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg, rgba(232,0,13,0.2), rgba(232,0,13,0.05))', border: '1px solid rgba(232,0,13,0.3)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 0 24px rgba(232,0,13,0.15)' }}>
-                <EmojiSolar emoji={board.emoji || '💬'} size={38} inline={false} />
+                <Icon icon={Solar.chat} width={38} height={38} style={{ display: 'block' }} />
               </div>
               <div>
                 <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 42, fontWeight: 900, textTransform: 'uppercase', color: '#fff', margin: '0 0 8px', lineHeight: 1, letterSpacing: 1 }}>{board.name}</h1>
@@ -550,7 +550,7 @@ export default function ForumBoardPage() {
                     onMouseEnter={e => {e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.transform='translateY(-1px)'}}
                     onMouseLeave={e => {e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.transform='none'}}>
                     <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, var(--bg-4), var(--bg-5))', border: '1px solid var(--border)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.2)' }}>
-                      <EmojiSolar emoji={b.emoji} size={18} inline={false} />
+                      <Icon icon={Solar.chat} width={18} height={18} style={{ display: 'block' }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#f0f0f0', lineHeight: 1.2 }}>{b.name}</div>
@@ -608,7 +608,7 @@ export default function ForumBoardPage() {
                 <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:0.6, color:'var(--text-dim)', marginBottom:6, display:'block' }}>Content</label>
                 {/* Toolbar */}
                 <div style={{ display:'flex', alignItems:'center', gap:3, padding:'8px 10px', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:'6px 6px 0 0', borderBottom:'none' }}>
-                  {['B','I','U','—','"','🔗','🖼️'].map((t, i) => (
+                  {['B','I','U','—','"','link','image'].map((t, i) => (
                     t === '—'
                       ? <span key={i} style={{ width:1, height:18, background:'var(--border)', margin:'0 3px' }} />
                       : <button key={i} onClick={() => {
@@ -621,8 +621,8 @@ export default function ForumBoardPage() {
                           else if (t === 'I') wrap = `*${selected || 'italic text'}*`
                           else if (t === 'U') wrap = `__${selected || 'underlined text'}__`
                           else if (t === '"') wrap = `\n> ${selected || 'quoted text'}\n`
-                          else if (t === '🔗') wrap = `[${selected || 'link text'}](https://)`
-                          else if (t === '🖼️') wrap = `![${selected || 'image'}](https://image-url)`
+                          else if (t === 'link') wrap = `[${selected || 'link text'}](https://)`
+                          else if (t === 'image') wrap = `![${selected || 'image'}](https://image-url)`
                           if (wrap) {
                             const nc = newContent.substring(0, start) + wrap + newContent.substring(end)
                             setNewContent(nc)
@@ -631,7 +631,7 @@ export default function ForumBoardPage() {
                         style={{ width:26, height:26, background:'transparent', border:'none', borderRadius:4, color:'var(--text-muted)', fontSize:t.length > 1 ? 13 : 11, fontWeight:t==='B'?800:t==='I'?400:700, fontStyle:t==='I'?'italic':'normal', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.15s, color 0.15s' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background='var(--bg-4)'; (e.currentTarget as HTMLButtonElement).style.color='#fff' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background='transparent'; (e.currentTarget as HTMLButtonElement).style.color='var(--text-muted)' }}>
-                        {t === '🔗' ? <Icon icon={Solar.link} width={14} height={14} /> : t === '🖼️' ? <Icon icon={Solar.gallery} width={14} height={14} /> : t}
+                        {t === 'link' ? <Icon icon={Solar.link} width={14} height={14} /> : t === 'image' ? <Icon icon={Solar.gallery} width={14} height={14} /> : t}
                       </button>
                   ))}
                 </div>

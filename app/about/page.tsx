@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Icon } from '@iconify/react'
-import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Solar } from '@/lib/solar-duotone'
 
 /* ─── TYPES ─────────────────────────────────────────── */
 interface StaffMember {
@@ -11,7 +11,7 @@ interface StaffMember {
   role: string
   title: string
   bio: string
-  emoji: string
+  icon: string
   accentColor: string
   socials: { twitter?: string; twitch?: string; discord?: string }
   isFounder?: boolean
@@ -44,7 +44,7 @@ const STAFF: StaffMember[] = [
     role: 'Founder & CEO',
     title: 'The Vision',
     bio: 'Built GamerHead from a single idea — that every gamer deserves a real home. Not just a place to play, but a place to compete, grow, connect, and belong. Still writing the story.',
-    emoji: '👑',
+    icon: Solar.crown,
     accentColor: '#E8000D',
     socials: { twitter: '#', twitch: '#', discord: '#' },
     isFounder: true,
@@ -56,7 +56,7 @@ const STAFF: StaffMember[] = [
     role: 'Lead Developer',
     title: 'The Architect',
     bio: 'This spot is waiting for someone who loves building things that matter. If you live and breathe code and gaming, reach out.',
-    emoji: '💻',
+    icon: Solar.document,
     accentColor: '#60A5FA',
     socials: {},
     joined: 'TBD',
@@ -67,7 +67,7 @@ const STAFF: StaffMember[] = [
     role: 'Community Manager',
     title: 'The Connector',
     bio: 'The heartbeat of the platform. Organizing events, moderating forums, and making sure every new member feels at home.',
-    emoji: '🎙️',
+    icon: Solar.microphone,
     accentColor: '#4ADE80',
     socials: {},
     joined: 'TBD',
@@ -78,7 +78,7 @@ const STAFF: StaffMember[] = [
     role: 'Head of Esports',
     title: 'The Tactician',
     bio: 'Runs the competitive ladder, organizes tournaments, and keeps fair play at the core of every match.',
-    emoji: '⚔️',
+    icon: Solar.sword,
     accentColor: '#F0AA1A',
     socials: {},
     joined: 'TBD',
@@ -89,7 +89,7 @@ const STAFF: StaffMember[] = [
     role: 'UI/UX Designer',
     title: 'The Craftsman',
     bio: 'Shapes how the platform looks and feels. Obsesses over every pixel so players can focus on what matters — the game.',
-    emoji: '🎨',
+    icon: Solar.palette,
     accentColor: '#A78BFA',
     socials: {},
     joined: 'TBD',
@@ -100,7 +100,7 @@ const STAFF: StaffMember[] = [
     role: 'Content & Media',
     title: 'The Storyteller',
     bio: 'Captures the moments that matter — match recaps, player spotlights, community highlights, and the stories behind the stats.',
-    emoji: '📡',
+    icon: Solar.megaphone,
     accentColor: '#FB923C',
     socials: {},
     joined: 'TBD',
@@ -114,7 +114,7 @@ const MILESTONES: Milestone[] = [
     month: 'Jan',
     title: 'The Idea Sparks',
     desc: 'Frustrated with fragmented gaming platforms and rigged lobbies — the concept for a fair, community-first competitive gaming home is born.',
-    icon: '💡',
+    icon: Solar.lamp,
     highlight: false,
   },
   {
@@ -122,7 +122,7 @@ const MILESTONES: Milestone[] = [
     month: 'Jun',
     title: 'First Lines of Code',
     desc: 'Development begins. The core vision: one platform for every type of gamer — competitors, creators, coaches, and casual players.',
-    icon: '⌨️',
+    icon: Solar.tools,
     highlight: false,
   },
   {
@@ -130,7 +130,7 @@ const MILESTONES: Milestone[] = [
     month: 'Oct',
     title: 'Platform Takes Shape',
     desc: 'Tournament system, wager matches, XP ladders, team profiles, and the coaching marketplace all come online in rapid succession.',
-    icon: '🏗️',
+    icon: Solar.building,
     highlight: false,
   },
   {
@@ -138,7 +138,7 @@ const MILESTONES: Milestone[] = [
     month: 'Q1',
     title: 'Beta Launch',
     desc: 'The doors open for the first wave of players. Real matches. Real stakes. Real community. The feedback loop begins.',
-    icon: '🚀',
+    icon: Solar.plain,
     highlight: true,
   },
   {
@@ -146,7 +146,7 @@ const MILESTONES: Milestone[] = [
     month: 'Q3',
     title: 'Community Milestones',
     desc: 'First major tournament runs. First verified coaches join the marketplace. Forums light up with game ideas and collaboration threads.',
-    icon: '🏆',
+    icon: Solar.trophy,
     highlight: false,
   },
   {
@@ -154,14 +154,14 @@ const MILESTONES: Milestone[] = [
     month: 'Now',
     title: 'Still Writing It',
     desc: 'The best chapter is always the one being written. New games, new features, new faces — and you might be part of what comes next.',
-    icon: '✍️',
+    icon: Solar.pen,
     highlight: true,
   },
 ]
 
 const PILLARS: Pillar[] = [
   {
-    icon: '⚔️',
+    icon: Solar.sword,
     title: 'Compete',
     desc: 'Wager matches, XP ladders, and major tournaments across all the biggest titles. Every player deserves a fair fight and a place on the board.',
     cta: 'View Tournaments',
@@ -169,7 +169,7 @@ const PILLARS: Pillar[] = [
     accent: '#E8000D',
   },
   {
-    icon: '🎙️',
+    icon: Solar.microphone,
     title: 'Coach',
     desc: 'Whether you\'re a Diamond-ranked veteran or a rising talent, connect with verified coaches or share your knowledge with the next generation.',
     cta: 'Find a Coach',
@@ -177,7 +177,7 @@ const PILLARS: Pillar[] = [
     accent: '#60A5FA',
   },
   {
-    icon: '🎨',
+    icon: Solar.palette,
     title: 'Create',
     desc: 'Gaming is more than just playing. Designers, developers, writers, and artists — bring your ideas to the forum and find people who get it.',
     cta: 'Visit Forum',
@@ -185,7 +185,7 @@ const PILLARS: Pillar[] = [
     accent: '#A78BFA',
   },
   {
-    icon: '👥',
+    icon: Solar.users,
     title: 'Connect',
     desc: 'Looking for a squad, a casual group, or just someone who shares your taste in games? The community is here and the door is always open.',
     cta: 'Browse Community',
@@ -193,7 +193,7 @@ const PILLARS: Pillar[] = [
     accent: '#4ADE80',
   },
   {
-    icon: '🛠️',
+    icon: Solar.tools,
     title: 'Build',
     desc: 'Want to get into game development? Need feedback on a concept, a team, or just someone to brainstorm with? This is the right room.',
     cta: 'Start a Thread',
@@ -201,7 +201,7 @@ const PILLARS: Pillar[] = [
     accent: '#F0AA1A',
   },
   {
-    icon: '🛡️',
+    icon: Solar.shield,
     title: 'Trust',
     desc: 'Fair play isn\'t a feature — it\'s the foundation. Anti-cheat protections, dispute resolution, verified coaches, and transparent payouts.',
     cta: 'View Rules',
@@ -211,10 +211,10 @@ const PILLARS: Pillar[] = [
 ]
 
 const VALUES = [
-  { icon: '⚖️', title: 'Fair Play Above All', desc: 'We built the entire payout and dispute system around one principle: if you win, you get paid. No exceptions, no grey areas.' },
-  { icon: '🌍', title: 'Everyone Belongs', desc: 'Hardcore competitor, casual Friday gamer, game dev with a dream — there is a seat at this table for you. We mean that.' },
-  { icon: '🔥', title: 'Community-Driven', desc: 'Features get built because the community asks for them. Game ideas in the forum become polls. Polls become features.' },
-  { icon: '📈', title: 'Built to Grow With You', desc: 'From your first XP match to your first tournament win to coaching your first student — the platform scales with your journey.' },
+  { icon: Solar.rules, title: 'Fair Play Above All', desc: 'We built the entire payout and dispute system around one principle: if you win, you get paid. No exceptions, no grey areas.' },
+  { icon: Solar.globe, title: 'Everyone Belongs', desc: 'Hardcore competitor, casual Friday gamer, game dev with a dream — there is a seat at this table for you. We mean that.' },
+  { icon: Solar.fire, title: 'Community-Driven', desc: 'Features get built because the community asks for them. Game ideas in the forum become polls. Polls become features.' },
+  { icon: Solar.chart, title: 'Built to Grow With You', desc: 'From your first XP match to your first tournament win to coaching your first student — the platform scales with your journey.' },
 ]
 
 /* ─── COMPONENT ─────────────────────────────────────── */
@@ -402,7 +402,7 @@ export default function AboutPage() {
                   onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                 >
                   <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center' }}>
-                    <EmojiSolar emoji={v.icon} size={24} inline={false} />
+                    <Icon icon={v.icon} width={24} height={24} style={{ display: 'block' }} />
                   </div>
                   <div style={{
                     fontFamily: "'Barlow Condensed', sans-serif",
@@ -490,7 +490,7 @@ export default function AboutPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 22, marginBottom: 18, marginLeft: 12,
                   }}>
-                    <EmojiSolar emoji={p.icon} size={22} inline={false} />
+                    <Icon icon={p.icon} width={22} height={22} style={{ display: 'block' }} />
                   </div>
 
                   <h3 style={{
@@ -580,7 +580,7 @@ export default function AboutPage() {
                           textAlign: 'right',
                         }}>
                           <div style={{ marginBottom: 8, textAlign: 'right', display: 'flex', justifyContent: 'flex-end' }}>
-                            <EmojiSolar emoji={m.icon} size={24} inline={false} />
+                            <Icon icon={m.icon} width={24} height={24} style={{ display: 'block' }} />
                           </div>
                           <div style={{
                             fontFamily: "'Barlow Condensed', sans-serif",
@@ -636,7 +636,7 @@ export default function AboutPage() {
                           maxWidth: 320, width: '100%',
                         }}>
                           <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center' }}>
-                            <EmojiSolar emoji={m.icon} size={24} inline={false} />
+                            <Icon icon={m.icon} width={24} height={24} style={{ display: 'block' }} />
                           </div>
                           <div style={{
                             fontFamily: "'Barlow Condensed', sans-serif",
@@ -739,7 +739,7 @@ export default function AboutPage() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 32,
                     }}>
-                      <EmojiSolar emoji={member.emoji} size={32} inline={false} />
+                      <Icon icon={member.icon} width={32} height={32} style={{ display: 'block' }} />
                     </div>
 
                     {/* Photo replace hint */}
@@ -930,17 +930,17 @@ export default function AboutPage() {
                 overflow: 'hidden', marginBottom: 40,
               }}>
                 {[
-                  { icon: '✅', label: 'Match Verification', sub: 'Every result reviewed' },
-                  { icon: '💬', label: 'Dispute System',     sub: 'Human-reviewed cases' },
-                  { icon: '💰', label: 'Protected Payouts',  sub: '98% success rate' },
-                  { icon: '🔍', label: 'Anti-Cheat Layer',   sub: 'Ongoing monitoring' },
+                  { icon: Solar.check, label: 'Match Verification', sub: 'Every result reviewed' },
+                  { icon: Solar.chat, label: 'Dispute System',     sub: 'Human-reviewed cases' },
+                  { icon: Solar.bill, label: 'Protected Payouts',  sub: '98% success rate' },
+                  { icon: Solar.magnifier, label: 'Anti-Cheat Layer',   sub: 'Ongoing monitoring' },
                 ].map((f, i) => (
                   <div key={i} style={{
                     background: 'var(--bg-3)',
                     padding: '20px 16px', textAlign: 'center',
                   }}>
                     <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}>
-                      <EmojiSolar emoji={f.icon} size={22} inline={false} />
+                      <Icon icon={f.icon} width={22} height={22} style={{ display: 'block' }} />
                     </div>
                     <div style={{
                       fontFamily: "'Barlow Condensed', sans-serif",

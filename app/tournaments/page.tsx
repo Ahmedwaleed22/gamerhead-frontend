@@ -126,26 +126,30 @@ export default function TournamentsPage() {
       </div>
 
       {/* ── FILTERS ──────────────────────────────────── */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={labelStyle}>Game</span>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-            {GAME_FILTERS.map(f => (
-              <FilterPill key={f} active={gameFilter === f} onClick={() => setGameFilter(f)}>{f}</FilterPill>
-            ))}
-          </div>
+          <select
+            value={gameFilter}
+            onChange={e => setGameFilter(e.target.value)}
+            style={{ padding: '8px 32px 8px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, color: '#fff', fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13, outline: 'none', cursor: 'pointer', appearance: 'none' as const, WebkitAppearance: 'none' as const, backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23999\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+          >
+            {GAME_FILTERS.map(f => <option key={f} value={f} style={{ background: 'var(--bg-1)', color: '#fff' }}>{f}</option>)}
+          </select>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={labelStyle}>Platform</span>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-            {PLATFORM_FILTERS.map(f => (
-              <FilterPill key={f} active={platformFilter === f} onClick={() => setPlatformFilter(f)}>{f}</FilterPill>
-            ))}
-          </div>
-          <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14, fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
-            <span style={{ color: '#fff' }}>{filtered.length}</span>&nbsp;result{filtered.length !== 1 ? 's' : ''}
-          </span>
+          <select
+            value={platformFilter}
+            onChange={e => setPlatformFilter(e.target.value)}
+            style={{ padding: '8px 32px 8px 12px', background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, color: '#fff', fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13, outline: 'none', cursor: 'pointer', appearance: 'none' as const, WebkitAppearance: 'none' as const, backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23999\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+          >
+            {PLATFORM_FILTERS.map(f => <option key={f} value={f} style={{ background: 'var(--bg-1)', color: '#fff' }}>{f}</option>)}
+          </select>
         </div>
+        <span style={{ marginLeft: 'auto', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 14, fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
+          <span style={{ color: '#fff' }}>{filtered.length}</span>&nbsp;result{filtered.length !== 1 ? 's' : ''}
+        </span>
       </div>
 
       {/* ── GRID ─────────────────────────────────────── */}
@@ -267,7 +271,7 @@ export default function TournamentsPage() {
                     display: 'flex', alignItems: 'center', gap: 6,
                     fontSize: 11, color: 'var(--text-muted)', fontWeight: 600,
                   }}>
-                    <span style={{ color: accent, fontSize: 10 }}>▶</span>
+                    <span style={{ display: 'inline-block', width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: `6px solid ${accent}`, flexShrink: 0 }} />
                     {t.time}
                   </div>
 
@@ -331,40 +335,7 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--text-dim)', flexShrink: 0,
 }
 
-function FilterPill({
-  active, onClick, children,
-}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: '4px 10px',
-        background: active ? 'var(--red)' : 'var(--bg-3)',
-        border: `1px solid ${active ? 'var(--red)' : 'var(--border)'}`,
-        borderRadius: 20,
-        color: active ? '#fff' : 'var(--text-muted)',
-        fontSize: 11, fontWeight: 600,
-        fontFamily: "'Barlow', sans-serif",
-        letterSpacing: '0.04em', textTransform: 'uppercase',
-        cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
-      }}
-      onMouseEnter={e => {
-        if (!active) {
-          e.currentTarget.style.borderColor = 'rgba(232,0,13,0.4)'
-          e.currentTarget.style.color = '#fff'
-        }
-      }}
-      onMouseLeave={e => {
-        if (!active) {
-          e.currentTarget.style.borderColor = 'var(--border)'
-          e.currentTarget.style.color = 'var(--text-muted)'
-        }
-      }}
-    >
-      {children}
-    </button>
-  )
-}
+
 
 function InfoCell({ label, value, gold, fullWidth }: { label: string; value: string; gold?: boolean; fullWidth?: boolean }) {
   return (
