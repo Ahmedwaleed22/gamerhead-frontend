@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import { mailboxApi, usersApi } from '@/lib/api'
 import { sendActivity } from '@/lib/socket'
 import { Icon } from '@iconify/react'
-import { Solar } from '@/lib/solar-duotone'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
 
 type Message = { id?: string; side: string; initials: string; color: string; date: string; time: string; body: string; editedAt?: string | null }
 type Thread  = { id: string; from: string; fromSlug: string; initials: string; color: string; subject: string; date: string; time: string; unread: boolean; preview: string }
@@ -482,7 +482,7 @@ function MailboxPage() {
                           {friend.avatarUrl
                             ? <img src={friend.avatarUrl} alt="" style={{ width:32, height:32, borderRadius:8, objectFit:'cover' }} />
                             : friend.avatarEmoji
-                              ? <span style={{ fontSize:16 }}>{friend.avatarEmoji}</span>
+                              ? <EmojiSolar emoji={friend.avatarEmoji} size={16} inline={false} />
                               : <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           }
                         </div>

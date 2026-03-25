@@ -22,15 +22,15 @@ export default function StatCard({ icon, label, value, color = '#fff', sub }: St
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {isIconifyId(icon) ? <Icon icon={icon} width={22} height={22} style={{ flexShrink: 0 }} /> : <span style={{ fontSize: 20 }}>{icon}</span>}
-        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8 }}>
           {label}
         </span>
       </div>
-      <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 30, color, lineHeight: 1 }}>
+      <div style={{ fontWeight: 900, fontSize: 30, color, lineHeight: 1 }}>
         {value}
       </div>
       {sub && (
-        <div style={{ fontSize: 11, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', marginTop: 2 }}>
+        <div style={{ fontSize: 13, color: '#4F5568', marginTop: 2 }}>
           {sub}
         </div>
       )}

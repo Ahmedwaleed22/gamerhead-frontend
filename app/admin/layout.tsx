@@ -20,16 +20,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (loading || !user || !isAdmin) {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a0c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 14, color: '#4F5568' }}>Loading...</div>
+        <div style={{ fontSize: 14, color: '#4F5568' }}>Loading...</div>
       </div>
     )
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0a0c' }}>
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#0a0a0c]">
       <AdminSidebar />
-      <div style={{ flex: 1, marginLeft: 240, padding: '24px 32px', minHeight: '100vh' }}>
-        {children}
+      <div className="px-8! py-18! md:p-8! flex-1 min-h-screen w-full md:pl-[240px] pt-[73px] md:pt-0">
+        <div className="p-4 md:p-8 lg:p-10 w-full overflow-hidden max-w-[100vw]">
+          {children}
+        </div>
       </div>
     </div>
   )

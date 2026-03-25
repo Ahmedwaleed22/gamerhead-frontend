@@ -110,7 +110,7 @@ export default function AdminUsersPage() {
       render: (row) => (
         <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
           <span style={{
-            padding: '2px 6px', fontSize: 8, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif',
+            padding: '2px 6px', fontSize: 8, fontWeight: 800,
             border: `1px solid ${ROLE_COLORS[row.role] || '#4F5568'}44`,
             borderRadius: 3, color: ROLE_COLORS[row.role] || '#4F5568',
             textTransform: 'uppercase', letterSpacing: .5,
@@ -119,7 +119,7 @@ export default function AdminUsersPage() {
           </span>
           {row.isCoach && (
             <span style={{
-              padding: '2px 6px', fontSize: 8, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif',
+              padding: '2px 6px', fontSize: 8, fontWeight: 800,
               border: '1px solid rgba(168,85,247,.3)', borderRadius: 3, color: '#a855f7',
               textTransform: 'uppercase', letterSpacing: .5,
             }}>
@@ -174,12 +174,12 @@ export default function AdminUsersPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
         <h1 style={{
-          fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28,
+          fontWeight: 900, fontSize: 28,
           color: '#fff', margin: 0, textTransform: 'uppercase',
         }}>
           Users & Accounts
         </h1>
-        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
+        <p style={{ fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
           {total.toLocaleString()} total users
         </p>
       </div>
@@ -225,7 +225,7 @@ export default function AdminUsersPage() {
       />
 
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>
           Loading users...
         </div>
       ) : (

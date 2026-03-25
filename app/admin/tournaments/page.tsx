@@ -6,6 +6,7 @@ import DataTable, { Column } from '../components/DataTable'
 import ActionBtn from '../components/ActionBtn'
 import SearchFilter from '../components/SearchFilter'
 import Modal from '../components/Modal'
+import { EmojiSolar } from '@/lib/solar-duotone'
 
 const STATUS_COLORS: Record<string, string> = {
   draft: '#4F5568', open: '#3b82f6', checkin: '#f59e0b', live: '#22c55e', completed: '#8890A4', cancelled: '#e8000d',
@@ -13,10 +14,10 @@ const STATUS_COLORS: Record<string, string> = {
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 9, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 
@@ -141,17 +142,31 @@ export default function AdminTournamentsPage() {
 
   const columns: Column[] = [
     { key: 'name', label: 'Name', width: '2fr', render: (r: any) => (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
         {r.bannerUrl || r.gameEmoji?.startsWith('/') ? (
           <img src={r.bannerUrl || r.gameEmoji} alt="" style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'cover' }} />
         ) : (
-          <span>{r.gameEmoji || '🎯'}</span>
+          <EmojiSolar emoji={r.gameEmoji || '🎯'} size={18} inline={false} />
         )}
-        <span style={{ fontWeight: 700, cursor: 'pointer', color: '#DDE0EA' }} onClick={() => handleViewDetail(r._id)}>{r.name}</span>
+        <span
+          style={{
+            fontWeight: 700,
+            cursor: 'pointer',
+            color: '#DDE0EA',
+            whiteSpace: 'normal',
+            overflowWrap: 'anywhere',
+            wordBreak: 'break-word',
+            minWidth: 0,
+            flex: '1 1 auto',
+          }}
+          onClick={() => handleViewDetail(r._id)}
+        >
+          {r.name}
+        </span>
         {r.isFeatured && <span style={{ fontSize: 8, color: '#f59e0b', fontWeight: 700, marginLeft: 6 }}>FEATURED</span>}
       </div>
     )},
-    { key: 'game', label: 'Game', width: '100px', render: (r: any) => <span style={{ color: '#4F5568' }}>{r.game}</span> },
+    { key: 'game', label: 'Game', width: '100px', render: (r: any) => <span style={{ color: '#4F5568', wordBreak: 'break-word' }}>{r.game}</span> },
     { key: 'bracketType', label: 'Bracket', width: '100px', render: (r: any) => <span style={{ fontSize: 9, color: '#8890A4' }}>{r.bracketType === 'Single Elimination' ? 'Single Elim' : 'Double Elim'}</span> },
     { key: 'registeredCount', label: 'Teams', width: '80px', render: (r: any) => <span style={{ color: '#8890A4' }}>{r.registeredCount}/{r.maxTeams}</span> },
     { key: 'prizePool', label: 'Prize Pool', width: '80px', render: (r: any) => <span style={{ fontWeight: 700, color: '#22c55e' }}>${((r.prizePool || 0) / 100).toFixed(0)}</span> },
@@ -170,14 +185,16 @@ export default function AdminTournamentsPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Tournaments</h1>
-          <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ flex: '1 1 auto', minWidth: 200 }}>
+          <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Tournaments</h1>
+          <p style={{ fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
             {total} total tournaments
           </p>
         </div>
-        <ActionBtn label="+ CREATE TOURNAMENT" color="#22c55e" onClick={() => setCreateModal(true)} />
+        <div style={{ marginLeft: 'auto' }}>
+          <ActionBtn label="+ CREATE TOURNAMENT" color="#22c55e" onClick={() => setCreateModal(true)} />
+        </div>
       </div>
 
       <SearchFilter
@@ -193,16 +210,16 @@ export default function AdminTournamentsPage() {
       />
 
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
       ) : (
         <DataTable columns={columns} rows={tournaments} emptyText="No tournaments" page={page} totalPages={pages} onPage={setPage} />
       )}
 
       {/* Detail Modal */}
       {detailModal && (
-        <Modal title={`${detailModal.gameEmoji} ${detailModal.name}`} onClose={() => setDetailModal(null)} width={600}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 11, fontFamily: 'Rajdhani, sans-serif', color: '#DDE0EA' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <Modal title={detailModal.name} onClose={() => setDetailModal(null)} width={600}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 11, color: '#DDE0EA' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
               <div><span style={{ color: '#4F5568' }}>Game:</span> {detailModal.game}</div>
               <div><span style={{ color: '#4F5568' }}>Status:</span> <span style={{ color: STATUS_COLORS[detailModal.status], fontWeight: 700, textTransform: 'uppercase' }}>{detailModal.status}</span></div>
               <div><span style={{ color: '#4F5568' }}>Bracket:</span> {detailModal.bracketType}</div>
@@ -238,7 +255,7 @@ export default function AdminTournamentsPage() {
                   {detailModal.registeredEntries.map((e: any, i: number) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
                       <span style={{ fontSize: 10, color: '#4F5568', width: 20 }}>#{e.seed || i + 1}</span>
-                      <span style={{ fontWeight: 700 }}>{e.emoji || '🎮'} {e.name}</span>
+                      <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}><EmojiSolar emoji={e.emoji || '🎮'} size={14} inline={false} /> {e.name}</span>
                       <span style={{ marginLeft: 'auto', fontSize: 9, color: e.checkedIn ? '#22c55e' : '#4F5568' }}>{e.checkedIn ? 'CHECKED IN' : 'NOT CHECKED'}</span>
                     </div>
                   ))}
@@ -262,7 +279,7 @@ export default function AdminTournamentsPage() {
       {/* Create Modal */}
       {createModal && (
         <Modal title="Create Tournament" onClose={() => setCreateModal(false)} width={540}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Name */}
             <div>
               <div style={labelStyle}>Name</div>
@@ -289,13 +306,13 @@ export default function AdminTournamentsPage() {
                   style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', border: `2px solid ${selectedGame.accentColor}` }}
                 />
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{selectedGame.name}</div>
-                  <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA' }}>{selectedGame.name}</div>
+                  <div style={{ fontSize: 9, color: '#4F5568' }}>
                     {selectedGame.platforms?.join(' / ')} &mdash; {selectedGame.modes?.length || 0} modes
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                     <div style={{ width: 10, height: 10, borderRadius: 2, background: selectedGame.accentColor }} />
-                    <span style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>{selectedGame.accentColor}</span>
+                    <span style={{ fontSize: 9, color: '#4F5568' }}>{selectedGame.accentColor}</span>
                   </div>
                 </div>
               </div>
@@ -315,7 +332,7 @@ export default function AdminTournamentsPage() {
             )}
 
             {/* Format & Series */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
               <div>
                 <div style={labelStyle}>Format</div>
                 <select value={form.format} onChange={e => setForm(p => ({ ...p, format: e.target.value }))} style={inputStyle}>
@@ -336,7 +353,7 @@ export default function AdminTournamentsPage() {
             </div>
 
             {/* Max Teams & Entry Tickets */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
               <div>
                 <div style={labelStyle}>Max Teams</div>
                 <input value={form.maxTeams} onChange={e => setForm(p => ({ ...p, maxTeams: e.target.value }))} style={inputStyle} />
@@ -348,7 +365,7 @@ export default function AdminTournamentsPage() {
             </div>
 
             {/* Prize Pool Type + Amount */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
               <div>
                 <div style={labelStyle}>Prize Type</div>
                 <select value={form.prizePoolType} onChange={e => setForm(p => ({ ...p, prizePoolType: e.target.value }))} style={inputStyle}>
@@ -378,7 +395,7 @@ export default function AdminTournamentsPage() {
               <div style={{ background: 'rgba(255,255,255,.02)', borderRadius: 6, padding: '8px 12px', border: '1px solid rgba(255,255,255,.05)' }}>
                 <div style={{ ...labelStyle, marginBottom: 6 }}>Prize Split (auto)</div>
                 {prizes.map((p, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', fontFamily: 'Rajdhani, sans-serif', fontSize: 11 }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', fontSize: 11 }}>
                     <span style={{ fontSize: 14 }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
                     <span style={{ color: p.color, fontWeight: 700, width: 60 }}>{p.place}</span>
                     <input
@@ -399,7 +416,7 @@ export default function AdminTournamentsPage() {
             )}
 
             {/* Start Date/Time */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
               <div>
                 <div style={labelStyle}>Start Date</div>
                 <input type="date" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} style={inputStyle} />
@@ -419,7 +436,7 @@ export default function AdminTournamentsPage() {
             </div>
 
             {/* Region & Platform */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
               <div><div style={labelStyle}>Region</div>
                 <select value={form.region} onChange={e => setForm(p => ({ ...p, region: e.target.value }))} style={inputStyle}>
                   <option value="North America">North America</option><option value="Europe">Europe</option><option value="Asia">Asia</option><option value="Global">Global</option>
@@ -436,7 +453,7 @@ export default function AdminTournamentsPage() {
             <div><div style={labelStyle}>Accent Color</div><input type="color" value={form.accentColor} onChange={e => setForm(p => ({ ...p, accentColor: e.target.value }))} style={{ ...inputStyle, height: 36, padding: 2 }} /></div>
 
             {/* Featured */}
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', cursor: 'pointer' }}>
               <input type="checkbox" checked={form.isFeatured} onChange={e => setForm(p => ({ ...p, isFeatured: e.target.checked }))} /> Featured Tournament
             </label>
 

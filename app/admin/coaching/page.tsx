@@ -5,6 +5,8 @@ import { adminApi } from '@/lib/api'
 import DataTable, { Column } from '../components/DataTable'
 import SearchFilter from '../components/SearchFilter'
 import ActionBtn from '../components/ActionBtn'
+import { EmojiSolar, Solar } from '@/lib/solar-duotone'
+import { Icon } from '@iconify/react'
 
 type Tab = 'Coaches' | 'Orders' | 'Reviews'
 
@@ -18,10 +20,10 @@ export default function AdminCoachingPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
           Coaching
         </h1>
-        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
+        <p style={{ fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
           Manage coaches, orders, and reviews
         </p>
       </div>
@@ -29,7 +31,7 @@ export default function AdminCoachingPage() {
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,.06)' }}>
         {(['Coaches', 'Orders', 'Reviews'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
-            padding: '8px 16px', fontSize: 11, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif',
+            padding: '8px 16px', fontSize: 11, fontWeight: 700,
             background: 'transparent', border: 'none', cursor: 'pointer',
             color: tab === t ? '#fff' : '#4F5568',
             borderBottom: tab === t ? '2px solid #e8000d' : '2px solid transparent',
@@ -92,8 +94,8 @@ function CoachesTab() {
     { key: 'displayName', label: 'Coach', width: '2fr',
       render: (row: any) => (
         <div>
-          <span style={{ fontWeight: 700 }}>{row.emoji} {row.displayName}</span>
-          {row.isVerified && <span style={{ marginLeft: 6, fontSize: 8, color: '#22c55e' }}>✓ VERIFIED</span>}
+          <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}><EmojiSolar emoji={row.emoji || '🎯'} size={14} inline={false} /> {row.displayName}</span>
+          {row.isVerified && <span style={{ marginLeft: 6, fontSize: 8, color: '#22c55e', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.checkRead} width={10} height={10} /> VERIFIED</span>}
         </div>
       ),
     },
@@ -136,7 +138,7 @@ function CoachesTab() {
         }]}
       />
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
       ) : (
         <DataTable columns={columns} rows={coaches} emptyText="No coaches found" page={page} totalPages={pages} onPage={setPage} />
       )}
@@ -179,7 +181,7 @@ function OrdersTab() {
     { key: 'price', label: 'Price', width: '70px', render: (row: any) => `$${((row.price || 0) / 100).toFixed(2)}` },
     { key: 'status', label: 'Status', width: '90px',
       render: (row: any) => (
-        <span style={{ padding: '2px 6px', fontSize: 8, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', border: `1px solid ${STATUS_COLORS[row.status] || '#4F5568'}44`, borderRadius: 3, color: STATUS_COLORS[row.status] || '#4F5568', textTransform: 'uppercase' }}>
+        <span style={{ padding: '2px 6px', fontSize: 8, fontWeight: 800, border: `1px solid ${STATUS_COLORS[row.status] || '#4F5568'}44`, borderRadius: 3, color: STATUS_COLORS[row.status] || '#4F5568', textTransform: 'uppercase' }}>
           {row.status}
         </span>
       ),
@@ -211,7 +213,7 @@ function OrdersTab() {
         }]}
       />
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
       ) : (
         <DataTable columns={columns} rows={orders} emptyText="No orders found" page={page} totalPages={pages} onPage={setPage} />
       )}
@@ -261,7 +263,7 @@ function ReviewsTab() {
   return (
     <div>
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
       ) : (
         <DataTable columns={columns} rows={reviews} emptyText="No reviews found" page={page} totalPages={pages} onPage={setPage} />
       )}

@@ -8,10 +8,10 @@ import Modal from '../components/Modal'
 const RARITY_COLORS: Record<string, string> = { Common: '#6b7280', Rare: '#3b82f6', Epic: '#a855f7', Legendary: '#f59e0b' }
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 9, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 
@@ -101,18 +101,18 @@ export default function AdminBadgesPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Badges</h1>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Badges</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           <ActionBtn label="AWARD TO USER" color="#3b82f6" onClick={() => setAwardModal(true)} />
           <ActionBtn label="+ CREATE BADGE" color="#22c55e" onClick={() => setCreateModal(true)} />
         </div>
       </div>
 
-      {loading ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
+      {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
         <>
           {/* Platform Badges */}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>
               Platform Badges ({badges.filter(b => b.category !== 'forum').length})
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
@@ -122,9 +122,9 @@ export default function AdminBadgesPage() {
                   borderRadius: 10, padding: 14, textAlign: 'center', opacity: b.isActive ? 1 : 0.5,
                 }}>
                   {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 6 }} />}
-                  <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{b.name}</div>
-                  <div style={{ fontSize: 9, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700, fontFamily: 'Rajdhani, sans-serif' }}>{b.rarity}</div>
-                  <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 4 }}>{b.slug}</div>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA' }}>{b.name}</div>
+                  <div style={{ fontSize: 9, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700 }}>{b.rarity}</div>
+                  <div style={{ fontSize: 9, color: '#4F5568', marginTop: 4 }}>{b.slug}</div>
                   <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 8 }}>
                     <ActionBtn label="EDIT" color="#3b82f6" onClick={() => openEditModal(b)} />
                     <ActionBtn label={b.isActive ? 'DISABLE' : 'ENABLE'} color={b.isActive ? '#f59e0b' : '#22c55e'} onClick={() => handleToggle(b._id, b.isActive)} />
@@ -137,7 +137,7 @@ export default function AdminBadgesPage() {
 
           {/* Forum Badges */}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>
               Forum Badges ({badges.filter(b => b.category === 'forum').length})
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
@@ -147,9 +147,9 @@ export default function AdminBadgesPage() {
                   borderRadius: 10, padding: 14, textAlign: 'center', opacity: b.isActive ? 1 : 0.5,
                 }}>
                   {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 6 }} />}
-                  <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{b.name}</div>
-                  <div style={{ fontSize: 9, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700, fontFamily: 'Rajdhani, sans-serif' }}>{b.rarity}</div>
-                  <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 4 }}>{b.slug}</div>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA' }}>{b.name}</div>
+                  <div style={{ fontSize: 9, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700 }}>{b.rarity}</div>
+                  <div style={{ fontSize: 9, color: '#4F5568', marginTop: 4 }}>{b.slug}</div>
                   <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 8 }}>
                     <ActionBtn label="EDIT" color="#3b82f6" onClick={() => openEditModal(b)} />
                     <ActionBtn label={b.isActive ? 'DISABLE' : 'ENABLE'} color={b.isActive ? '#f59e0b' : '#22c55e'} onClick={() => handleToggle(b._id, b.isActive)} />
@@ -164,7 +164,7 @@ export default function AdminBadgesPage() {
 
       {createModal && (
         <Modal title="Create Badge" onClose={() => setCreateModal(false)} width={420}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {[['Name', 'name'], ['Slug', 'slug'], ['Description', 'desc'], ['Image URL', 'img']].map(([l, k]) => (
               <div key={k as string}><div style={labelStyle}>{l}</div><input value={(form as any)[k as string]} onChange={e => setForm(p => ({ ...p, [k as string]: e.target.value }))} style={inputStyle} /></div>
             ))}
@@ -192,7 +192,7 @@ export default function AdminBadgesPage() {
 
       {editModal && (
         <Modal title="Edit Badge" subtitle={editModal.name} onClose={() => setEditModal(null)} width={420}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {[['Name', 'name'], ['Slug', 'slug'], ['Description', 'desc'], ['Image URL', 'img']].map(([l, k]) => (
               <div key={k as string}><div style={labelStyle}>{l}</div><input value={(form as any)[k as string]} onChange={e => setForm(p => ({ ...p, [k as string]: e.target.value }))} style={inputStyle} /></div>
             ))}
@@ -220,7 +220,7 @@ export default function AdminBadgesPage() {
 
       {awardModal && (
         <Modal title="Award Badge to User" onClose={() => setAwardModal(false)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div><div style={labelStyle}>User ID</div><input value={awardForm.userId} onChange={e => setAwardForm(p => ({ ...p, userId: e.target.value }))} style={inputStyle} placeholder="Paste user ID..." /></div>
             <div><div style={labelStyle}>Badge Slug</div><input value={awardForm.badgeSlug} onChange={e => setAwardForm(p => ({ ...p, badgeSlug: e.target.value }))} style={inputStyle} placeholder="e.g. first-win" /></div>
             <ActionBtn label="AWARD BADGE" color="#3b82f6" onClick={handleAward} />

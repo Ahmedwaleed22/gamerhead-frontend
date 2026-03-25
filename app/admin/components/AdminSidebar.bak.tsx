@@ -3,8 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
 
 const SECTIONS = [
   {
@@ -65,7 +63,6 @@ const SECTIONS = [
 export default function AdminSidebar() {
   const pathname = usePathname()
   const { user } = useAuth()
-  const [mobileOpen, setMobileOpen] = useState(false)
 
   const isActive = (key: string) => {
     if (key === '/admin') return pathname === '/admin'
@@ -73,44 +70,29 @@ export default function AdminSidebar() {
   }
 
   return (
-    <>
-      <div className="md:hidden flex items-center justify-between p-3! bg-[#0d0d14] border-b border-white/5 fixed top-0 left-0 w-full z-[110]">
-        <div className="flex items-center gap-2">
-          <div className="font-black text-lg text-white">ADMIN</div>
-          <span className="px-2 py-[2px] text-[11px] font-extrabold bg-[#e8000d]/15 border border-[#e8000d]/30 rounded-[3px] text-[#e8000d] tracking-wider uppercase">
+    <div 
+      className="flex flex-col md:fixed md:top-0 md:left-0 md:h-screen md:w-[240px] z-[100] bg-[#0d0d14] border-r border-white/5 overflow-y-auto w-full shrink-0"
+    >
+      {/* Header */}
+      <div style={{ padding: '18px 18px 14px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            fontWeight: 900, fontSize: 18, color: '#fff',
+          }}>
+            ADMIN
+          </div>
+          <span style={{
+            padding: '2px 8px', fontSize: 11, fontWeight: 800,
+            background: 'rgba(232,0,13,.15)', border: '1px solid rgba(232,0,13,.3)', borderRadius: 3,
+            color: '#e8000d', letterSpacing: .5, textTransform: 'uppercase',
+          }}>
             PANEL
           </span>
         </div>
-        <button onClick={() => setMobileOpen(v => !v)} className="p-2 text-white">
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      <div 
-        className={`md:relative fixed top-0 left-0 h-screen w-[240px] md:w-[240px] z-[110] bg-[#0d0d14] border-r border-white/5 overflow-y-auto shrink-0 transition-transform duration-300 md:translate-x-0 ${
-          mobileOpen ? "translate-x-0 mt-[73px] md:mt-0 py-12!" : "-translate-x-full"
-        }`}
-      >
-        {/* Header */}
-        <div style={{ padding: '18px 18px 14px', borderBottom: '1px solid rgba(255,255,255,.06)' }} className="hidden md:block">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{
-              fontWeight: 900, fontSize: 18, color: '#fff',
-            }}>
-              ADMIN
-            </div>
-            <span style={{
-              padding: '2px 8px', fontSize: 11, fontWeight: 800,
-              background: 'rgba(232,0,13,.15)', border: '1px solid rgba(232,0,13,.3)', borderRadius: 3,
-              color: '#e8000d', letterSpacing: .5, textTransform: 'uppercase',
-            }}>
-              PANEL
-            </span>
-          </div>
-          <div style={{ fontSize: 13, color: '#4F5568', marginTop: 4 }}>
-            {user?.username || '...'}
-          </div>
+        <div style={{ fontSize: 13, color: '#4F5568', marginTop: 4 }}>
+          {user?.username || '...'}
         </div>
+      </div>
 
       {/* Nav sections */}
       <div style={{ flex: 1, padding: '8px 0' }}>
@@ -125,12 +107,7 @@ export default function AdminSidebar() {
             {section.items.map(item => {
               const active = isActive(item.key)
               return (
-                <Link
-                  key={item.key}
-                  href={item.key}
-                  onClick={() => setMobileOpen(false)}
-                  style={{ textDecoration: 'none', display: 'block' }}
-                >
+                <Link key={item.key} href={item.key} style={{ textDecoration: 'none', display: 'block' }}>
                   <div
                     style={{
                       display: 'flex', alignItems: 'center', gap: 16,
@@ -169,14 +146,6 @@ export default function AdminSidebar() {
           Back to Site
         </Link>
       </div>
-
-      {mobileOpen && (
-        <div 
-          className="fixed top-[73px] left-[240px] right-0 bottom-0 bg-black/50 z-[105] md:hidden" 
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-      </div>
-    </>
+    </div>
   )
 }

@@ -51,7 +51,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 14, color: '#4F5568', padding: 40 }}>
+      <div style={{ fontSize: 14, color: '#4F5568', padding: 40 }}>
         Loading dashboard...
       </div>
     )
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
 
   if (!stats) {
     return (
-      <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 14, color: '#e8000d', padding: 40 }}>
+      <div style={{ fontSize: 14, color: '#e8000d', padding: 40 }}>
         Failed to load dashboard stats.
       </div>
     )
@@ -70,18 +70,18 @@ export default function AdminDashboard() {
       {/* Page Header */}
       <div>
         <h1 style={{
-          fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28,
+          fontWeight: 900, fontSize: 28,
           color: '#fff', margin: 0, textTransform: 'uppercase',
         }}>
           Dashboard
         </h1>
-        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
+        <p style={{ fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
           Platform overview and quick actions
         </p>
       </div>
 
       {/* Row 1: Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
         <StatCard icon={Solar.users} label="Total Users" value={stats.totalUsers.toLocaleString()} />
         <StatCard icon={Solar.live} label="Active (24h)" value={stats.activeUsers24h.toLocaleString()} color="#22c55e" />
         <StatCard icon={Solar.bolt} label="Live Matches" value={stats.liveMatches} color="#3b82f6" />
@@ -93,26 +93,26 @@ export default function AdminDashboard() {
       </div>
 
       {/* Row 2: Activity + Quick Actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: 14 }}>
         {/* Recent Activity */}
         <div style={{
           background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10,
           padding: '16px 18px', display: 'flex', flexDirection: 'column',
         }}>
           <div style={{
-            fontSize: 10, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif',
+            fontSize: 10, fontWeight: 800,
             color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 12,
           }}>
             Recent Activity
           </div>
           <div style={{ flex: 1, overflowY: 'auto', maxHeight: 340, display: 'flex', flexDirection: 'column', gap: 2 }}>
             {stats.recentActivity.length === 0 ? (
-              <div style={{ fontSize: 12, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textAlign: 'center', padding: 24 }}>
+              <div style={{ fontSize: 12, color: '#4F5568', textAlign: 'center', padding: 24 }}>
                 No recent activity
               </div>
             ) : stats.recentActivity.map((item, i) => (
               <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+                display: 'flex', alignItems: 'center', gap: 16, padding: '8px 10px',
                 borderRadius: 6, background: 'rgba(255,255,255,.02)',
               }}>
                 <span style={{ width: 22, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
@@ -120,18 +120,18 @@ export default function AdminDashboard() {
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
-                    fontSize: 11, fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
+                    fontSize: 11, fontWeight: 700,
                     color: '#DDE0EA', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
                     {item.action}
                     {item.username && <span style={{ color: '#8890A4' }}> — {item.username}</span>}
                     {item.admin && <span style={{ color: '#4F5568' }}> by {item.admin}</span>}
                   </div>
-                  <div style={{ fontSize: 9, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568' }}>
+                  <div style={{ fontSize: 9, color: '#4F5568' }}>
                     {item.targetType}/{item.targetId}
                   </div>
                 </div>
-                <div style={{ fontSize: 9, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 9, color: '#4F5568', whiteSpace: 'nowrap' }}>
                   {formatTimeAgo(item.timestamp)}
                 </div>
               </div>
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
           padding: '16px 18px', display: 'flex', flexDirection: 'column',
         }}>
           <div style={{
-            fontSize: 10, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif',
+            fontSize: 10, fontWeight: 800,
             color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 12,
           }}>
             Quick Actions
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
                 >
                   <Icon icon={qa.icon} width={20} height={20} style={{ flexShrink: 0 }} />
                   <span style={{
-                    fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 13,
+                    fontWeight: 700, fontSize: 13,
                     color: '#DDE0EA',
                   }}>
                     {qa.label}
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Row 3: Mini Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
         <StatCard icon={Solar.shield} label="Active Teams" value={stats.totalTeams} />
         <StatCard icon={Solar.target} label="Total Matches" value={stats.totalMatches.toLocaleString()} />
         <StatCard icon={Solar.clipboard} label="Claimed Tickets" value={stats.claimedTickets} sub="Being handled" />

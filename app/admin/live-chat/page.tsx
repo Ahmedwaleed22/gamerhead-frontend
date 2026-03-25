@@ -94,13 +94,13 @@ export default function AdminLiveChatPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
+      <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
         Live Chat
       </h1>
 
       {/* Stats */}
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
           <StatCard icon={Solar.hourglass} label="In Queue" value={stats.queueCount} color={stats.queueCount > 0 ? '#e8000d' : '#22c55e'} />
           <StatCard icon={Solar.chat} label="Active Chats" value={stats.activeCount} color="#3b82f6" />
         </div>
@@ -112,32 +112,30 @@ export default function AdminLiveChatPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* Queue */}
           <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#e8000d', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, color: '#e8000d', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 8 }}>
               Queue ({queue.length})
             </div>
             {queue.length === 0 ? (
-              <div style={{ fontSize: 10, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', textAlign: 'center', padding: 12 }}>No users waiting</div>
+              <div style={{ fontSize: 10, color: '#4F5568', textAlign: 'center', padding: 12 }}>No users waiting</div>
             ) : queue.map(s => {
               const priority = PRIORITY_MAP[s.category] || PRIORITY_MAP.general
               const catColor = CATEGORY_COLORS[s.category] || '#8890A4'
               return (
                 <div key={s.sessionId} style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(255,255,255,.03)', marginBottom: 6, border: '1px solid rgba(255,255,255,.04)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                    <span style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', flex: 1 }}>{s.username}</span>
+                    <span style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', flex: 1 }}>{s.username}</span>
                     <span style={{
                       fontSize: 8, fontWeight: 800, color: priority.color, padding: '1px 5px',
                       border: `1px solid ${priority.color}44`, borderRadius: 3, letterSpacing: .5,
-                      fontFamily: 'Rajdhani, sans-serif',
                     }}>{priority.label}</span>
                     <span style={{
                       fontSize: 8, fontWeight: 700, color: catColor, padding: '1px 5px',
                       border: `1px solid ${catColor}44`, borderRadius: 3,
-                      fontFamily: 'Rajdhani, sans-serif',
                     }}>{CATEGORY_LABELS[s.category] || s.category}</span>
                   </div>
-                  {s.contextLabel && <div style={{ fontSize: 9, color: '#6B7280', fontFamily: 'Rajdhani, sans-serif', marginBottom: 4 }}>{s.contextLabel}</div>}
+                  {s.contextLabel && <div style={{ fontSize: 9, color: '#6B7280', marginBottom: 4 }}>{s.contextLabel}</div>}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>{timeAgo(s.createdAt)}</span>
+                    <span style={{ fontSize: 9, color: '#4F5568' }}>{timeAgo(s.createdAt)}</span>
                     <ActionBtn label="CLAIM" color="#22c55e" onClick={() => handleClaim(s.sessionId)} />
                   </div>
                 </div>
@@ -147,11 +145,11 @@ export default function AdminLiveChatPage() {
 
           {/* Active Chats */}
           <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12, flex: 1 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#3b82f6', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 8 }}>
               My Active ({active.length})
             </div>
             {active.length === 0 ? (
-              <div style={{ fontSize: 10, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', textAlign: 'center', padding: 12 }}>No active chats</div>
+              <div style={{ fontSize: 10, color: '#4F5568', textAlign: 'center', padding: 12 }}>No active chats</div>
             ) : active.map(s => {
               const catColor = CATEGORY_COLORS[s.category] || '#8890A4'
               return (
@@ -161,14 +159,13 @@ export default function AdminLiveChatPage() {
                   border: selected?.sessionId === s.sessionId ? '1px solid rgba(59,130,246,.3)' : '1px solid transparent',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', flex: 1 }}>{s.username}</span>
+                    <span style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA', flex: 1 }}>{s.username}</span>
                     <span style={{
                       fontSize: 8, fontWeight: 700, color: catColor, padding: '1px 5px',
                       border: `1px solid ${catColor}44`, borderRadius: 3,
-                      fontFamily: 'Rajdhani, sans-serif',
                     }}>{CATEGORY_LABELS[s.category] || s.category}</span>
                   </div>
-                  <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 2 }}>
+                  <div style={{ fontSize: 9, color: '#4F5568', marginTop: 2 }}>
                     {s.messages?.length || 0} msgs · {timeAgo(s.claimedAt || s.createdAt)}
                   </div>
                 </div>
@@ -180,7 +177,7 @@ export default function AdminLiveChatPage() {
         {/* Right Panel: Chat */}
         <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, display: 'flex', flexDirection: 'column' }}>
           {!selected ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#4F5568' }}>
               Select a chat from the left panel
             </div>
           ) : (
@@ -188,12 +185,12 @@ export default function AdminLiveChatPage() {
               {/* Header */}
               <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: '#fff', fontFamily: 'Rajdhani, sans-serif' }}>{selected.username}</span>
-                  <span style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginLeft: 8 }}>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{selected.username}</span>
+                  <span style={{ fontSize: 9, color: '#4F5568', marginLeft: 8 }}>
                     {CATEGORY_LABELS[selected.category] || selected.category} {selected.contextLabel ? `· ${selected.contextLabel}` : ''}
                   </span>
                   {selected.userId && (
-                    <span style={{ fontSize: 9, color: '#4F5568', fontFamily: 'monospace', marginLeft: 8 }}>
+                    <span style={{ fontSize: 9, color: '#4F5568', marginLeft: 8 }}>
                       ID: {selected.userId?.toString?.()?.slice(-8) || ''}
                     </span>
                   )}
@@ -210,11 +207,11 @@ export default function AdminLiveChatPage() {
                     background: msg.isAdmin ? 'rgba(59,130,246,.15)' : 'rgba(255,255,255,.06)',
                     border: `1px solid ${msg.isAdmin ? 'rgba(59,130,246,.3)' : 'rgba(255,255,255,.06)'}`,
                   }}>
-                    <div style={{ fontSize: 9, color: msg.isAdmin ? '#3b82f6' : '#f59e0b', fontWeight: 700, fontFamily: 'Rajdhani, sans-serif', marginBottom: 2 }}>
+                    <div style={{ fontSize: 9, color: msg.isAdmin ? '#3b82f6' : '#f59e0b', fontWeight: 700, marginBottom: 2 }}>
                       {msg.senderName}
                     </div>
-                    <div style={{ fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{msg.text}</div>
-                    <div style={{ fontSize: 8, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 2, textAlign: 'right' }}>
+                    <div style={{ fontSize: 11, color: '#DDE0EA' }}>{msg.text}</div>
+                    <div style={{ fontSize: 8, color: '#4F5568', marginTop: 2, textAlign: 'right' }}>
                       {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
@@ -231,7 +228,7 @@ export default function AdminLiveChatPage() {
                   placeholder="Type a message..."
                   style={{
                     flex: 1, padding: '8px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-                    borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none',
+                    borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none',
                   }}
                 />
                 <ActionBtn label="SEND" color="#3b82f6" onClick={handleSend} />

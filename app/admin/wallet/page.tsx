@@ -13,7 +13,7 @@ type Tab = 'Overview' | 'Transactions' | 'Withdrawals' | 'Deposits' | 'Prize Cla
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 
 export default function AdminWalletPage() {
@@ -22,14 +22,14 @@ export default function AdminWalletPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
           Wallet & Transactions
         </h1>
       </div>
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,.06)' }}>
         {(['Overview', 'Transactions', 'Withdrawals', 'Deposits', 'Prize Claims'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
-            padding: '8px 16px', fontSize: 11, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif',
+            padding: '8px 16px', fontSize: 11, fontWeight: 700,
             background: 'transparent', border: 'none', cursor: 'pointer',
             color: tab === t ? '#fff' : '#4F5568', borderBottom: tab === t ? '2px solid #e8000d' : '2px solid transparent',
           }}>{t}</button>
@@ -50,10 +50,10 @@ function OverviewTab() {
     adminApi.getWalletSummary().then(r => setSummary(r)).catch(() => {})
   }, [])
 
-  if (!summary) return <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+  if (!summary) return <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
       <StatCard icon={Solar.coin} label="Tickets in Circulation" value={summary.totalCredits?.toLocaleString()} />
       <StatCard icon={Solar.bill} label="Total Cash Held" value={`$${((summary.totalCash || 0) / 100).toFixed(2)}`} color="#22c55e" />
       <StatCard icon={Solar.hourglass} label="Pending Withdrawals" value={`$${((summary.pendingWithdrawals || 0) / 100).toFixed(2)}`} color="#f59e0b" sub={`${summary.pendingWithdrawalCount || 0} requests`} />
@@ -134,7 +134,7 @@ function TransactionsTab() {
           },
         ]}
       />
-      {loading ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
+      {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
         <DataTable columns={columns} rows={transactions} emptyText="No transactions" page={page} totalPages={pages} onPage={setPage} />
       )}
     </div>
@@ -209,13 +209,13 @@ function WithdrawalsTab() {
         <option value="completed">Completed</option>
         <option value="cancelled">Denied</option>
       </select>
-      {loading ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
+      {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
         <DataTable columns={columns} rows={withdrawals} emptyText="No withdrawals" page={page} totalPages={pages} onPage={setPage} />
       )}
       {denyModal && (
         <Modal title="Deny Withdrawal" subtitle={`$${(Math.abs(denyModal.amount) / 100).toFixed(2)} → ${denyModal.user?.username}`} onClose={() => setDenyModal(null)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 10, color: '#f59e0b', fontFamily: 'Rajdhani, sans-serif' }}>Amount will be refunded to user's cash balance.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ fontSize: 10, color: '#f59e0b' }}>Amount will be refunded to user's cash balance.</div>
             <textarea value={denyReason} onChange={e => setDenyReason(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Reason for denial..." />
             <ActionBtn label="DENY & REFUND" color="#e8000d" onClick={handleDeny} />
           </div>
@@ -252,7 +252,7 @@ function DepositsTab() {
   ]
 
   return loading ? (
-    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+    <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
   ) : (
     <DataTable columns={columns} rows={deposits} emptyText="No deposits" page={page} totalPages={pages} onPage={setPage} />
   )
@@ -290,14 +290,14 @@ function PrizeClaimsTab() {
 
   return (
     <div>
-      <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }} style={{ padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)', borderRadius: 6, fontSize: 11, color: '#8890A4', fontFamily: 'Rajdhani, sans-serif', outline: 'none', marginBottom: 12 }}>
+      <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }} style={{ padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)', borderRadius: 6, fontSize: 11, color: '#8890A4', outline: 'none', marginBottom: 12 }}>
         <option value="">All Status</option>
         <option value="ready">Ready</option>
         <option value="claimed">Claimed</option>
         <option value="expired">Expired</option>
       </select>
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
       ) : (
         <DataTable columns={columns} rows={claims} emptyText="No prize claims" page={page} totalPages={pages} onPage={setPage} />
       )}

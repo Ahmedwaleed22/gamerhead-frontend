@@ -7,10 +7,10 @@ import Modal from '../components/Modal'
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 9, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 
@@ -131,7 +131,7 @@ export default function AdminGamesPage() {
   }
 
   const formFields = (onSubmit: () => void, submitLabel: string) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {[['Name', 'name'], ['Slug', 'slug'], ['Description', 'description'], ['Banner URL', 'bannerUrl']].map(([l, k]) => (
         <div key={k as string}><div style={labelStyle}>{l}</div><input value={(form as any)[k as string]} onChange={e => setForm(p => ({ ...p, [k as string]: e.target.value }))} style={inputStyle} /></div>
       ))}
@@ -183,7 +183,7 @@ export default function AdminGamesPage() {
                   return { ...p, teamSizes: ts }
                 })
               }} />
-              <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, fontSize: 11, color: 'Solo' in form.teamSizes ? '#DDE0EA' : '#4F5568' }}>Solo (1v1)</span>
+              <span style={{ fontWeight: 600, fontSize: 11, color: 'Solo' in form.teamSizes ? '#DDE0EA' : '#4F5568' }}>Solo (1v1)</span>
             </label>
           </div>
           {/* Duo */}
@@ -197,7 +197,7 @@ export default function AdminGamesPage() {
                   return { ...p, teamSizes: ts }
                 })
               }} />
-              <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, fontSize: 11, color: 'Duo' in form.teamSizes ? '#DDE0EA' : '#4F5568' }}>Duo (2v2)</span>
+              <span style={{ fontWeight: 600, fontSize: 11, color: 'Duo' in form.teamSizes ? '#DDE0EA' : '#4F5568' }}>Duo (2v2)</span>
             </label>
           </div>
           {/* Squad — multi-select sizes */}
@@ -211,7 +211,7 @@ export default function AdminGamesPage() {
                   return { ...p, teamSizes: ts }
                 })
               }} />
-              <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, fontSize: 11, color: 'Squad' in form.teamSizes ? '#DDE0EA' : '#4F5568' }}>Squad</span>
+              <span style={{ fontWeight: 600, fontSize: 11, color: 'Squad' in form.teamSizes ? '#DDE0EA' : '#4F5568' }}>Squad</span>
             </label>
             {'Squad' in form.teamSizes && (
               <div style={{ display: 'flex', gap: 6, marginTop: 6, marginLeft: 22 }}>
@@ -232,7 +232,7 @@ export default function AdminGamesPage() {
                           return { ...p, teamSizes: { ...p.teamSizes, Squad: next } }
                         })
                       }} />
-                      <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, fontSize: 10, color: checked ? '#DDE0EA' : '#4F5568' }}>{n}v{n}</span>
+                      <span style={{ fontWeight: 600, fontSize: 10, color: checked ? '#DDE0EA' : '#4F5568' }}>{n}v{n}</span>
                     </label>
                   )
                 })}
@@ -240,7 +240,7 @@ export default function AdminGamesPage() {
             )}
           </div>
         </div>
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 9, color: '#4F5568', marginTop: 4 }}>Select which team sizes this game supports. Squad can have multiple valid sizes.</div>
+        <div style={{ fontSize: 9, color: '#4F5568', marginTop: 4 }}>Select which team sizes this game supports. Squad can have multiple valid sizes.</div>
       </div>
 
       {/* ── Mode-Map Builder ── */}
@@ -251,16 +251,16 @@ export default function AdminGamesPage() {
             const name = prompt('Mode name (e.g. Search & Destroy)')
             if (!name?.trim()) return
             setForm(p => ({ ...p, modeMapMatrix: { ...p.modeMapMatrix, [name.trim()]: [] } }))
-          }} style={{ background: '#22c55e', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 700, color: '#fff', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>+ Add Mode</button>
+          }} style={{ background: '#22c55e', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 700, color: '#fff', cursor: 'pointer', textTransform: 'uppercase' }}>+ Add Mode</button>
         </div>
         {Object.keys(form.modeMapMatrix).length === 0 && (
-          <div style={{ fontSize: 10, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', padding: '8px 0' }}>No modes added yet. Click &quot;+ Add Mode&quot; to get started.</div>
+          <div style={{ fontSize: 10, color: '#4F5568', padding: '8px 0' }}>No modes added yet. Click &quot;+ Add Mode&quot; to get started.</div>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {Object.entries(form.modeMapMatrix).map(([mode, maps]) => (
             <div key={mode} style={{ background: '#0d0d14', border: '1px solid rgba(255,255,255,.06)', borderRadius: 8, padding: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: 13, color: '#fff' }}>{mode}</span>
+                <span style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>{mode}</span>
                 <div style={{ display: 'flex', gap: 4 }}>
                   <button type="button" onClick={() => {
                     const name = prompt('Rename mode:', mode)
@@ -271,19 +271,19 @@ export default function AdminGamesPage() {
                       delete m[mode]
                       return { ...p, modeMapMatrix: m }
                     })
-                  }} style={{ background: '#3b82f6', border: 'none', borderRadius: 3, padding: '2px 7px', fontSize: 8, fontWeight: 700, color: '#fff', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>RENAME</button>
+                  }} style={{ background: '#3b82f6', border: 'none', borderRadius: 3, padding: '2px 7px', fontSize: 8, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>RENAME</button>
                   <button type="button" onClick={() => {
                     setForm(p => {
                       const m = { ...p.modeMapMatrix }
                       delete m[mode]
                       return { ...p, modeMapMatrix: m }
                     })
-                  }} style={{ background: '#e8000d', border: 'none', borderRadius: 3, padding: '2px 7px', fontSize: 8, fontWeight: 700, color: '#fff', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>REMOVE</button>
+                  }} style={{ background: '#e8000d', border: 'none', borderRadius: 3, padding: '2px 7px', fontSize: 8, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>REMOVE</button>
                 </div>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
                 {(maps || []).map((map, mi) => (
-                  <span key={mi} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 4, padding: '3px 8px', fontSize: 10, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>
+                  <span key={mi} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 4, padding: '3px 8px', fontSize: 10, color: '#DDE0EA' }}>
                     {map}
                     <button type="button" onClick={() => {
                       setForm(p => {
@@ -303,7 +303,7 @@ export default function AdminGamesPage() {
                   m[mode] = [...(m[mode] || []), name.trim()]
                   return { ...p, modeMapMatrix: m }
                 })
-              }} style={{ background: 'rgba(255,255,255,.05)', border: '1px dashed rgba(255,255,255,.12)', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 600, color: '#9CA3AF', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer', width: '100%' }}>+ Add Map</button>
+              }} style={{ background: 'rgba(255,255,255,.05)', border: '1px dashed rgba(255,255,255,.12)', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 600, color: '#9CA3AF', cursor: 'pointer', width: '100%' }}>+ Add Map</button>
             </div>
           ))}
         </div>
@@ -312,19 +312,19 @@ export default function AdminGamesPage() {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <div style={labelStyle}>Game / Tournament Rules</div>
-          <button type="button" onClick={() => setForm(p => ({ ...p, rules: p.rules ? p.rules + '\n' : '\n' }))} style={{ background: '#22c55e', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 700, color: '#fff', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer', textTransform: 'uppercase' }}>+ Add Rule</button>
+          <button type="button" onClick={() => setForm(p => ({ ...p, rules: p.rules ? p.rules + '\n' : '\n' }))} style={{ background: '#22c55e', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 9, fontWeight: 700, color: '#fff', cursor: 'pointer', textTransform: 'uppercase' }}>+ Add Rule</button>
         </div>
         {(() => {
           const rulesArr = form.rules.split('\n').filter((_, i, a) => i < a.length || a[i] !== '')
           const parsed = form.rules ? form.rules.split('\n') : []
           if (parsed.length === 0) return (
-            <div style={{ fontSize: 10, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', padding: '8px 0' }}>No rules added yet.</div>
+            <div style={{ fontSize: 10, color: '#4F5568', padding: '8px 0' }}>No rules added yet.</div>
           )
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {parsed.map((rule, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 11, color: '#4F5568', flexShrink: 0, width: 18, textAlign: 'right' }}>{i + 1}.</span>
+                  <span style={{ fontWeight: 700, fontSize: 11, color: '#4F5568', flexShrink: 0, width: 18, textAlign: 'right' }}>{i + 1}.</span>
                   <input value={rule} onChange={e => {
                     const arr = form.rules.split('\n')
                     arr[i] = e.target.value
@@ -356,7 +356,7 @@ export default function AdminGamesPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Games</h1>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Games</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           <ActionBtn label="RECALC RANKS" color="#f59e0b" onClick={async () => { try { const r = await matchesApi.recalculateRanks(); alert(`Recalculated ${r.processed} entries`) } catch { alert('Failed') } }} />
           <ActionBtn label="+ ADD GAME" color="#22c55e" onClick={() => setCreateModal(true)} />
@@ -364,7 +364,7 @@ export default function AdminGamesPage() {
       </div>
 
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
           {games.map((game: any) => (
@@ -375,13 +375,13 @@ export default function AdminGamesPage() {
               {game.bannerUrl && <div style={{ height: 80, backgroundImage: `url(${game.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
               <div style={{ padding: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 16, color: '#fff' }}>{game.name}</span>
-                  {!game.isActive && <span style={{ fontSize: 8, fontWeight: 700, color: '#e8000d', fontFamily: 'Rajdhani, sans-serif' }}>DISABLED</span>}
+                  <span style={{ fontWeight: 900, fontSize: 16, color: '#fff' }}>{game.name}</span>
+                  {!game.isActive && <span style={{ fontSize: 8, fontWeight: 700, color: '#e8000d' }}>DISABLED</span>}
                 </div>
-                <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginBottom: 8 }}>
+                <div style={{ fontSize: 9, color: '#4F5568', marginBottom: 8 }}>
                   {game.platformType === 'pc' ? 'PC Only' : game.platformType === 'console' ? 'Console Only' : game.crossplay ? 'Crossplay' : (game.platforms || []).join(', ')} · {game.genre}
                 </div>
-                <div style={{ fontSize: 9, color: '#8890A4', fontFamily: 'Rajdhani, sans-serif', marginBottom: 8 }}>
+                <div style={{ fontSize: 9, color: '#8890A4', marginBottom: 8 }}>
                   Modes: {game.modes?.join(', ') || '—'}
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
@@ -405,11 +405,11 @@ export default function AdminGamesPage() {
         <Modal title="Edit Game" subtitle={editModal.name} onClose={() => { setEditModal(null); setMigrateSlug(''); setMigrateName(''); setMigrateResult(null) }} width={500}>
           {formFields(handleEdit, 'SAVE CHANGES')}
           <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 8 }}>
-            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#3b82f6', marginBottom: 6, letterSpacing: 0.5 }}>Migrate Old Slug</div>
-            <div style={{ fontSize: 10, color: '#4F5568', marginBottom: 8, fontFamily: 'Barlow, sans-serif' }}>If this game was renamed, enter the old slug and name to migrate all matches, teams, ladders, stats, and user profiles.</div>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#3b82f6', marginBottom: 6, letterSpacing: 0.5 }}>Migrate Old Slug</div>
+            <div style={{ fontSize: 10, color: '#4F5568', marginBottom: 8, }}>If this game was renamed, enter the old slug and name to migrate all matches, teams, ladders, stats, and user profiles.</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <input value={migrateSlug} onChange={e => setMigrateSlug(e.target.value)} placeholder="Old slug (e.g. call-of-duty)" style={{ padding: '6px 10px', background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4, color: '#fff', fontSize: 11, fontFamily: 'Barlow, sans-serif' }} />
-              <input value={migrateName} onChange={e => setMigrateName(e.target.value)} placeholder="Old name (e.g. Call of Duty)" style={{ padding: '6px 10px', background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4, color: '#fff', fontSize: 11, fontFamily: 'Barlow, sans-serif' }} />
+              <input value={migrateSlug} onChange={e => setMigrateSlug(e.target.value)} placeholder="Old slug (e.g. call-of-duty)" style={{ padding: '6px 10px', background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4, color: '#fff', fontSize: 11, }} />
+              <input value={migrateName} onChange={e => setMigrateName(e.target.value)} placeholder="Old name (e.g. Call of Duty)" style={{ padding: '6px 10px', background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4, color: '#fff', fontSize: 11, }} />
               <button onClick={async () => {
                 if (!migrateSlug.trim()) return
                 try {
@@ -417,9 +417,9 @@ export default function AdminGamesPage() {
                   setMigrateResult(`Migrated ${res.updated} records`)
                   setMigrateSlug(''); setMigrateName('')
                 } catch (err: any) { console.error('Migration error:', err); setMigrateResult(`Migration failed: ${err?.message || err}`) }
-              }} style={{ padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', textTransform: 'uppercase' }}>Migrate</button>
+              }} style={{ padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>Migrate</button>
             </div>
-            {migrateResult && <div style={{ marginTop: 6, fontSize: 10, color: '#4ade80', fontFamily: 'Barlow, sans-serif' }}>{migrateResult}</div>}
+            {migrateResult && <div style={{ marginTop: 6, fontSize: 10, color: '#4ade80', }}>{migrateResult}</div>}
           </div>
         </Modal>
       )}

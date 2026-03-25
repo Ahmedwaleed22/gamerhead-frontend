@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { adminApi } from '@/lib/api'
 import ActionBtn from '../../components/ActionBtn'
 import Modal from '../../components/Modal'
+import { EmojiSolar } from '@/lib/solar-duotone'
 
 const TABS = ['Overview', 'Wallet & Finance', 'Match History', 'Teams', 'Badges'] as const
 type Tab = typeof TABS[number]
@@ -13,10 +14,10 @@ const ROLE_COLORS: Record<string, string> = { admin: '#e8000d', premium: '#f59e0
 
 const inputStyle: React.CSSProperties = {
   padding: '10px 14px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 13, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 13, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 13, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 6,
 }
 const cardStyle: React.CSSProperties = {
@@ -24,7 +25,7 @@ const cardStyle: React.CSSProperties = {
 }
 
 const badgeStyle = (color: string, bg?: string): React.CSSProperties => ({
-  padding: '3px 10px', fontSize: 10, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif',
+  padding: '3px 10px', fontSize: 12, fontWeight: 800,
   background: bg || `${color}18`, border: `1px solid ${color}44`, borderRadius: 4,
   color, textTransform: 'uppercase', letterSpacing: .5, lineHeight: 1.3,
 })
@@ -60,8 +61,8 @@ export default function AdminUserDetail() {
 
   useEffect(() => { load() }, [id])
 
-  if (loading) return <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 16, color: '#4F5568', padding: 40 }}>Loading user...</div>
-  if (!data) return <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 16, color: '#e8000d', padding: 40 }}>User not found</div>
+  if (loading) return <div style={{ fontSize: 16, color: '#4F5568', padding: 40 }}>Loading user...</div>
+  if (!data) return <div style={{ fontSize: 16, color: '#e8000d', padding: 40 }}>User not found</div>
 
   const { user, transactions, teams, matches, badges, forumStats } = data
   const displayName = user.displayName || user.username
@@ -144,7 +145,7 @@ export default function AdminUserDetail() {
       {/* Back link */}
       <span
         onClick={() => router.push('/admin/users')}
-        style={{ fontSize: 13, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, cursor: 'pointer' }}
+        style={{ fontSize: 13, color: '#4F5568', fontWeight: 700, cursor: 'pointer' }}
       >
         ← Back to Users
       </span>
@@ -156,14 +157,14 @@ export default function AdminUserDetail() {
           backgroundImage: user.avatarUrl ? `url(${user.avatarUrl})` : 'none',
           backgroundSize: 'cover', backgroundPosition: 'center',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 28, color: '#4F5568', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900,
+          fontSize: 28, color: '#4F5568', fontWeight: 900,
         }}>
           {!user.avatarUrl && displayName?.[0]?.toUpperCase()}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: user.usernameColor || '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginBottom: 6 }}>
+            <span style={{ fontWeight: 900, fontSize: 28, color: user.usernameColor || '#fff' }}>
               {displayName}
             </span>
             <span style={badgeStyle(ROLE_COLORS[user.role] || '#4F5568')}>{user.role}</span>
@@ -172,12 +173,12 @@ export default function AdminUserDetail() {
             {user.isBanned && <span style={badgeStyle('#e8000d')}>BANNED</span>}
           </div>
 
-          <div style={{ fontSize: 13, color: '#8890A4', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13, color: '#8890A4', fontWeight: 600, lineHeight: 1.6 }}>
             {user.email} &nbsp;·&nbsp; Level {user.level} &nbsp;·&nbsp; Rep {user.reputation} &nbsp;·&nbsp; Joined {new Date(user.createdAt).toLocaleDateString()}
           </div>
 
           {user.isBanned && user.bannedReason && (
-            <div style={{ fontSize: 12, color: '#e8000d', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, marginTop: 6, background: 'rgba(232,0,13,.08)', padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(232,0,13,.15)' }}>
+            <div style={{ fontSize: 16, color: '#e8000d', fontWeight: 700, marginTop: 6, background: 'rgba(232,0,13,.08)', padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(232,0,13,.15)' }}>
               Ban reason: {user.bannedReason}
             </div>
           )}
@@ -202,7 +203,7 @@ export default function AdminUserDetail() {
             key={t}
             onClick={() => setTab(t)}
             style={{
-              padding: '10px 20px', fontSize: 13, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif',
+              padding: '10px 20px', fontSize: 13, fontWeight: 700,
               background: 'transparent', border: 'none', cursor: 'pointer',
               color: tab === t ? '#fff' : '#4F5568',
               borderBottom: tab === t ? '2px solid #e8000d' : '2px solid transparent',
@@ -268,14 +269,14 @@ export default function AdminUserDetail() {
           </div>
           <div style={{ marginBottom: 14 }}>
             <div style={labelStyle}>Additional Roles</div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+            <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
               {[
                 { key: 'premium', label: 'Premium', active: user.isPremium, color: '#f59e0b' },
                 { key: 'coach', label: 'Coach', active: user.isCoach, color: '#a855f7' },
               ].map(r => (
                 <label key={r.key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '8px 14px', background: user[`is${r.key.charAt(0).toUpperCase() + r.key.slice(1)}`] ? `${r.color}15` : '#0d0d14', border: `1px solid ${user[`is${r.key.charAt(0).toUpperCase() + r.key.slice(1)}`] ? r.color : 'rgba(255,255,255,.09)'}`, borderRadius: 6 }}>
                   <input type="checkbox" defaultChecked={r.key === 'premium' ? user.isPremium : user.isCoach} id={`role-${r.key}`} style={{ accentColor: r.color }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif', color: r.color }}>{r.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: r.color }}>{r.label}</span>
                 </label>
               ))}
             </div>
@@ -392,16 +393,16 @@ function OverviewTab({ user, forumStats }: { user: any; forumStats?: { threads: 
   ]
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
       {sections.map(s => (
         <div key={s.title} style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
             {s.title}
           </div>
           {s.fields.map(([label, val]) => (
             <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-              <span style={{ fontSize: 13, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700 }}>{label}</span>
-              <span style={{ fontSize: 13, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{String(val)}</span>
+              <span style={{ fontSize: 13, color: '#4F5568', fontWeight: 700 }}>{label}</span>
+              <span style={{ fontSize: 13, color: '#DDE0EA', fontWeight: 700, textAlign: 'right', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{String(val)}</span>
             </div>
           ))}
         </div>
@@ -414,7 +415,7 @@ function WalletTab({ user, transactions }: { user: any; transactions: any[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Balances */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
         {[
           ['Tickets', user.credits?.toLocaleString()],
           ['Cash', `$${((user.cashBalance || 0) / 100).toFixed(2)}`],
@@ -423,24 +424,24 @@ function WalletTab({ user, transactions }: { user: any; transactions: any[] }) {
           ['Lifetime Earnings', `$${((user.lifetimeEarnings || 0) / 100).toFixed(2)}`],
         ].map(([label, val]) => (
           <div key={label as string} style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: '14px 16px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .6 }}>{label}</div>
-            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 24, color: '#fff', marginTop: 4 }}>{val}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#4F5568', textTransform: 'uppercase', letterSpacing: .6 }}>{label}</div>
+            <div style={{ fontWeight: 900, fontSize: 24, color: '#fff', marginTop: 4 }}>{val}</div>
           </div>
         ))}
       </div>
 
       {/* Transaction History */}
       <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 12, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 16, fontWeight: 800, color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1 }}>
           Recent Transactions
         </div>
         {transactions.length === 0 ? (
-          <div style={{ padding: 30, textAlign: 'center', fontSize: 14, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>No transactions</div>
+          <div style={{ padding: 30, textAlign: 'center', fontSize: 16, color: '#4F5568' }}>No transactions</div>
         ) : transactions.map((tx: any) => (
           <div key={tx._id} style={{
             display: 'grid', gridTemplateColumns: '110px 80px 90px 1fr 80px 110px',
-            gap: 10, padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.04)',
-            fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', alignItems: 'center',
+            gap: 16, padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.04)',
+            fontSize: 16, color: '#DDE0EA', alignItems: 'center',
           }}>
             <span style={{ color: '#8890A4', fontWeight: 700 }}>{tx.type}</span>
             <span style={{ color: '#4F5568' }}>{tx.currency}</span>
@@ -448,7 +449,7 @@ function WalletTab({ user, transactions }: { user: any; transactions: any[] }) {
               {tx.amount >= 0 ? '+' : ''}{tx.currency === 'cash' ? `$${(tx.amount / 100).toFixed(2)}` : tx.amount.toLocaleString()}
             </span>
             <span style={{ color: '#4F5568', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description}</span>
-            <span style={{ color: tx.status === 'completed' ? '#22c55e' : '#f59e0b', fontWeight: 700, fontSize: 11 }}>{tx.status}</span>
+            <span style={{ color: tx.status === 'completed' ? '#22c55e' : '#f59e0b', fontWeight: 700, fontSize: 13 }}>{tx.status}</span>
             <span style={{ color: '#4F5568' }}>{new Date(tx.createdAt).toLocaleString()}</span>
           </div>
         ))}
@@ -460,16 +461,16 @@ function WalletTab({ user, transactions }: { user: any; transactions: any[] }) {
 function MatchesTab({ matches }: { matches: any[] }) {
   return (
     <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, overflow: 'hidden' }}>
-      <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 12, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1 }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 16, fontWeight: 800, color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1 }}>
         Match History (Last 25)
       </div>
       {matches.length === 0 ? (
-        <div style={{ padding: 30, textAlign: 'center', fontSize: 14, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>No matches</div>
+        <div style={{ padding: 30, textAlign: 'center', fontSize: 16, color: '#4F5568' }}>No matches</div>
       ) : matches.map((m: any) => (
         <div key={m._id} style={{
           display: 'grid', gridTemplateColumns: '100px 80px 90px 90px 90px 1fr',
-          gap: 10, padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.04)',
-          fontSize: 12, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', alignItems: 'center',
+          gap: 16, padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.04)',
+          fontSize: 16, color: '#DDE0EA', alignItems: 'center',
         }}>
           <span style={{ color: '#8890A4', fontWeight: 700 }}>{m.game}</span>
           <span style={{ color: '#4F5568' }}>{m.type}</span>
@@ -478,7 +479,7 @@ function MatchesTab({ matches }: { matches: any[] }) {
             {m.type === 'cash' ? `$${((m.wager || 0) / 100).toFixed(2)}` : `${m.wager || 0} XP`}
           </span>
           <span style={{
-            fontSize: 11, fontWeight: 700,
+            fontSize: 13, fontWeight: 700,
             color: m.status === 'completed' ? '#22c55e' : m.status === 'disputed' ? '#e8000d' : m.status === 'live' ? '#3b82f6' : '#4F5568',
           }}>
             {m.status?.toUpperCase()}
@@ -493,11 +494,11 @@ function MatchesTab({ matches }: { matches: any[] }) {
 function TeamsTab({ teams, userId }: { teams: any[]; userId: string }) {
   return (
     <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, overflow: 'hidden' }}>
-      <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 12, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1 }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 16, fontWeight: 800, color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1 }}>
         Team Memberships
       </div>
       {teams.length === 0 ? (
-        <div style={{ padding: 30, textAlign: 'center', fontSize: 14, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>No teams</div>
+        <div style={{ padding: 30, textAlign: 'center', fontSize: 16, color: '#4F5568' }}>No teams</div>
       ) : teams.map((t: any) => {
         const member = t.roster?.find((r: any) => r.user?.toString() === userId || r.user?._id?.toString() === userId)
         return (
@@ -505,12 +506,12 @@ function TeamsTab({ teams, userId }: { teams: any[]; userId: string }) {
             display: 'flex', alignItems: 'center', gap: 14,
             padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.04)',
           }}>
-            <span style={{ fontSize: 22 }}>{t.emoji || '🛡️'}</span>
+            <EmojiSolar emoji={t.emoji || '🛡️'} size={22} inline={false} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{t.name}</div>
-              <div style={{ fontSize: 11, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>{t.game} · {member?.role || 'Member'}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#DDE0EA' }}>{t.name}</div>
+              <div style={{ fontSize: 13, color: '#4F5568' }}>{t.game} · {member?.role || 'Member'}</div>
             </div>
-            {t.isDisbanded && <span style={{ fontSize: 11, color: '#e8000d', fontWeight: 700, fontFamily: 'Rajdhani, sans-serif' }}>DISBANDED</span>}
+            {t.isDisbanded && <span style={{ fontSize: 13, color: '#e8000d', fontWeight: 700 }}>DISBANDED</span>}
           </div>
         )
       })}
@@ -525,27 +526,27 @@ function BadgesTab({ badges, user }: { badges: any[]; user: any }) {
 
   return (
     <div>
-      <div style={{ fontSize: 12, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
+      <div style={{ fontSize: 16, fontWeight: 800, color: '#8890A4', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
         Earned Badges ({badges.length})
       </div>
       {badges.length === 0 ? (
-        <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: 30, textAlign: 'center', fontSize: 14, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>
+        <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: 30, textAlign: 'center', fontSize: 16, color: '#4F5568' }}>
           No badges earned
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
           {badges.map((b: any, i: number) => (
             <div key={b._id} style={{
               background: '#13131E', border: `1px solid ${RARITY_COLORS[b.rarity] || '#4F5568'}44`,
               borderRadius: 12, padding: 18, textAlign: 'center',
             }}>
               {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 8 }} />}
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif' }}>{b.name}</div>
-              <div style={{ fontSize: 11, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700, fontFamily: 'Rajdhani, sans-serif', marginTop: 3 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#DDE0EA' }}>{b.name}</div>
+              <div style={{ fontSize: 13, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700, marginTop: 3 }}>
                 {b.rarity}
               </div>
               {user.badgesEarnedAt?.[i] && (
-                <div style={{ fontSize: 10, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: '#4F5568', marginTop: 4 }}>
                   {new Date(user.badgesEarnedAt[i]).toLocaleDateString()}
                 </div>
               )}

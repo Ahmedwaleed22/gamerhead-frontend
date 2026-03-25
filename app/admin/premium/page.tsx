@@ -10,10 +10,10 @@ import { Solar } from '@/lib/solar-duotone'
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 9, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 
@@ -77,13 +77,13 @@ export default function AdminPremiumPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
           Premium Members
         </h1>
       </div>
 
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
           <StatCard icon={Solar.star} label="Total Premium Members" value={stats.totalMembers} color="#f59e0b" />
           <StatCard icon={Solar.warning} label="Expiring This Week" value={stats.expiringThisWeek} color={stats.expiringThisWeek > 0 ? '#e8000d' : '#22c55e'} />
           <StatCard icon={Solar.sparkles} label="New This Month" value={stats.newThisMonth} color="#3b82f6" />
@@ -93,12 +93,12 @@ export default function AdminPremiumPage() {
       <div>
         <ActionBtn label="+ GRANT PREMIUM" color="#f59e0b" onClick={() => setGrantModal(true)} />
       </div>
-      {loading ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
+      {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
         <DataTable columns={columns} rows={members} emptyText="No premium members" page={page} totalPages={pages} onPage={setPage} />
       )}
       {grantModal && (
         <Modal title="Grant Premium" onClose={() => setGrantModal(false)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div><div style={labelStyle}>User ID</div><input value={grantForm.userId} onChange={e => setGrantForm(p => ({ ...p, userId: e.target.value }))} style={inputStyle} placeholder="Paste user ID..." /></div>
             <div>
               <div style={labelStyle}>Duration</div>

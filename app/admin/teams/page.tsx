@@ -6,13 +6,14 @@ import DataTable, { Column } from '../components/DataTable'
 import SearchFilter from '../components/SearchFilter'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
+import { EmojiSolar } from '@/lib/solar-duotone'
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 9, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 
@@ -134,12 +135,12 @@ export default function AdminTeamsPage() {
 
   const columns: Column[] = [
     { key: '_id', label: 'Team ID', width: '100px',
-      render: (row: any) => <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#8890A4' }}>{row._id?.slice(-8)}</span>,
+      render: (row: any) => <span style={{ fontSize: 10, color: '#8890A4' }}>{row._id?.slice(-8)}</span>,
     },
     { key: 'name', label: 'Team', width: '1.5fr',
       render: (row: any) => (
         <span style={{ cursor: 'pointer', fontWeight: 700 }} onClick={() => viewDetail(row._id)}>
-          {row.emoji} {row.name}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><EmojiSolar emoji={row.emoji || '🛡️'} size={14} inline={false} /> {row.name}</span>
         </span>
       ),
     },
@@ -182,10 +183,10 @@ export default function AdminTeamsPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
           Teams
         </h1>
-        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
+        <p style={{ fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
           {total.toLocaleString()} teams total
         </p>
       </div>
@@ -215,25 +216,25 @@ export default function AdminTeamsPage() {
       />
 
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading teams...</div>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading teams...</div>
       ) : (
         <DataTable columns={columns} rows={teams} emptyText="No teams found" page={page} totalPages={pages} onPage={setPage} />
       )}
 
       {/* Detail Modal */}
       {detailModal && !editModal && !transferModal && (
-        <Modal title={`${detailModal.emoji || '🛡️'} ${detailModal.name}`} subtitle={`${detailModal.game} · ${detailModal.matchType === 'cash' ? 'Cash' : 'XP'} · ${detailModal.wins || 0}W ${detailModal.losses || 0}L`} onClose={() => setDetailModal(null)} width={520}>
+        <Modal title={detailModal.name} subtitle={`${detailModal.game} · ${detailModal.matchType === 'cash' ? 'Cash' : 'XP'} · ${detailModal.wins || 0}W ${detailModal.losses || 0}L`} onClose={() => setDetailModal(null)} width={520}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {/* Team ID */}
-            <div style={{ fontSize: 11, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568' }}>
-              Team ID: <span style={{ fontFamily: 'monospace', color: '#8890A4' }}>{detailModal._id}</span>
+            <div style={{ fontSize: 11, color: '#4F5568' }}>
+              Team ID: <span style={{ color: '#8890A4' }}>{detailModal._id}</span>
               {detailModal.tournamentName && (
                 <span style={{ marginLeft: 12, fontWeight: 700, color: '#f59e0b' }}>Tournament: {detailModal.tournamentName}</span>
               )}
             </div>
 
             {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, fontSize: 10, fontFamily: 'Rajdhani, sans-serif' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, fontSize: 10 }}>
               {[
                 ['Cash Earned', `$${((detailModal.cashEarned || 0) / 100).toFixed(2)}`],
                 ['Ladder Rank', detailModal.ladderRank || 'Unranked'],
@@ -241,25 +242,25 @@ export default function AdminTeamsPage() {
               ].map(([k, v]) => (
                 <div key={k as string} style={{ background: '#0d0d14', borderRadius: 6, padding: '8px 10px', textAlign: 'center' }}>
                   <div style={{ color: '#4F5568', fontWeight: 700, fontSize: 8, textTransform: 'uppercase', letterSpacing: .5 }}>{k}</div>
-                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 16, fontFamily: 'Barlow Condensed, sans-serif' }}>{String(v)}</div>
+                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 16, }}>{String(v)}</div>
                 </div>
               ))}
             </div>
 
             {/* Roster */}
             <div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', textTransform: 'uppercase', letterSpacing: .6, marginBottom: 6 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#4F5568', textTransform: 'uppercase', letterSpacing: .6, marginBottom: 6 }}>
                 Roster ({detailModal.roster?.length || 0})
               </div>
               {(detailModal.roster || []).map((member: any) => (
                 <div key={member.userId?.toString() || member.username} style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0',
-                  borderBottom: '1px solid rgba(255,255,255,.04)', fontSize: 11, fontFamily: 'Rajdhani, sans-serif',
+                  display: 'flex', alignItems: 'center', gap: 16, padding: '6px 0',
+                  borderBottom: '1px solid rgba(255,255,255,.04)', fontSize: 11,
                 }}>
                   <span style={{ fontWeight: 700, color: member.color || '#DDE0EA', flex: 1 }}>
                     {member.userInfo?.username || member.username || 'Unknown'}
                   </span>
-                  <span style={{ fontSize: 10, color: '#4F5568', fontFamily: 'monospace' }}>{(member.userId || member.user)?.toString()?.slice(-8)}</span>
+                  <span style={{ fontSize: 10, color: '#4F5568', }}>{(member.userId || member.user)?.toString()?.slice(-8)}</span>
                   <span style={{ fontSize: 9, color: member.role === 'Leader' ? '#f59e0b' : '#4F5568', fontWeight: 700 }}>{member.role}</span>
                   <ActionBtn label="REMOVE" color="#e8000d" onClick={() => handleRemoveMember(detailModal._id, (member.userId || member.user)?.toString())} />
                 </div>
@@ -281,7 +282,7 @@ export default function AdminTeamsPage() {
       {/* Edit Team Modal */}
       {editModal && detailModal && (
         <Modal title="Edit Team" subtitle={`${detailModal.name} · ${detailModal.game} (locked)`} onClose={() => setEditModal(false)} width={460}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div><div style={labelStyle}>Team Name</div><input value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} /></div>
             <div><div style={labelStyle}>Team Bio</div><textarea value={editForm.bio} onChange={e => setEditForm(p => ({ ...p, bio: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Team bio..." /></div>
             <div><div style={labelStyle}>Profile Picture URL</div><input value={editForm.avatarUrl} onChange={e => setEditForm(p => ({ ...p, avatarUrl: e.target.value }))} style={inputStyle} placeholder="https://..." /></div>
@@ -314,7 +315,7 @@ export default function AdminTeamsPage() {
       {transferModal && detailModal && (
         <Modal title="Transfer Leader" subtitle={detailModal.name} onClose={() => setTransferModal(false)} width={420}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#8890A4', margin: 0 }}>
+            <p style={{ fontSize: 12, color: '#8890A4', margin: 0 }}>
               Enter the User ID of the new leader. They must be a member of this team.
             </p>
             <div>

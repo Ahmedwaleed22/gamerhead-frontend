@@ -19,12 +19,12 @@ interface SearchFilterProps {
 
 const inputStyle: React.CSSProperties = {
   padding: '9px 14px', background: '#13131E', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 13, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none',
+  borderRadius: 6, fontSize: 13, color: '#fff', outline: 'none',
 }
 
 export default function SearchFilter({ search, onSearch, searchPlaceholder = 'Search...', filters = [] }: SearchFilterProps) {
   return (
-    <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
       {onSearch !== undefined && (
         <input
           value={search || ''}

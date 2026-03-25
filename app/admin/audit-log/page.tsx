@@ -49,7 +49,7 @@ export default function AdminAuditLogPage() {
       render: (r: any) => <span style={{ color: '#4F5568' }}>{r.targetType}</span>,
     },
     { key: 'targetId', label: 'Target ID', width: '130px',
-      render: (r: any) => <span style={{ color: '#8890A4', fontFamily: 'monospace' }}>{r.targetId?.slice(-12)}</span>,
+      render: (r: any) => <span style={{ color: '#8890A4', }}>{r.targetId?.slice(-12)}</span>,
     },
     { key: 'details', label: 'Details', width: '2fr',
       render: (r: any) => {
@@ -63,8 +63,8 @@ export default function AdminAuditLogPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Audit Log</h1>
-        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Audit Log</h1>
+        <p style={{ fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
           {total.toLocaleString()} total entries
         </p>
       </div>
@@ -96,7 +96,7 @@ export default function AdminAuditLogPage() {
       />
 
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
       ) : (
         <DataTable columns={columns} rows={logs} emptyText="No audit log entries" page={page} totalPages={pages} onPage={setPage} />
       )}

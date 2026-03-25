@@ -8,7 +8,7 @@ import StatCard from '../components/StatCard'
 import { Solar } from '@/lib/solar-duotone'
 import ActionBtn from '../components/ActionBtn'
 
-const R: React.CSSProperties = { fontFamily: 'Rajdhani, sans-serif' }
+const R: React.CSSProperties = {  }
 
 const STATUS_COLOR: Record<string, string> = {
   'Awaiting Claim': '#f59e0b',
@@ -139,7 +139,7 @@ function TicketDetail({ ticketId, onBack, onRefresh }: { ticketId: string; onBac
           Back
         </button>
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 24, color: '#fff', margin: 0 }}>
+          <h1 style={{ fontWeight: 900, fontSize: 24, color: '#fff', margin: 0 }}>
             {ticket.subject || 'Support Ticket'}
           </h1>
           <div style={{ ...R, fontSize: 12, color: '#4F5568', marginTop: 2 }}>
@@ -159,7 +159,7 @@ function TicketDetail({ ticketId, onBack, onRefresh }: { ticketId: string; onBac
       {/* Info bar + actions */}
       <div style={{ display: 'flex', gap: 14, alignItems: 'stretch' }}>
         {/* Ticket info */}
-        <div style={{ flex: 1, background: '#18181C', borderRadius: 10, padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 14 }}>
+        <div style={{ flex: 1, background: '#18181C', borderRadius: 10, padding: '16px 20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
           {[
             ['Department', ticket.department || '—'],
             ['Staff Claimed', ticket.claimedByName || '—'],
@@ -214,7 +214,7 @@ function TicketDetail({ ticketId, onBack, onRefresh }: { ticketId: string; onBac
 
             return (
               <div key={i} style={{ display: 'flex', justifyContent: isStaff ? 'flex-end' : 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: isStaff ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 10, maxWidth: '75%' }}>
+                <div style={{ display: 'flex', flexDirection: isStaff ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 16, maxWidth: '75%' }}>
                   {/* Avatar */}
                   <div style={{
                     width: 34, height: 34, borderRadius: isStaff ? '50%' : 8, flexShrink: 0,
@@ -250,7 +250,7 @@ function TicketDetail({ ticketId, onBack, onRefresh }: { ticketId: string; onBac
 
         {/* Reply input */}
         {!isClosed ? (
-          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', gap: 10 }}>
+          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', gap: 16 }}>
             <input
               style={{ flex: 1, background: '#0d0d14', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '12px 16px', ...R, fontSize: 13, color: '#fff', outline: 'none' }}
               placeholder="Type a reply to the user..."
@@ -345,12 +345,12 @@ export default function AdminSupportPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
+      <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
         Ticket Center
       </h1>
 
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
           <StatCard icon={Solar.clipboard} label="Open" value={stats.open} color={stats.open > 0 ? '#f59e0b' : '#22c55e'} />
           <StatCard icon={Solar.user} label="Claimed" value={stats.claimed} color="#3b82f6" />
           <StatCard icon={Solar.check} label="Closed" value={stats.closed} />

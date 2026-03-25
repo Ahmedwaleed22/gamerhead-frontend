@@ -9,10 +9,10 @@ import Modal from '../components/Modal'
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 9, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 const STATUS_COLORS: Record<string, string> = { active: '#22c55e', offseason: '#f59e0b', completed: '#8890A4', archived: '#4F5568' }
@@ -106,7 +106,7 @@ export default function AdminLaddersPage() {
   }
 
   const ladderForm = (onSubmit: () => void, submitLabel: string) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Game */}
       <div><div style={labelStyle}>Game</div>
         <select value={form.gameSlug} onChange={e => handleGameSelect(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
@@ -178,7 +178,7 @@ export default function AdminLaddersPage() {
       <div><div style={labelStyle}>Prize Description</div>
         <input value={form.prize} onChange={e => setForm(p => ({ ...p, prize: e.target.value }))} style={inputStyle} placeholder="e.g. $500 Prize Pool" />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 8 }}>
         <div><div style={labelStyle}>Prize Pool (cents)</div>
           <input type="number" value={form.prizePool} onChange={e => setForm(p => ({ ...p, prizePool: e.target.value }))} style={inputStyle} placeholder="0" />
         </div>
@@ -215,7 +215,7 @@ export default function AdminLaddersPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Ladders</h1>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Ladders</h1>
         <ActionBtn label="+ CREATE LADDER" color="#22c55e" onClick={() => setCreateModal(true)} />
       </div>
 
@@ -230,7 +230,7 @@ export default function AdminLaddersPage() {
         },
       ]} />
 
-      {loading ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
+      {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
         <DataTable columns={columns} rows={ladders} emptyText="No ladders" page={page} totalPages={pages} onPage={setPage} />
       )}
 

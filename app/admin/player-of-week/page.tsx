@@ -102,7 +102,7 @@ export default function AdminPotwPage() {
             {r.teamName && <div style={{ fontSize: 10, color: '#4F5568' }}>{r.teamName}</div>}
           </div>
           {r.isLastWeekWinner && (
-            <span style={{ fontSize: 9, fontWeight: 800, color: '#e8000d', background: 'rgba(232,0,13,.12)', padding: '2px 6px', borderRadius: 3, fontFamily: 'Rajdhani, sans-serif' }}>
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#e8000d', background: 'rgba(232,0,13,.12)', padding: '2px 6px', borderRadius: 3 }}>
               LAST WEEK
             </span>
           )}
@@ -168,11 +168,11 @@ export default function AdminPotwPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
           Player of the Week
         </h1>
         {weekKey && (
-          <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 13, color: '#4F5568', margin: '4px 0 0' }}>
             Week: {weekKey} &middot; {visibleCandidates.length} candidates
           </p>
         )}
@@ -180,13 +180,13 @@ export default function AdminPotwPage() {
 
       {/* Candidates Table */}
       <div>
-        <div style={{ fontSize: 11, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 8 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 8 }}>
           This Week&apos;s Candidates
         </div>
         {loading ? (
-          <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+          <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
         ) : visibleCandidates.length === 0 ? (
-          <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center', background: '#13131E', borderRadius: 10, border: '1px solid rgba(255,255,255,.06)' }}>
+          <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center', background: '#13131E', borderRadius: 10, border: '1px solid rgba(255,255,255,.06)' }}>
             No candidates found this week. Matches must be completed to generate candidates.
           </div>
         ) : (
@@ -196,7 +196,7 @@ export default function AdminPotwPage() {
 
       {/* History */}
       <div>
-        <div style={{ fontSize: 11, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 8 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 8 }}>
           History
         </div>
         <DataTable
@@ -211,18 +211,18 @@ export default function AdminPotwPage() {
       {reviewUserId && (
         <Modal title={`Match Review — ${reviewUsername}`} onClose={() => setReviewUserId(null)}>
           {reviewLoading ? (
-            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 20, textAlign: 'center' }}>Loading matches...</div>
+            <div style={{ fontSize: 13, color: '#4F5568', padding: 20, textAlign: 'center' }}>Loading matches...</div>
           ) : reviewMatches.length === 0 ? (
-            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 20, textAlign: 'center' }}>No completed matches this week.</div>
+            <div style={{ fontSize: 13, color: '#4F5568', padding: 20, textAlign: 'center' }}>No completed matches this week.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 400, overflowY: 'auto' }}>
               {reviewMatches.map((m: any) => (
                 <div key={m._id} style={{
-                  display: 'grid', gridTemplateColumns: '80px 1fr 70px 60px 110px', alignItems: 'center', gap: 10,
+                  display: 'grid', gridTemplateColumns: '80px 1fr 70px 60px 110px', alignItems: 'center', gap: 16,
                   padding: '10px 14px', background: 'rgba(255,255,255,.02)', borderRadius: 6, border: '1px solid rgba(255,255,255,.04)',
                 }}>
-                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#8890A4' }}>{m.matchId}</span>
-                  <span style={{ fontSize: 12, color: '#DDE0EA', fontWeight: 600, fontFamily: 'Rajdhani, sans-serif' }}>
+                  <span style={{ fontSize: 11, color: '#8890A4' }}>{m.matchId}</span>
+                  <span style={{ fontSize: 12, color: '#DDE0EA', fontWeight: 600 }}>
                     {m.teamAName} vs {m.teamBName}
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#DDE0EA', textAlign: 'center' }}>
@@ -248,14 +248,14 @@ export default function AdminPotwPage() {
       {/* Select Confirmation Modal */}
       {selectUserId && (
         <Modal title="Confirm Selection" onClose={() => setSelectUserId(null)}>
-          <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 14, color: '#DDE0EA', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 14, color: '#DDE0EA', lineHeight: 1.6 }}>
             <p style={{ margin: '0 0 12px' }}>
               Select <strong style={{ color: '#f59e0b' }}>{selectUsername}</strong> as Player of the Week?
             </p>
             <p style={{ margin: '0 0 16px', color: '#8890A4', fontSize: 12 }}>
               This will award them 7 days of Premium and the &quot;Player of the Week&quot; badge. This action cannot be undone.
             </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
               <ActionBtn label="CANCEL" color="#4F5568" size="md" onClick={() => setSelectUserId(null)} />
               <ActionBtn label={selecting ? 'SELECTING...' : 'CONFIRM'} color="#22c55e" size="md" onClick={handleSelect} />
             </div>

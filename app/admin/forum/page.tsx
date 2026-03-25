@@ -7,15 +7,16 @@ import DataTable, { Column } from '../components/DataTable'
 import ActionBtn from '../components/ActionBtn'
 import SearchFilter from '../components/SearchFilter'
 import Modal from '../components/Modal'
+import { EmojiSolar } from '@/lib/solar-duotone'
 
 const STATUS_COLORS: Record<string, string> = { open: '#22c55e', locked: '#e8000d' }
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 9, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 
@@ -210,9 +211,9 @@ export default function AdminForumPage() {
 
   // Board columns
   const boardColumns: Column[] = [
-    { key: 'emoji', label: '', width: '40px', render: (b: any) => <span style={{ fontSize: 16 }}>{b.emoji || '💬'}</span> },
+    { key: 'emoji', label: '', width: '40px', render: (b: any) => <EmojiSolar emoji={b.emoji || '💬'} size={16} inline={false} /> },
     { key: 'name', label: 'Name', width: '1fr', render: (b: any) => <span style={{ fontWeight: 700 }}>{b.name}</span> },
-    { key: 'slug', label: 'Slug', width: '120px', render: (b: any) => <span style={{ fontSize: 9, color: '#8890A4', fontFamily: 'monospace' }}>{b.slug}</span> },
+    { key: 'slug', label: 'Slug', width: '120px', render: (b: any) => <span style={{ fontSize: 9, color: '#8890A4', }}>{b.slug}</span> },
     { key: 'category', label: 'Category', width: '120px', render: (b: any) => <span style={{ color: '#4F5568' }}>{b.category}</span> },
     { key: 'threadCount', label: 'Threads', width: '70px', render: (b: any) => <span style={{ color: '#8890A4' }}>{b.threadCount || 0}</span> },
     { key: 'sortOrder', label: 'Order', width: '60px', render: (b: any) => <span style={{ color: '#4F5568' }}>{b.sortOrder}</span> },
@@ -231,14 +232,14 @@ export default function AdminForumPage() {
   ]
 
   const tabStyle = (t: Tab) => ({
-    padding: '5px 14px', fontSize: 10, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif',
+    padding: '5px 14px', fontSize: 10, fontWeight: 700,
     background: tab === t ? 'rgba(232,0,13,.15)' : 'transparent',
     border: `1px solid ${tab === t ? 'rgba(232,0,13,.3)' : 'rgba(255,255,255,.06)'}`,
     borderRadius: 4, color: tab === t ? '#e8000d' : '#4F5568', cursor: 'pointer' as const,
   })
 
   const boardFormModal = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {[['Name', 'name'], ['Slug', 'slug'], ['Emoji', 'emoji'], ['Description', 'description'], ['Sort Order', 'sortOrder']].map(([l, k]) => (
         <div key={k as string}><div style={labelStyle}>{l}</div><input value={(boardForm as any)[k as string]} onChange={e => setBoardForm(p => ({ ...p, [k as string]: e.target.value }))} style={inputStyle} /></div>
       ))}
@@ -251,17 +252,17 @@ export default function AdminForumPage() {
           <option value="Support">Support</option>
         </select>
       </div>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', cursor: 'pointer' }}>
         <input type="checkbox" checked={boardForm.isActive} onChange={e => setBoardForm(p => ({ ...p, isActive: e.target.checked }))} /> Active
       </label>
 
       {/* Post Permission — who can create threads */}
       <div>
         <div style={labelStyle}>Post Threads — Allowed Roles</div>
-        <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginBottom: 4 }}>Leave all unchecked = everyone can post threads</div>
+        <div style={{ fontSize: 9, color: '#4F5568', marginBottom: 4 }}>Leave all unchecked = everyone can post threads</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {['admin', 'premium', 'coach', 'member'].map(role => (
-            <label key={role} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: boardForm.postRoles.includes(role) ? '#DDE0EA' : '#4F5568', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <label key={role} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: boardForm.postRoles.includes(role) ? '#DDE0EA' : '#4F5568', fontWeight: 600, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               <input type="checkbox" checked={boardForm.postRoles.includes(role)} onChange={e => {
                 setBoardForm(p => ({
                   ...p,
@@ -277,10 +278,10 @@ export default function AdminForumPage() {
       {/* View Permission — who can see this board */}
       <div>
         <div style={labelStyle}>View Board — Allowed Roles</div>
-        <div style={{ fontSize: 9, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif', marginBottom: 4 }}>Leave all unchecked = public to everyone</div>
+        <div style={{ fontSize: 9, color: '#4F5568', marginBottom: 4 }}>Leave all unchecked = public to everyone</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {['admin', 'premium', 'coach', 'member'].map(role => (
-            <label key={role} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: boardForm.viewRoles.includes(role) ? '#DDE0EA' : '#4F5568', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <label key={role} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: boardForm.viewRoles.includes(role) ? '#DDE0EA' : '#4F5568', fontWeight: 600, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               <input type="checkbox" checked={boardForm.viewRoles.includes(role)} onChange={e => {
                 setBoardForm(p => ({
                   ...p,
@@ -301,14 +302,14 @@ export default function AdminForumPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Forum Moderation</h1>
-          <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
+          <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Forum Moderation</h1>
+          <p style={{ fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
             Manage reported posts, threads, and boards
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {tab === 'boards' && <ActionBtn label="+ NEW BOARD" color="#22c55e" onClick={() => { setBoardForm({ name: '', slug: '', emoji: '', category: 'General Gaming', description: '', sortOrder: '0', isActive: true, postRoles: [], viewRoles: [] }); setCreateBoardModal(true) }} />}
-          <Link href="/forum" style={{ fontSize: 10, color: '#3b82f6', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, textDecoration: 'none', padding: '5px 12px', border: '1px solid rgba(59,130,246,.3)', borderRadius: 4, display: 'flex', alignItems: 'center' }}>
+          <Link href="/forum" style={{ fontSize: 10, color: '#3b82f6', fontWeight: 700, textDecoration: 'none', padding: '5px 12px', border: '1px solid rgba(59,130,246,.3)', borderRadius: 4, display: 'flex', alignItems: 'center' }}>
             VIEW FORUM
           </Link>
         </div>
@@ -357,15 +358,15 @@ export default function AdminForumPage() {
       {/* Boards Tab */}
       {tab === 'boards' && (
         boardsLoading
-          ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+          ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
           : <DataTable columns={boardColumns} rows={boards} emptyText="No boards" />
       )}
 
       {/* Move Thread Modal */}
       {moveModal && (
         <Modal title="Move Thread" onClose={() => setMoveModal(null)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 11, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ fontSize: 11, color: '#4F5568' }}>
               {(moveModal.title || '').slice(0, 60)}
             </div>
             <select value={moveTarget} onChange={e => setMoveTarget(e.target.value)} style={inputStyle}>
@@ -399,7 +400,7 @@ export default function AdminForumPage() {
 function FlagBadge({ label, color }: { label: string; color: string }) {
   return (
     <span style={{
-      padding: '1px 4px', fontSize: 7, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif',
+      padding: '1px 4px', fontSize: 7, fontWeight: 800,
       background: `${color}18`, border: `1px solid ${color}44`, borderRadius: 3,
       color, letterSpacing: .5, textTransform: 'uppercase',
     }}>

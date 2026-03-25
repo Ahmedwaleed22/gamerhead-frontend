@@ -6,6 +6,8 @@ import DataTable, { Column } from '../components/DataTable'
 import SearchFilter from '../components/SearchFilter'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 interface MatchRow {
   _id: string
@@ -34,10 +36,10 @@ const STATUS_COLORS: Record<string, string> = {
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 9, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 
@@ -157,7 +159,7 @@ export default function AdminMatchesPage() {
     },
     { key: 'status', label: 'Status', width: '85px',
       render: (row) => (
-        <span style={{ padding: '2px 6px', fontSize: 8, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', border: `1px solid ${STATUS_COLORS[row.status] || '#4F5568'}44`, borderRadius: 3, color: STATUS_COLORS[row.status] || '#4F5568', textTransform: 'uppercase', letterSpacing: .5 }}>
+        <span style={{ padding: '2px 6px', fontSize: 8, fontWeight: 800, border: `1px solid ${STATUS_COLORS[row.status] || '#4F5568'}44`, borderRadius: 3, color: STATUS_COLORS[row.status] || '#4F5568', textTransform: 'uppercase', letterSpacing: .5 }}>
           {row.status}
         </span>
       ),
@@ -180,10 +182,10 @@ export default function AdminMatchesPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
           Matches & Disputes
         </h1>
-        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
+        <p style={{ fontSize: 12, color: '#4F5568', margin: '4px 0 0' }}>
           {total.toLocaleString()} matches total
         </p>
       </div>
@@ -192,10 +194,10 @@ export default function AdminMatchesPage() {
       {disputeCount > 0 && (
         <div style={{
           background: 'rgba(232,0,13,.1)', border: '1px solid rgba(232,0,13,.3)', borderRadius: 8,
-          padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 16,
         }}>
-          <span style={{ fontSize: 18 }}>⚠️</span>
-          <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 13, color: '#e8000d' }}>
+          <Icon icon={Solar.warning} width={18} height={18} />
+          <span style={{ fontWeight: 700, fontSize: 13, color: '#e8000d' }}>
             {disputeCount} disputed match{disputeCount !== 1 ? 'es' : ''} need{disputeCount === 1 ? 's' : ''} attention
           </span>
           <ActionBtn label="VIEW DISPUTES" color="#e8000d" onClick={() => { setStatus('disputed'); setPage(1) }} />
@@ -223,7 +225,7 @@ export default function AdminMatchesPage() {
       />
 
       {loading ? (
-        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading matches...</div>
+        <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading matches...</div>
       ) : (
         <DataTable columns={columns} rows={matches} emptyText="No matches found" page={page} totalPages={pages} onPage={setPage} />
       )}
@@ -232,11 +234,11 @@ export default function AdminMatchesPage() {
       {resolveModal && (
         <Modal title="Resolve Dispute" subtitle={`${resolveModal.matchId} — ${resolveModal.teamAName} vs ${resolveModal.teamBName}`} onClose={() => setResolveModal(null)} width={500}>
           {resolveModal.disputeReason && (
-            <div style={{ background: 'rgba(232,0,13,.08)', border: '1px solid rgba(232,0,13,.2)', borderRadius: 6, padding: '8px 12px', marginBottom: 12, fontSize: 10, color: '#e8000d', fontFamily: 'Rajdhani, sans-serif' }}>
+            <div style={{ background: 'rgba(232,0,13,.08)', border: '1px solid rgba(232,0,13,.2)', borderRadius: 6, padding: '8px 12px', marginBottom: 12, fontSize: 10, color: '#e8000d' }}>
               Dispute: {resolveModal.disputeReason}
             </div>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <div style={labelStyle}>Winner</div>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -258,7 +260,7 @@ export default function AdminMatchesPage() {
                 </button>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 8 }}>
               <div>
                 <div style={labelStyle}>Score A</div>
                 <input type="number" value={resolveForm.scoreA} onChange={e => setResolveForm(p => ({ ...p, scoreA: e.target.value }))} style={inputStyle} />
@@ -280,13 +282,13 @@ export default function AdminMatchesPage() {
       {/* Cancel Modal */}
       {cancelModal && (
         <Modal title="Cancel Match" subtitle={cancelModal.matchId} onClose={() => setCancelModal(null)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <div style={labelStyle}>Reason</div>
               <textarea value={cancelForm.reason} onChange={e => setCancelForm(p => ({ ...p, reason: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Cancellation reason..." />
             </div>
             {cancelModal.matchType === 'cash' && (
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', fontFamily: 'Rajdhani, sans-serif', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', cursor: 'pointer' }}>
                 <input type="checkbox" checked={cancelForm.refund} onChange={e => setCancelForm(p => ({ ...p, refund: e.target.checked }))} />
                 Refund wagers to all players
               </label>
@@ -299,7 +301,7 @@ export default function AdminMatchesPage() {
       {/* Edit Result Modal */}
       {editModal && (
         <Modal title="Edit Match Outcome" subtitle={`${editModal.matchId} — ${editModal.teamAName} vs ${editModal.teamBName}`} onClose={() => setEditModal(null)} width={500}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <div style={labelStyle}>Winner</div>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -321,7 +323,7 @@ export default function AdminMatchesPage() {
                 </button>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 8 }}>
               <div>
                 <div style={labelStyle}>Score A</div>
                 <input type="number" value={editForm.scoreA} onChange={e => setEditForm(p => ({ ...p, scoreA: e.target.value }))} style={inputStyle} />
@@ -343,8 +345,8 @@ export default function AdminMatchesPage() {
       {/* Detail Modal */}
       {detailModal && (
         <Modal title={`Match ${detailModal.matchId}`} onClose={() => setDetailModal(null)} width={600}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 10, fontFamily: 'Rajdhani, sans-serif' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 8 }}>
               {[
                 ['Status', detailModal.status], ['Game', detailModal.game], ['Type', detailModal.matchType],
                 ['Format', detailModal.format], ['Mode', detailModal.gamemode || '—'], ['Map', detailModal.assignedMap || '—'],

@@ -19,10 +19,10 @@ const CATEGORIES = [
 
 const inputStyle: React.CSSProperties = {
   padding: '7px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-  borderRadius: 6, fontSize: 11, color: '#fff', fontFamily: 'Rajdhani, sans-serif', outline: 'none', width: '100%',
+  borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none', width: '100%',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4F5568', fontFamily: 'Rajdhani, sans-serif',
+  fontSize: 9, fontWeight: 700, color: '#4F5568',
   textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4,
 }
 
@@ -32,14 +32,14 @@ export default function AdminStorePage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
+        <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>
           Store & Products
         </h1>
       </div>
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,.06)' }}>
         {(['Items', 'Orders', 'Coupons', 'Revenue'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
-            padding: '8px 16px', fontSize: 11, fontWeight: 700, fontFamily: 'Rajdhani, sans-serif',
+            padding: '8px 16px', fontSize: 11, fontWeight: 700,
             background: 'transparent', border: 'none', cursor: 'pointer',
             color: tab === t ? '#fff' : '#4F5568', borderBottom: tab === t ? '2px solid #e8000d' : '2px solid transparent',
           }}>{t}</button>
@@ -156,7 +156,7 @@ function ItemsTab() {
   ]
 
   const renderItemForm = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div><div style={labelStyle}>Name</div><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} /></div>
       <div><div style={labelStyle}>Slug</div><input value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} style={inputStyle} /></div>
       <div>
@@ -183,7 +183,7 @@ function ItemsTab() {
       <div style={{ marginBottom: 12 }}>
         <ActionBtn label="+ ADD ITEM" color="#22c55e" onClick={() => { setForm({ ...defaultItemForm }); setCreateModal(true) }} />
       </div>
-      {loading ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
+      {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
         <DataTable columns={columns} rows={items} emptyText="No store items" page={page} totalPages={pages} onPage={setPage} />
       )}
       {createModal && (
@@ -259,7 +259,7 @@ function OrdersTab() {
         <option value="refunded">Refunded</option>
         <option value="cancelled">Cancelled</option>
       </select>
-      {loading ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
+      {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
         <DataTable columns={columns} rows={orders} emptyText="No orders" page={page} totalPages={pages} onPage={setPage} />
       )}
     </div>
@@ -369,7 +369,7 @@ function CouponsTab() {
   const renderCouponForm = () => {
     const selectedIds = form.applicableTo ? form.applicableTo.split(',').filter(Boolean) : []
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div><div style={labelStyle}>Code</div><input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} style={inputStyle} placeholder="SUMMER20" /></div>
         <div><div style={labelStyle}>Discount %</div><input type="number" value={form.percent} onChange={e => setForm(p => ({ ...p, percent: e.target.value }))} style={inputStyle} placeholder="20" /></div>
         <div><div style={labelStyle}>Max Uses (0 = unlimited)</div><input type="number" value={form.maxUses} onChange={e => setForm(p => ({ ...p, maxUses: e.target.value }))} style={inputStyle} /></div>
@@ -377,12 +377,12 @@ function CouponsTab() {
         <div>
           <div style={labelStyle}>Applies To</div>
           <div style={{ background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)', borderRadius: 6, padding: 8, maxHeight: 160, overflowY: 'auto' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontFamily: 'Rajdhani, sans-serif', color: selectedIds.length === 0 ? '#22c55e' : '#8890A4', fontWeight: 700 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', cursor: 'pointer', fontSize: 11, color: selectedIds.length === 0 ? '#22c55e' : '#8890A4', fontWeight: 700 }}>
               <input type="checkbox" checked={selectedIds.length === 0} onChange={() => setForm(p => ({ ...p, applicableTo: '' }))} />
               All Products
             </label>
             {storeItems.map((item: any) => (
-              <label key={item._id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', cursor: 'pointer', fontSize: 11, fontFamily: 'Rajdhani, sans-serif', color: '#DDE0EA' }}>
+              <label key={item._id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', cursor: 'pointer', fontSize: 11, color: '#DDE0EA' }}>
                 <input type="checkbox" checked={selectedIds.includes(item._id)} onChange={() => toggleApplicable(item._id)} />
                 {item.name} <span style={{ color: '#4F5568', fontSize: 9 }}>({item.category})</span>
               </label>
@@ -396,7 +396,7 @@ function CouponsTab() {
   return (
     <div>
       <div style={{ marginBottom: 12 }}><ActionBtn label="+ CREATE COUPON" color="#22c55e" onClick={() => { setForm({ ...defaultCouponForm }); setCreateModal(true) }} /></div>
-      {loading ? <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
+      {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
         <DataTable columns={columns} rows={coupons} emptyText="No coupons" page={page} totalPages={pages} onPage={setPage} />
       )}
       {createModal && (
@@ -427,7 +427,7 @@ function RevenueTab() {
     adminApi.getStoreRevenue({ period: '30d' }).then(r => { setData(r); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  if (loading || !data) return <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+  if (loading || !data) return <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -435,9 +435,9 @@ function RevenueTab() {
 
       {data.byCategory?.length > 0 && (
         <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 16 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>Revenue by Category</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>Revenue by Category</div>
           {data.byCategory.map((c: any) => (
-            <div key={c._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.03)', fontFamily: 'Rajdhani, sans-serif', fontSize: 12 }}>
+            <div key={c._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.03)', fontSize: 12 }}>
               <span style={{ color: '#DDE0EA', fontWeight: 700 }}>{c._id || 'Unknown'}</span>
               <span style={{ color: '#22c55e', fontWeight: 700 }}>${(c.total || 0).toFixed(2)} ({c.count} orders)</span>
             </div>
@@ -447,9 +447,9 @@ function RevenueTab() {
 
       {data.recentOrders?.length > 0 && (
         <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 16 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, fontFamily: 'Rajdhani, sans-serif', color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>Recent High-Value Orders</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: '#4F5568', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 10 }}>Recent High-Value Orders</div>
           {data.recentOrders.slice(0, 5).map((o: any) => (
-            <div key={o._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.03)', fontFamily: 'Rajdhani, sans-serif', fontSize: 11 }}>
+            <div key={o._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.03)', fontSize: 11 }}>
               <span style={{ color: '#8890A4' }}>{o.orderId}</span>
               <span style={{ color: '#22c55e', fontWeight: 700 }}>${(o.total || 0).toFixed(2)}</span>
               <span style={{ color: '#4F5568' }}>{new Date(o.createdAt).toLocaleDateString()}</span>
