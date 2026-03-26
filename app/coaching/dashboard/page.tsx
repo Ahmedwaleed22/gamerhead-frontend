@@ -19,7 +19,7 @@ function timeAgo(dateStr: string): string {
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type OrderStatus = 'pending' | 'active' | 'delivered' | 'revision' | 'completed' | 'cancelled'
-type PackageType = 'vod' | 'session' | 'drills' | 'team' | 'custom'
+type PackageType = 'vod' | 'session' | 'drills' | 'team' | 'custom' | 'guide'
 
 interface Order {
   id: string
@@ -67,6 +67,7 @@ const TYPE_LABELS: Record<PackageType, { label:string; color:string; bg:string }
   drills:  { label:'Drill Plan',    color:'#FB923C', bg:'rgba(251,146,60,.12)'  },
   team:    { label:'Team Coaching', color:'#A78BFA', bg:'rgba(167,139,250,.12)' },
   custom:  { label:'Custom',        color:'#F0AA1A', bg:'rgba(240,170,26,.12)'  },
+  guide:   { label:'Guide',         color:'#F472B6', bg:'rgba(244,114,182,.12)' },
 }
 
 const STATUS_STYLES: Record<OrderStatus, { label:string; color:string; bg:string; border:string }> = {
@@ -293,7 +294,7 @@ export default function CoachDashboard() {
         const rating = me.reviewCount > 0 ? parseFloat((me.ratingSum / me.reviewCount).toFixed(1)) : (me.rating || 0)
         setCOACH({
           name: me.displayName || me.name || user.username,
-          emoji: me.emoji || '🎯',
+          emoji: me.emoji || '',
           avatarUrl: me.avatarUrl || '',
           title: me.title || '',
           game: me.game || '',
@@ -337,7 +338,7 @@ export default function CoachDashboard() {
       } else {
         // No coach profile yet — show empty state
         setCOACH({
-          name: user.username, emoji: '🎯', avatarUrl: (user as any).avatarUrl || '', title: '', game: '',
+          name: user.username, emoji: '', avatarUrl: (user as any).avatarUrl || '', title: '', game: '',
           verified: false, memberSince: '', totalEarned: 0, pendingPayout: 0,
           rating: 0, totalReviews: 0, completionRate: 0, responseTime: '—', slug: '',
         })

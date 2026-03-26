@@ -8,7 +8,7 @@ import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
-type PackageType = 'vod' | 'session' | 'drills' | 'team'
+type PackageType = 'vod' | 'session' | 'drills' | 'team' | 'guide'
 type SortKey     = 'rating' | 'price_low' | 'price_high' | 'orders' | 'response'
 
 interface CoachListing {
@@ -41,6 +41,7 @@ const TYPE_LABELS: Record<PackageType, { label:string; color:string; bg:string; 
   session: { label:'Live Session', color:'#4ade80', bg:'rgba(74,222,128,.12)',  icon: Solar.microphone },
   drills:  { label:'Drill Plan',   color:'#FB923C', bg:'rgba(251,146,60,.12)',  icon: Solar.tools },
   team:    { label:'Team',         color:'#A78BFA', bg:'rgba(167,139,250,.12)', icon: Solar.users },
+  guide:   { label:'Guide',        color:'#F472B6', bg:'rgba(244,114,182,.12)', icon: Solar.book },
 }
 
 const GAMES_DEFAULT = [
@@ -53,6 +54,7 @@ const SERVICE_FILTERS: { label:string; value:PackageType|'all'; icon?: string }[
   { label:'Live Session', value:'session', icon: Solar.microphone },
   { label:'Drill Plan',   value:'drills',  icon: Solar.tools },
   { label:'Team',         value:'team',    icon: Solar.users },
+  { label:'Guide',        value:'guide',   icon: Solar.book },
 ]
 
 const RAIL = {

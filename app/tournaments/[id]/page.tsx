@@ -940,15 +940,20 @@ export default function TournamentOverviewPage() {
 
             <div style={{ display:'flex', alignItems:'flex-start', gap:22 }}>
               {TOURNAMENT.gameEmoji && (TOURNAMENT.gameEmoji.startsWith('/') || TOURNAMENT.gameEmoji.startsWith('http')) ? (
-                <img src={TOURNAMENT.gameEmoji} alt={TOURNAMENT.game} style={{ width:80, height:80, borderRadius:14, objectFit:'cover', border:'1px solid rgba(26,92,158,.4)', flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }} />
+                <img src={TOURNAMENT.gameEmoji} alt={TOURNAMENT.game} style={{ width:100, height:100, borderRadius:16, objectFit:'cover', border:'1px solid rgba(26,92,158,.4)', flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }} />
               ) : (
-                <div style={{ width:80, height:80, background:'linear-gradient(135deg, rgba(26,92,158,.3), rgba(10,16,28,.9))', border:'1px solid rgba(26,92,158,.4)', borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }}><Icon icon={Solar.gamepad} width={40} height={40} /></div>
+                <div style={{ width:100, height:100, background:'linear-gradient(135deg, rgba(26,92,158,.3), rgba(10,16,28,.9))', border:'1px solid rgba(26,92,158,.4)', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 0 30px rgba(26,92,158,.2)' }}><Icon icon={Solar.gamepad} width={50} height={50} /></div>
               )}
-              <div>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, flexWrap:'wrap' }}>
-                  <span style={{ background: TOURNAMENT.status==='live'?'rgba(39,174,96,.1)':TOURNAMENT.status==='open'?'rgba(59,130,246,.1)':TOURNAMENT.status==='checkin'?'rgba(240,192,64,.1)':'rgba(79,85,104,.1)', border:`1px solid ${TOURNAMENT.status==='live'?'rgba(39,174,96,.25)':TOURNAMENT.status==='open'?'rgba(59,130,246,.25)':TOURNAMENT.status==='checkin'?'rgba(240,192,64,.25)':'rgba(79,85,104,.25)'}`, color: TOURNAMENT.status==='live'?'#4ade80':TOURNAMENT.status==='open'?'#3b82f6':TOURNAMENT.status==='checkin'?'#f0c040':'#8890A4', fontSize:10, fontWeight:700, padding:'3px 10px', borderRadius:20, textTransform:'uppercase', letterSpacing:.5 }}>{TOURNAMENT.status === 'checkin' ? 'Starting' : TOURNAMENT.status}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                  <span style={{ background: TOURNAMENT.status==='live'?'rgba(39,174,96,.1)':TOURNAMENT.status==='open'?'rgba(59,130,246,.1)':TOURNAMENT.status==='checkin'?'rgba(240,192,64,.1)':'rgba(79,85,104,.1)', border:`1px solid ${TOURNAMENT.status==='live'?'rgba(39,174,96,.25)':TOURNAMENT.status==='open'?'rgba(59,130,246,.25)':TOURNAMENT.status==='checkin'?'rgba(240,192,64,.25)':'rgba(79,85,104,.25)'}`, color: TOURNAMENT.status==='live'?'#4ade80':TOURNAMENT.status==='open'?'#3b82f6':TOURNAMENT.status==='checkin'?'#f0c040':'#8890A4', fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:20, textTransform:'uppercase', letterSpacing:.5 }}>{TOURNAMENT.status === 'checkin' ? 'Starting' : TOURNAMENT.status}</span>
                 </div>
-                <h1 style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:38, fontWeight:900, textTransform:'uppercase', color:'#fff', margin:0, lineHeight:1 }}>{TOURNAMENT.name}</h1>
+                <h1 style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:44, fontWeight:900, textTransform:'uppercase', color:'#fff', margin:0, lineHeight:1.1 }}>{TOURNAMENT.name}</h1>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.gamepad} width={16} height={16} /> {TOURNAMENT.game || 'Game TBR'}</span>
+                  <span>•</span>
+                  <span>{TOURNAMENT.format || 'Format TBR'}</span>
+                </div>
               </div>
             </div>
 

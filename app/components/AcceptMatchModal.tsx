@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { matchesApi, teamsApi } from '@/lib/api'
 import { useMutation } from '@/lib/use-api'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties  = { fontFamily: 'Roboto, sans-serif' }
 const BC: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif" }
@@ -172,7 +174,7 @@ export function AcceptMatchModal({ match, onClose, onAccepted }: AcceptMatchModa
                   const isSel = selectedTeam?._id === t._id
                   return (
                     <button key={t._id} onClick={() => setSelectedTeam(t)} style={{ display: 'flex', alignItems: 'center', gap: 12, background: isSel ? '#1E1E28' : '#25252C', border: `1.5px solid ${isSel ? '#B22D2D' : 'rgba(255,255,255,0.06)'}`, borderRadius: 10, padding: '12px 16px', cursor: 'pointer', textAlign: 'left', transition: 'all .15s' }}>
-                      <div style={{ width: 36, height: 36, background: '#18181C', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{t.emoji || '🎮'}</div>
+                      <div style={{ width: 36, height: 36, background: '#18181C', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{t.emoji || <Icon icon={Solar.gamepad} width={18} height={18} />}</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#fff' }}>{t.name}</div>
                         <div style={{ ...R, fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{t.roster?.length || 1}/{t.maxMembers} members</div>
@@ -219,7 +221,7 @@ export function AcceptMatchModal({ match, onClose, onAccepted }: AcceptMatchModa
 
           {selectedTeam && isSolo && (
             <div style={{ background: '#25252C', borderRadius: 8, padding: '10px 14px', ...R, fontSize: 12, color: '#9CA3AF' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{marginRight:6,verticalAlign:'middle'}}><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/><path d="M17.32 5H6.68a4 4 0 00-3.978 3.59l-.95 7.6A2 2 0 003.737 18.5h1.526a2 2 0 001.94-1.515L7.88 14h8.24l.677 2.985A2 2 0 0018.737 18.5h1.526a2 2 0 001.985-2.31l-.95-7.6A4 4 0 0017.32 5z" stroke="#9CA3AF" strokeWidth="2"/></svg>Solo match — you'll be entered as the player.
+              <span style={{marginRight:6,verticalAlign:'middle',display:'inline-flex'}}><Icon icon={Solar.user} width={14} height={14} /></span>Solo match — you'll be entered as the player.
             </div>
           )}
 

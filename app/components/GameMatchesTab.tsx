@@ -10,6 +10,8 @@ import { matchesApi, teamsApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import PostMatchModal   from '@/app/components/PostMatchModal'
 import { AcceptMatchModal } from '@/app/components/AcceptMatchModal'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 // Format label: Solo→1v1, Duo→2v2, Trio→3v3, Squad→4v4, otherwise as-is
 function formatLabel(fmt: string) {
@@ -255,7 +257,9 @@ export function MatchesTab({ game, xpLadders, cashLadders }: { game: any; xpLadd
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 12 }}><path d="M6 2l6 6 6-6M4 10l8 8 8-8" stroke="#4A5568" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+            <Icon icon={Solar.gamepad} width={32} height={32} style={{ color: '#4A5568' }} />
+          </div>
           <div style={{ fontWeight: 600, color: '#fff', marginBottom: 6 }}>No active matches</div>
           <div style={{ fontSize: 13 }}>Be the first to post a match challenge for this game.</div>
         </div>
@@ -296,7 +300,9 @@ export function MatchesTab({ game, xpLadders, cashLadders }: { game: any; xpLadd
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setCancelMatch(null)}>
           <div style={{ background: '#18181C', borderRadius: 16, width: 420, maxWidth: '100%', border: '1px solid #25252C', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: '24px 24px 0', textAlign: 'center' }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 12 }}><path d="M12 2L1 21h22L12 2z" fill="#F0AA1A"/><path d="M12 9v5" stroke="#0C0C11" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="17" r="1" fill="#0C0C11"/></svg>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                <Icon icon={Solar.warning} width={40} height={40} style={{ color: '#F0AA1A' }} />
+              </div>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 22, color: '#fff', marginBottom: 8 }}>Cancel Match Listing?</div>
               <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 13, color: '#9CA3AF', lineHeight: 1.6, margin: 0 }}>
                 This will remove your <strong style={{ color: '#fff' }}>{cancelMatch.gamemode}</strong> {cancelMatch.format || cancelMatch.ladder} listing.

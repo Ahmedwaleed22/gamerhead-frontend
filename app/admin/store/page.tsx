@@ -250,15 +250,17 @@ function OrdersTab() {
 
   return (
     <div>
-      <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }} style={{ ...inputStyle, width: 'auto', marginBottom: 12 }}>
-        <option value="">All Status</option>
-        <option value="pending">Pending</option>
-        <option value="processing">Processing</option>
-        <option value="delivered">Delivered</option>
-        <option value="shipped">Shipped</option>
-        <option value="refunded">Refunded</option>
-        <option value="cancelled">Cancelled</option>
-      </select>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }} style={{ ...inputStyle, width: 'auto' }}>
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="delivered">Delivered</option>
+          <option value="shipped">Shipped</option>
+          <option value="refunded">Refunded</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
       {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
         <DataTable columns={columns} rows={orders} emptyText="No orders" page={page} totalPages={pages} onPage={setPage} />
       )}

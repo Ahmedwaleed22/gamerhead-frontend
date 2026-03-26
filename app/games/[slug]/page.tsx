@@ -162,7 +162,7 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
         name: teamName.trim(),
         game: game.name,
         gameSlug: game.slug,
-        gameEmoji: game.emoji || '🎮',
+        gameEmoji: game.emoji || '',
         matchType: ladder.type || 'xp',
         ladder: ladder.teamSize,
         maxMembers,

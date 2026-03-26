@@ -402,7 +402,7 @@ function buildTeam(match: any, side: 'A' | 'B', fallback: Team): Team {
 }
 
 // ─── PAGE ──────────────────────────────────────────────
-export default function XPMatchPage() {
+export default function MatchDetail({ matchType }: { matchType?: "universal" | "tournament" }) {
   const params = useParams()
   const matchId = params?.matchId as string
   const { user } = useAuth()

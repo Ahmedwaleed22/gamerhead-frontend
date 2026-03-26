@@ -9,7 +9,7 @@ import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
-type PackageType = 'vod' | 'session' | 'drills' | 'team' | 'custom'
+type PackageType = 'vod' | 'session' | 'drills' | 'team' | 'custom' | 'guide'
 
 interface Package {
   id: string
@@ -43,6 +43,7 @@ const TYPE_LABELS: Record<PackageType, { label:string; color:string; bg:string }
   drills:  { label:'Drill Plan',    color:'#FB923C', bg:'rgba(251,146,60,.12)'  },
   team:    { label:'Team Coaching', color:'#A78BFA', bg:'rgba(167,139,250,.12)' },
   custom:  { label:'Custom',        color:'#F0AA1A', bg:'rgba(240,170,26,.12)'  },
+  guide:   { label:'Guide',         color:'#F472B6', bg:'rgba(244,114,182,.12)' },
 }
 
 const TYPE_ICONS: Record<PackageType, string> = {
@@ -51,6 +52,7 @@ const TYPE_ICONS: Record<PackageType, string> = {
   drills: Solar.tools,
   team: Solar.users,
   custom: Solar.sparkles,
+  guide: Solar.book,
 }
 
 const SOCIAL_ICONS: Record<string,React.ReactNode> = {

@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react'
 import { matchesApi, teamsApi, gamesApi, walletApi } from '@/lib/api'
 import { useMutation } from '@/lib/use-api'
 import { useAuth } from '@/lib/auth-context'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const R: React.CSSProperties  = { fontFamily: 'Roboto, sans-serif' }
 const BC: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif" }
@@ -219,7 +221,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
                     const tCash = t.matchType === 'cash'
                     return (
                       <button key={t._id} onClick={() => setSelectedTeam(t)} style={{ display: 'flex', alignItems: 'center', gap: 14, background: isSel ? '#1E1E28' : '#25252C', border: `1.5px solid ${isSel ? '#B22D2D' : 'rgba(255,255,255,0.06)'}`, borderRadius: 10, padding: '12px 16px', cursor: 'pointer', textAlign: 'left', transition: 'all .15s' }}>
-                        <div style={{ width: 40, height: 40, background: '#18181C', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{t.emoji || '🎮'}</div>
+                        <div style={{ width: 40, height: 40, background: '#18181C', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{t.emoji || <Icon icon={Solar.gamepad} width={20} height={20} />}</div>
                         <div style={{ flex: 1 }}>
                           <div style={{ ...BC, fontWeight: 900, fontSize: 16, color: '#fff' }}>{t.name}</div>
                           <div style={{ ...R, fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{t.ladder} · {t.roster?.length || 1}/{t.maxMembers} members</div>
@@ -238,7 +240,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
           {/* ── TEAM PREVIEW (Team page pre-load) ── */}
           {preTeam && selectedTeam && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#25252C', borderRadius: 10, padding: '14px 16px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ width: 48, height: 48, background: '#18181C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>{selectedTeam.emoji || '🎮'}</div>
+              <div style={{ width: 48, height: 48, background: '#18181C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>{selectedTeam.emoji || <Icon icon={Solar.gamepad} width={26} height={26} />}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ ...BC, fontWeight: 900, fontSize: 18, color: '#fff' }}>{selectedTeam.name}</div>
                 <div style={{ ...R, fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{selectedTeam.game} · {selectedTeam.ladder} · {selectedTeam.roster?.length || 1}/{selectedTeam.maxMembers}</div>
@@ -256,7 +258,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
                 <div style={{ display: 'flex', gap: 8, marginBottom: scheduleType === 'scheduled' ? 12 : 0 }}>
                   {(['now', 'scheduled'] as const).map(s => (
                     <button key={s} onClick={() => setScheduleType(s)} style={{ flex: 1, padding: '11px 0', borderRadius: 8, cursor: 'pointer', background: scheduleType === s ? 'rgba(178,45,45,0.15)' : '#25252C', border: `1.5px solid ${scheduleType === s ? 'rgba(178,45,45,0.45)' : 'rgba(255,255,255,0.07)'}`, ...R, fontWeight: 700, fontSize: 13, color: scheduleType === s ? '#fff' : '#6B7280', transition: 'all .15s' }}>
-                      {s === 'now' ? <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{marginRight:5,verticalAlign:'middle'}}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg>Available Now</> : <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{marginRight:5,verticalAlign:'middle'}}><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>Schedule Match</>}
+                      {s === 'now' ? <><span style={{marginRight:5,verticalAlign:'middle',display:'inline-flex'}}><Icon icon={Solar.bolt} width={12} height={12} /></span>Available Now</> : <><span style={{marginRight:5,verticalAlign:'middle',display:'inline-flex'}}><Icon icon={Solar.calendar} width={12} height={12} /></span>Schedule Match</>}
                     </button>
                   ))}
                 </div>
@@ -350,7 +352,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
                     {[...modes, 'Random'].map(m => (
                       <button key={m} onClick={() => setGamemode(m)} style={{ padding: '10px 12px', borderRadius: 8, cursor: 'pointer', background: gamemode === m ? 'rgba(178,45,45,0.15)' : '#25252C', border: `1.5px solid ${gamemode === m ? 'rgba(178,45,45,0.45)' : 'rgba(255,255,255,0.07)'}`, ...R, fontWeight: 700, fontSize: 12, color: gamemode === m ? '#fff' : '#9CA3AF', textAlign: 'left', transition: 'all .15s' }}>
-                        {m === 'Random' ? <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{marginRight:4,verticalAlign:'middle'}}><rect x="2" y="2" width="20" height="20" rx="3" stroke="currentColor" strokeWidth="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg>Random</> : m}
+                        {m === 'Random' ? <><span style={{marginRight:4,verticalAlign:'middle',display:'inline-flex'}}><Icon icon={Solar.sparkles} width={12} height={12} /></span>Random</> : m}
                         {m === 'Random' && <div style={{ fontSize: 10, fontWeight: 400, color: '#6B7280', marginTop: 2 }}>System picks mode + map</div>}
                       </button>
                     ))}
@@ -361,7 +363,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
               {/* ── MAP NOTE ── */}
               {gamemode && (
                 <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 8, padding: '10px 14px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{flexShrink:0}}><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z" stroke="#A78BFA" strokeWidth="2" strokeLinejoin="round"/><path d="M8 2v16M16 6v16" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round"/></svg>
+                  <span style={{flexShrink:0,display:'inline-flex',color:'#A78BFA'}}><Icon icon={Solar.map} width={16} height={16} /></span>
                   <div style={{ ...R, fontSize: 12, color: '#cbd5e1', lineHeight: 1.5 }}>
                     <strong style={{ color: '#A78BFA' }}>Map assigned on accept.</strong>{' '}
                     {gamemode === 'Random'
@@ -407,7 +409,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
               {/* Solo auto-fill note */}
               {isSolo && (
                 <div style={{ background: '#25252C', borderRadius: 8, padding: '10px 14px', ...R, fontSize: 12, color: '#9CA3AF' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{marginRight:6,verticalAlign:'middle'}}><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/><path d="M17.32 5H6.68a4 4 0 00-3.978 3.59l-.95 7.6A2 2 0 003.737 18.5h1.526a2 2 0 001.94-1.515L7.88 14h8.24l.677 2.985A2 2 0 0018.737 18.5h1.526a2 2 0 001.985-2.31l-.95-7.6A4 4 0 0017.32 5z" stroke="#9CA3AF" strokeWidth="2"/></svg>Solo match — you'll be auto-entered as the player.
+                  <span style={{marginRight:6,verticalAlign:'middle',display:'inline-flex'}}><Icon icon={Solar.user} width={14} height={14} /></span>Solo match — you'll be auto-entered as the player.
                 </div>
               )}
 
