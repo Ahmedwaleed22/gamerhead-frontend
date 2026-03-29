@@ -4,23 +4,60 @@ import { Icon } from "@iconify/react";
 import { motion } from "motion/react";
 import React from "react";
 import { HoverCard } from "./HoverCard";
+import { useApi } from "@/lib/use-api";
+import { platformApi } from "@/lib/api";
 
-const stats = [
-  { icon: "proicons:game", value: "+50,000", label: "Simultaneous Players" },
+const STAT_CONFIG = [
+  {
+    icon: "proicons:game",
+    key: "totalUsers" as const,
+    label: "Registered Players",
+    format: (v: number) => `+${v.toLocaleString()}`,
+    fallback: "+50,000",
+  },
   {
     icon: "game-icons:target-prize",
-    value: "2,942,000",
+    key: "matchesPlayed" as const,
     label: "Matches Played",
+    format: (v: number) => v.toLocaleString(),
+    fallback: "0",
   },
   {
     icon: "famicons:share-social-sharp",
-    value: "+100,000",
-    label: "On Our Social Networks",
+    key: "activeTournaments" as const,
+    label: "Active Tournaments",
+    format: (v: number) => `+${v.toLocaleString()}`,
+    fallback: "+0",
   },
-  { icon: "game-icons:trophy", value: "+1,000", label: "Active Tournaments" },
+  {
+    icon: "game-icons:trophy",
+    key: "liveMatches" as const,
+    label: "Matches Live Now",
+    format: (v: number) => `${v.toLocaleString()}`,
+    fallback: "0",
+  },
 ];
 
-function StatCard({ s, i }: { s: { icon: string; value: string; label: string }, i: number }) {
+type StatsData = {
+  totalUsers: number;
+  matchesPlayed: number;
+  activeTournaments: number;
+  liveMatches: number;
+};
+
+function StatCard({
+  s,
+  i,
+  stats,
+}: {
+  s: (typeof STAT_CONFIG)[number];
+  i: number;
+  stats: StatsData | null;
+}) {
+  const raw = stats?.[s.key];
+  const value =
+    raw !== undefined ? s.format(raw) : s.fallback;
+
   return (
     <HoverCard
       delay={i * 0.1}
@@ -36,7 +73,7 @@ function StatCard({ s, i }: { s: { icon: string; value: string; label: string },
       </div>
       <div className="mt-8! ml-auto text-right">
         <div className="stat-value text-2xl font-bold text-white">
-          {s.value}
+          {value}
         </div>
         <div className="stat-label text-sm font-medium text-white">
           {s.label}
@@ -47,6 +84,8 @@ function StatCard({ s, i }: { s: { icon: string; value: string; label: string },
 }
 
 function LandingPageStats() {
+  const { data: stats } = useApi<StatsData>(() => platformApi.getStats());
+
   return (
     <div className="bg-black/30">
       <motion.section
@@ -55,11 +94,9 @@ function LandingPageStats() {
         animate={{ marginTop: "-3rem" }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        {/* <div className="stats-grid"> */}
-        {stats.map((s, i) => (
-          <StatCard key={i} s={s} i={i} />
+        {STAT_CONFIG.map((s, i) => (
+          <StatCard key={s.key} s={s} i={i} stats={stats} />
         ))}
-        {/* </div> */}
       </motion.section>
     </div>
   );

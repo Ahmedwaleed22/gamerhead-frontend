@@ -97,6 +97,7 @@ const TYPE_ICONS: Record<PackageType, string> = {
   drills: Solar.tools,
   team: Solar.users,
   custom: Solar.sparkles,
+  guide: Solar.book,
 }
 
 // ─── PACKAGE EDITOR MODAL ─────────────────────────────────────────────────────

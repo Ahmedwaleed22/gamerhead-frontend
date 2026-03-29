@@ -348,6 +348,11 @@ export const linkedAccountsApi = {
   getLinked:      ()                 => api.get('/auth/linked-platforms'),
 }
 
+// PLATFORM (public, no auth)
+export const platformApi = {
+  getStats: () => api.get('/platform/stats', { noAuth: true }),
+}
+
 // ─── Utility ──────────────────────────────────────────────────────────────────
 
 function toQuery(params?: Record<string, any>): string {

@@ -64,7 +64,7 @@ function mapTournament(t: any): Tournament {
     mode:     t.mode ?? t.format ?? '',
     slots:    t.slots ?? t.maxTeams ?? 0,
     filled:   t.filled ?? (t.maxTeams && (t.registeredCount || t.teams) ? Math.round(((t.registeredCount || t.teams) / t.maxTeams) * 100) : 0),
-    prize:    t.prize ?? (t.prizePool != null ? `$${Number(t.prizePool).toLocaleString()}` : '$0'),
+    prize:    t.prize ?? (t.prizePool != null ? `$${(Number(t.prizePool) / 100).toLocaleString()}` : '$0'),
     game:     t.game ?? '',
     platform: t.platform ?? '',
     type:     t.type ?? t.bracketType ?? '',
