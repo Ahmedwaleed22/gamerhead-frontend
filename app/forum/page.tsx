@@ -187,9 +187,19 @@ export default function ForumPage() {
                 Discuss strategy, find teammates, share clips & connect with the CE community.
               </p>
             </div>
-            <div style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.2)', borderRadius:10, padding:'10px 16px', boxShadow: '0 4px 12px rgba(39,174,96,0.05)' }}>
-              <Icon icon={Solar.online} width={18} height={18} style={{ flexShrink: 0, color: '#4ade80' }} />
-              <span style={{ fontSize:13, fontWeight:700, color:'#4ade80' }}>{FORUM_STATS.online.toLocaleString()} online now</span>
+            <div style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(39,174,96,0.08)', border:'1px solid rgba(39,174,96,0.18)', borderRadius:10, padding:'10px 16px', boxShadow: '0 4px 16px rgba(39,174,96,0.08)' }}>
+              <div style={{ position:'relative', width:10, height:10, flexShrink:0 }}>
+                <span style={{
+                  position:'absolute', inset:0,
+                  borderRadius:'50%',
+                  background:'#22c55e',
+                  boxShadow:'0 0 0 3px rgba(34,197,94,0.22), 0 0 8px 2px rgba(34,197,94,0.35)',
+                  animation:'onlinePulse 2.2s ease-in-out infinite',
+                  display:'block',
+                }} />
+                <style>{`@keyframes onlinePulse{0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,0.22),0 0 8px 2px rgba(34,197,94,0.35)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0.12),0 0 14px 4px rgba(34,197,94,0.22)}}`}</style>
+              </div>
+              <span style={{ fontSize:13, fontWeight:700, color:'#4ade80', letterSpacing:'0.02em' }}>{FORUM_STATS.online.toLocaleString()} online now</span>
             </div>
           </div>
 

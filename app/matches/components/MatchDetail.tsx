@@ -2,7 +2,7 @@
 
 // FILE: app/matches/xp/[matchId]/page.tsx
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
@@ -476,35 +476,94 @@ export default function MatchDetail({ matchType }: { matchType?: "universal" | "
   const [showTicketModal, setShowTicketModal] = useState(false)
   const [staffRequested, setStaffRequested] = useState(false)
 
+  const chatBoxRef     = useRef<HTMLDivElement>(null)
+  const atBottomRef    = useRef(true)
+  const [unread, setUnread] = useState(0)
+
+  const scrollToBottom = useCallback((force?: boolean) => {
+    const el = chatBoxRef.current
+    if (!el) return
+    if (force || atBottomRef.current) {
+      el.scrollTop = el.scrollHeight
+      setUnread(0)
+    }
+  }, [])
+
   useEffect(() => {
     if (match?.chat?.length) {
-      setMsgs(match.chat.map((c: any) => ({
-        from:     c.username || 'System',
-        initials: c.initials || (c.username || 'SY').slice(0, 2).toUpperCase(),
-        color:    c.type === 'system' ? ACCENT : '#8890A4',
-        bg:       c.type === 'system' ? ACCENT_DIM : '#13131E',
-        text:     c.text,
-        type:     c.type || 'recv',
-      })))
+      const myUsername = user?.username
+      setMsgs(match.chat.map((c: any) => {
+        const isSystem = c.type === 'system'
+        const isMine   = !isSystem && myUsername && c.username === myUsername
+        return {
+          from:     c.username || 'System',
+          initials: c.initials || (c.username || 'SY').slice(0, 2).toUpperCase(),
+          color:    isSystem ? ACCENT : isMine ? '#fff' : '#8890A4',
+          bg:       isSystem ? ACCENT_DIM : isMine ? '#B82C2C' : '#13131E',
+          text:     c.text,
+          type:     isSystem ? 'system' : isMine ? 'sent' : 'recv',
+        }
+      }))
     } else {
       setMsgs([
         { from:'GH System', initials:'GH', color:ACCENT, bg:ACCENT_DIM, text:`Match ${REAL_MATCH_ID} created. XP ladder match.`, type:'system' },
       ])
     }
-  }, [match])
+  }, [match, user?.username])
 
   useEffect(() => {
     const t = setInterval(() => setTimer(s => s > 0 ? s - 1 : 0), 1000)
     return () => clearInterval(t)
   }, [])
 
+  // Poll for new chat messages every 3 seconds
+  useEffect(() => {
+    if (!REAL_MATCH_ID) return
+    const myUsername = user?.username
+    const poll = () => {
+      matchesApi.getChat(REAL_MATCH_ID).then((data: any) => {
+        const chatArr: any[] = Array.isArray(data) ? data : (data?.chat || [])
+        if (!chatArr.length) return
+        setMsgs(chatArr.map((c: any) => {
+          const isSystem = c.type === 'system'
+          const isMine   = !isSystem && myUsername && c.username === myUsername
+          return {
+            from:     c.username || 'System',
+            initials: c.initials || (c.username || 'SY').slice(0, 2).toUpperCase(),
+            color:    isSystem ? ACCENT : isMine ? '#fff' : '#8890A4',
+            bg:       isSystem ? ACCENT_DIM : isMine ? '#B82C2C' : '#13131E',
+            text:     c.text,
+            type:     isSystem ? 'system' : isMine ? 'sent' : 'recv',
+          }
+        }))
+      }).catch(() => {})
+    }
+    poll()
+    const t = setInterval(poll, 3000)
+    return () => clearInterval(t)
+  }, [REAL_MATCH_ID, user?.username])
+
+  // Auto-scroll or show unread badge, like WhatsApp
+  const prevMsgCountRef = useRef(0)
+  useEffect(() => {
+    const newCount = msgs.length - prevMsgCountRef.current
+    prevMsgCountRef.current = msgs.length
+    if (newCount > 0 && !atBottomRef.current) {
+      setUnread(u => u + newCount)
+    } else {
+      scrollToBottom()
+    }
+  }, [msgs, scrollToBottom])
+
   const fmt = (s: number) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`
   const send = () => {
     if (!chatMsg.trim()) return
     const username = user?.username || 'You'
-    setMsgs(p => [...p, { from: username, initials: username.slice(0, 2).toUpperCase(), color:'#8890A4', bg:'#B82C2C', text:chatMsg.trim(), type:'sent' }])
+    setMsgs(p => [...p, { from: username, initials: username.slice(0, 2).toUpperCase(), color:'#fff', bg:'#B82C2C', text:chatMsg.trim(), type:'sent' }])
     matchesApi.sendChat(REAL_MATCH_ID, { text: chatMsg.trim() }).catch(console.error)
     setChatMsg('')
+    // Always scroll to bottom when you send — force regardless of position
+    setTimeout(() => scrollToBottom(true), 0)
   }
 
   const refreshMatch = () => matchesApi.getById(REAL_MATCH_ID).then(setMatch).catch(console.error)
@@ -697,18 +756,43 @@ export default function MatchDetail({ matchType }: { matchType?: "universal" | "
 
             <div style={{ borderTop:'1px solid rgba(255,255,255,.055)' }}>
               <SectLabel>Match Chat</SectLabel>
-              <div style={{ height:150, overflowY:'auto', padding:'4px 16px', display:'flex', flexDirection:'column', gap:8 }}>
-                {msgs.map((msg,i) => (
-                  <div key={i} style={{ display:'flex', gap:8, flexDirection:msg.type==='sent'?'row-reverse':'row', alignItems:'flex-start' }}>
-                    <div style={{ width:18, height:18, background:msg.bg, border:'1px solid rgba(255,255,255,.09)', borderRadius:3, display:'flex', alignItems:'center', justifyContent:'center', fontSize:7, fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, color:msg.color, flexShrink:0 }}>{msg.initials}</div>
-                    <div style={{ maxWidth:'80%' }}>
-                      <div style={{ fontSize:9, color:'#8890A4', marginBottom:3, textAlign:msg.type==='sent'?'right':'left' }}>{msg.from}</div>
-                      <div style={{ fontSize:9, padding:'5px 8px', color:msg.type==='system'?ACCENT:'#fff', lineHeight:1.5, background:msg.type==='sent'?'#B82C2C':msg.type==='system'?ACCENT_DIM:'#13131E', border:`1px solid ${msg.type==='system'?ACCENT_BDR:'rgba(255,255,255,.055)'}`, borderRadius:msg.type==='sent'?'5px 5px 0 5px':msg.type==='system'?5:'5px 5px 5px 0' }}>
-                        {msg.text}
+              <div style={{ position:'relative' }}>
+                <div
+                  ref={chatBoxRef}
+                  onScroll={() => {
+                    const el = chatBoxRef.current
+                    if (!el) return
+                    const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40
+                    atBottomRef.current = isAtBottom
+                    if (isAtBottom) setUnread(0)
+                  }}
+                  style={{ height:150, overflowY:'auto', padding:'4px 16px', display:'flex', flexDirection:'column', gap:8 }}
+                >
+                  {msgs.map((msg,i) => (
+                    <div key={i} style={{ display:'flex', gap:8, flexDirection:msg.type==='sent'?'row-reverse':'row', alignItems:'flex-start' }}>
+                      <div style={{ width:18, height:18, background:msg.bg, border:'1px solid rgba(255,255,255,.09)', borderRadius:3, display:'flex', alignItems:'center', justifyContent:'center', fontSize:7, fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, color:msg.color, flexShrink:0 }}>{msg.initials}</div>
+                      <div style={{ maxWidth:'80%' }}>
+                        <div style={{ fontSize:9, color:'#8890A4', marginBottom:3, textAlign:msg.type==='sent'?'right':'left' }}>{msg.from}</div>
+                        <div style={{ fontSize:9, padding:'5px 8px', color:msg.type==='system'?ACCENT:'#fff', lineHeight:1.5, background:msg.type==='sent'?'#B82C2C':msg.type==='system'?ACCENT_DIM:'#13131E', border:`1px solid ${msg.type==='system'?ACCENT_BDR:'rgba(255,255,255,.055)'}`, borderRadius:msg.type==='sent'?'5px 5px 0 5px':msg.type==='system'?5:'5px 5px 5px 0' }}>
+                          {msg.text}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                {/* Unread badge — shown when scrolled up and new messages arrive */}
+                {unread > 0 && (
+                  <button
+                    onClick={() => scrollToBottom(true)}
+                    style={{ position:'absolute', bottom:8, left:'50%', transform:'translateX(-50%)', display:'flex', alignItems:'center', gap:6, background:'#1C1C2E', border:'1px solid rgba(167,139,250,.35)', borderRadius:20, padding:'4px 12px 4px 8px', cursor:'pointer', boxShadow:'0 2px 12px rgba(0,0,0,.5)', zIndex:10 }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-6-6h12l-6 6z" fill={ACCENT}/></svg>
+                    <span style={{ fontSize:10, fontWeight:700, color:ACCENT, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>
+                      {unread} new {unread === 1 ? 'message' : 'messages'}
+                    </span>
+                  </button>
+                )}
               </div>
               <div style={{ borderTop:'1px solid rgba(255,255,255,.055)', padding:'8px 16px', display:'flex', gap:8 }}>
                 {['completed','disputed','cancelled'].includes(matchStatus) ? (

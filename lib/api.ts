@@ -165,6 +165,7 @@ export const matchesApi = {
   getByTeam:    (teamId: string)               => api.get(`/matches/team/${teamId}`),
   getLive:      (teamId: string)               => api.get(`/matches/team/${teamId}/live`),
   create:       (body: any)                    => api.post('/matches', body),
+  getChat:      (matchId: string)               => api.get(`/matches/${matchId}/chat`),
   sendChat:     (matchId: string, body: any)   => api.post(`/matches/${matchId}/chat`, body),
   submitResult: (matchId: string, body: any)   => api.post(`/matches/${matchId}/result`, body),
   dispute:      (matchId: string, body: any)   => api.post(`/matches/${matchId}/dispute`, body),
