@@ -407,11 +407,18 @@ export default function MatchDetail({ matchType }: { matchType?: "universal" | "
   const matchId = params?.matchId as string
   const { user } = useAuth()
   const [match, setMatch] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => { sendActivity('In a Match') }, [])
 
   useEffect(() => {
-    if (matchId) matchesApi.getById(matchId).then(setMatch).catch(console.error)
+    if (matchId) {
+      setLoading(true)
+      matchesApi.getById(matchId)
+        .then(setMatch)
+        .catch(console.error)
+        .finally(() => setLoading(false))
+    }
   }, [matchId])
 
   const REAL_MATCH_ID = match?.matchId || matchId || ''
@@ -522,6 +529,19 @@ export default function MatchDetail({ matchType }: { matchType?: "universal" | "
     matchesApi.requestCancel(REAL_MATCH_ID, userTeamId).then(() => {
       refreshMatch()
     }).catch(console.error)
+  }
+
+  if (loading) {
+    return (
+      <div style={{ background:'#0B0B12', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div style={{ textAlign:'center' }}>
+          <div style={{ width:40, height:40, border:`3px solid ${ACCENT_BDR}`, borderTopColor:ACCENT, borderRadius:'50%', margin:'0 auto 16px', animation:'match-spin 0.8s linear infinite' }} />
+          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:16, color:'#4F5568', letterSpacing:1 }}>LOADING MATCH</div>
+          {matchId && <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:12, color:'#2D3142', marginTop:6 }}>{matchId}</div>}
+          <style>{`@keyframes match-spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    )
   }
 
   return (
