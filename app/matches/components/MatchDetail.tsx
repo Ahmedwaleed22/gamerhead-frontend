@@ -533,7 +533,7 @@ export default function MatchDetail({ matchType }: { matchType?: "universal" | "
 
   if (loading) {
     return (
-      <div style={{ background:'#0B0B12', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ background:'#0d121b', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
         <div style={{ textAlign:'center' }}>
           <div style={{ width:40, height:40, border:`3px solid ${ACCENT_BDR}`, borderTopColor:ACCENT, borderRadius:'50%', margin:'0 auto 16px', animation:'match-spin 0.8s linear infinite' }} />
           <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:16, color:'#4F5568', letterSpacing:1 }}>LOADING MATCH</div>
@@ -545,7 +545,7 @@ export default function MatchDetail({ matchType }: { matchType?: "universal" | "
   }
 
   return (
-    <div style={{ background:'#0B0B12', minHeight:'100vh' }}>
+    <div style={{ background:'#0d121b', minHeight:'100vh' }}>
 
       {showReportModal && <ReportScoreModal bestOf={bestOf} onSubmit={handleReportScore} onClose={()=>setShowReportModal(false)} />}
       {showTicketModal && <CreateTicketModal matchId={REAL_MATCH_ID} onClose={()=>setShowTicketModal(false)} />}
