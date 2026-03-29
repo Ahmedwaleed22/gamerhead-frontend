@@ -158,7 +158,6 @@ export default function AdminTournamentsPage() {
             overflowWrap: 'anywhere',
             wordBreak: 'break-word',
             minWidth: 0,
-            flex: '1 1 auto',
           }}
           onClick={() => handleViewDetail(r._id)}
         >

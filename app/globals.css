@@ -70,9 +70,10 @@ a { color: inherit; text-decoration: none; }
 img { max-width: 100%; display: block; }
 
 /* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 6px; }
+/* Keep scrollbars subtle and consistent across the app */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg-2); }
-::-webkit-scrollbar-thumb { background: var(--red-dark); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--red-dark); border-radius: 2px; }
 
 /* ── NAVBAR ── */
 .navbar {
@@ -2612,7 +2613,6 @@ img { max-width: 100%; display: block; }
 /* ══════════════════════════════════
    OVERVIEW — LADDERS
 ══════════════════════════════════ */
-.ladder-section {}
 .ladder-section-title {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Barlow Condensed', sans-serif;
@@ -2659,7 +2659,6 @@ img { max-width: 100%; display: block; }
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
   background: var(--bg-3); border-radius: 8px; padding: 14px; margin-bottom: 16px;
 }
-.ladder-detail-item {}
 .ladder-detail-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 3px; }
 .ladder-detail-value { font-size: 13px; font-weight: 700; color: #fff; }
 
@@ -2744,7 +2743,6 @@ img { max-width: 100%; display: block; }
 .tp-card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; text-transform: uppercase; color: #fff; }
 .tp-card-count { font-size: 12px; color: var(--text-muted); }
 
-.tp-match-list {}
 .tp-match-row {
   display: flex; align-items: center; gap: 12px;
   padding: 14px 18px; border-bottom: 1px solid var(--border);
@@ -3136,7 +3134,6 @@ img { max-width: 100%; display: block; }
 .settings-nav-item:hover:not(.active) { background: var(--bg-3); color: #fff; }
 .settings-nav-icon { font-size: 14px; }
 
-.settings-main   { }
 .settings-panel  { background: #0F0F1A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 28px 32px; }
 .settings-panel-header { margin-bottom: 24px; }
 .settings-panel-title  { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; color: #fff; margin: 0 0 8px; }
@@ -3526,8 +3523,6 @@ footer {
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
-
-.footer-col {}
 
 .footer-title {
   font-family: 'Barlow Condensed', sans-serif;

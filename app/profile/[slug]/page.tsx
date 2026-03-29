@@ -57,8 +57,7 @@ function GameIconCell({ icon, size = 18 }: { icon?: string; size?: number }) {
 
 function matchHref(m: any) {
   if (m.type === 'Tournament' && m.tournamentSlug) return `/tournaments/${m.tournamentSlug}/matches/${m.id}`
-  if (m.matchType === 'cash')  return `/matches/cash/${m.id}`
-  return `/matches/xp/${m.id}`
+  return `/matches/${m.id}`
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────

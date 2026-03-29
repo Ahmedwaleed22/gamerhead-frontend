@@ -396,8 +396,8 @@ export default function TeamProfilePage() {
           {/* LIVE MATCH BLOCK — only renders when a match is active */}
           {liveMatch && liveMatch.matchId && (() => {
             const mCfg = liveMatch.matchType === 'cash'
-              ? { accent: '#F0AA1A', dim: 'rgba(212,146,10,.15)', bdr: 'rgba(212,146,10,.3)', badge: 'WAGER MATCH', sectionTitle: 'Live Match', routeBase: '/matches/cash' }
-              : { accent: '#A78BFA', dim: 'rgba(124,58,237,.15)', bdr: 'rgba(124,58,237,.3)', badge: 'XP LADDER', sectionTitle: 'Live Match', routeBase: '/matches/xp' }
+              ? { accent: '#F0AA1A', dim: 'rgba(212,146,10,.15)', bdr: 'rgba(212,146,10,.3)', badge: 'WAGER MATCH', sectionTitle: 'Live Match' }
+              : { accent: '#A78BFA', dim: 'rgba(124,58,237,.15)', bdr: 'rgba(124,58,237,.3)', badge: 'XP LADDER', sectionTitle: 'Live Match' }
             return (
               <div style={{ background: '#18181C', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.04)', marginBottom: 16 }}>
                 {/* Card header — matches old UI tp-card-header */}
@@ -407,7 +407,7 @@ export default function TeamProfilePage() {
                 </div>
                 {/* Live match card inside */}
                 <div style={{ padding: '10px 14px' }}>
-                  <Link href={`${mCfg.routeBase}/${liveMatch.matchId}`} style={{ textDecoration: 'none', display: 'block' }}>
+                  <Link href={`/matches/${liveMatch.matchId}`} style={{ textDecoration: 'none', display: 'block' }}>
                     <div
                       style={{ background: `linear-gradient(135deg,${mCfg.dim},rgba(15,15,24,.95))`, border: `1px solid ${mCfg.accent}66`, borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, transition: 'border-color .15s' }}
                       onMouseEnter={e => (e.currentTarget.style.borderColor = mCfg.accent + 'aa')}
@@ -468,7 +468,7 @@ export default function TeamProfilePage() {
                   const isDraw  = m.result === 'draw'
                   const rColor  = isWin ? '#4ade80' : isDraw ? '#9CA3AF' : '#E74C3C'
                   const rBg     = isWin ? 'rgba(74,222,128,0.08)' : isDraw ? 'rgba(156,163,175,0.08)' : 'rgba(231,76,60,0.08)'
-                  const matchUrl = m.matchType === 'cash' ? `/matches/cash/${m.matchId}` : `/matches/xp/${m.matchId}`
+                  const matchUrl = `/matches/${m.matchId}`
                   const gameImg = m.gameImage || ''
                   const oppLogo = m.opponentLogo || gameImg
                   const teamLogo = team.logoUrl || team.bannerUrl || gameImg
