@@ -25,7 +25,7 @@ interface Order {
   id: string
   orderId: string
   buyer: string
-  buyerEmoji: string
+  buyerAvatarUrl?: string | null
   package: string
   type: PackageType
   status: OrderStatus
@@ -53,7 +53,7 @@ interface Package {
 
 interface Review {
   buyer: string
-  buyerEmoji: string
+  buyerAvatarUrl?: string | null
   rating: number
   text: string
   package: string
@@ -225,7 +225,7 @@ function CustomOfferModal({ order, onClose }: { order: Order; onClose:()=>void }
           <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:20, color:'#fff' }}>Create Custom Offer</span>
           <button onClick={onClose} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer' }}>✕</button>
         </div>
-        <div style={{ fontSize:11, color:'rgba(255,255,255,.35)', fontFamily:'Barlow, sans-serif', marginBottom:20 }}>For {order.buyerEmoji} {order.buyer} · {order.orderId || order.id}</div>
+        <div style={{ fontSize:11, color:'rgba(255,255,255,.35)', fontFamily:'Barlow, sans-serif', marginBottom:20 }}>For {order.buyer} · {order.orderId || order.id}</div>
 
         {[
           { label:'Custom Title',     type:'text',   placeholder:'e.g. Extended IGL Session + VOD', val:ofTitle, set:setOfTitle },
@@ -272,6 +272,7 @@ export default function CoachDashboard() {
   const [reviewDist, setReviewDist]         = useState<Record<number,number>>({})
   const [editCoachModal, setEditCoachModal] = useState(false)
   const [editBio, setEditBio]              = useState('')
+  const [editTitle, setEditTitle]          = useState('')
   const [editCustomReqs, setEditCustomReqs] = useState(false)
   const [editGameSlugs, setEditGameSlugs]  = useState<string[]>([])
   const [savingProfile, setSavingProfile]   = useState(false)
@@ -325,7 +326,7 @@ export default function CoachDashboard() {
             const items = Array.isArray(rev) ? rev : rev.items ?? rev.reviews ?? []
             setREVIEWS(items.map((r: any) => ({
               buyer: r.buyerName || r.buyer || 'User',
-              buyerEmoji: r.buyerEmoji || '👤',
+              buyerAvatarUrl: r.buyerAvatarUrl || null,
               rating: r.rating,
               text: r.text,
               package: r.packageTitle || r.package || '',
@@ -350,8 +351,8 @@ export default function CoachDashboard() {
       setORDERS(rawOrders.map((o: any) => ({
         id: o._id || o.id,
         orderId: o.orderId || o._id,
-        buyer: o.buyerName || 'User',
-        buyerEmoji: o.buyerEmoji || '👤',
+        buyer: o.buyerId?.username || o.buyerName || 'User',
+        buyerAvatarUrl: o.buyerId?.avatarUrl || null,
         package: o.packageTitle || '',
         type: o.packageType || 'vod',
         status: o.status || 'pending',
@@ -407,7 +408,7 @@ export default function CoachDashboard() {
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
                 <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:22, color:'#fff', letterSpacing:.5 }}>{COACH.name}</span>
                 <span style={{ background:'rgba(178,45,45,.2)', border:'1px solid rgba(178,45,45,.4)', borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:'#ff6b6b', fontFamily:'Rajdhani, sans-serif', letterSpacing:.5 }}>✓ VERIFIED COACH</span>
-                <button onClick={() => { setEditBio(COACH.bio || ''); setEditCustomReqs(COACH.allowCustomRequests); setEditGameSlugs(COACH.gameSlugs || []); setEditCoachModal(true) }} style={{ background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', borderRadius:6, padding:'3px 10px', fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.5)', cursor:'pointer', letterSpacing:.3 }}>
+                <button onClick={() => { setEditBio(COACH.bio || ''); setEditTitle(COACH.title || ''); setEditCustomReqs(COACH.allowCustomRequests); setEditGameSlugs(COACH.gameSlugs || []); setEditCoachModal(true) }} style={{ background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', borderRadius:6, padding:'3px 10px', fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.5)', cursor:'pointer', letterSpacing:.3 }}>
                   EDIT PROFILE
                 </button>
               </div>
@@ -492,46 +493,51 @@ export default function CoachDashboard() {
             </div>
 
             {/* Orders list */}
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
               {filteredOrders.map(order=>{
                 const st = STATUS_STYLES[order.status]
                 const tp = TYPE_LABELS[order.type]
                 return (
-                  <div key={order.id} style={{ background:'#18181C', border:`1px solid ${order.unread?'rgba(178,45,45,.3)':'rgba(255,255,255,.07)'}`, borderRadius:10, padding:'14px 18px', display:'flex', alignItems:'center', gap:14 }}>
-
-                    {/* Unread dot */}
-                    <div style={{ width:6, height:6, borderRadius:'50%', background:order.unread?'#ff6b6b':'transparent', flexShrink:0 }}/>
-
-                    {/* Buyer */}
-                    <div style={{ width:36, height:36, borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>
-                      <Icon icon={Solar.user} width={18} height={18} style={{ display: 'block' }} />
+                  <div key={order.id} style={{ background:'#18181B', border:`1px solid ${order.unread?'#3B82F6':'#27272A'}`, borderRadius:12, padding:'16px', display:'flex', alignItems:'center', gap:16 }}>
+                    
+                    {/* Unread indicator wrapper - modern look */}
+                    <div style={{ position:'relative', display:'flex', flexShrink:0 }}>
+                      <div style={{ width:40, height:40, borderRadius:20, background:'#27272A', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+                        {order.buyerAvatarUrl ? (
+                          <img src={order.buyerAvatarUrl} alt={order.buyer} style={{width:'100%', height:'100%', objectFit:'cover'}}/>
+                        ) : (
+                          <Icon icon={Solar.user} width={20} height={20} style={{ color: '#A1A1AA' }} />
+                        )}
+                      </div>
+                      {order.unread && <div style={{ position:'absolute', top:0, right:0, width:10, height:10, borderRadius:'50%', background:'#3B82F6', border:'2px solid #18181B' }}/>}
                     </div>
 
                     {/* Info */}
                     <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
-                        <span style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:13, color:'#fff' }}>{order.buyer}</span>
-                        <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'1px 7px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, display:'inline-flex', alignItems:'center', gap:5 }}><Icon icon={TYPE_ICONS[order.type]} width={11} height={11} style={{ flexShrink: 0, color: tp.color }} /> {tp.label}</span>
-                        <span style={{ background:st.bg, border:`1px solid ${st.border}`, borderRadius:4, padding:'1px 7px', fontSize:9, fontWeight:700, color:st.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3 }}>{st.label}</span>
-                        {order.unread&&<span style={{ fontSize:9, fontWeight:700, color:'#ff6b6b', fontFamily:'Rajdhani, sans-serif' }}>● NEW MESSAGE</span>}
+                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4, flexWrap:'wrap' }}>
+                        <span style={{ fontFamily:'Inter, sans-serif', fontWeight:600, fontSize:15, color:'#F9FAFB' }}>{order.buyer}</span>
+                        <span style={{ background:`${tp.color}15`, color:tp.color, padding:'2px 8px', borderRadius:6, fontSize:12, fontWeight:500, fontFamily:'Inter, sans-serif', display:'inline-flex', alignItems:'center', gap:4 }}>
+                          <Icon icon={TYPE_ICONS[order.type]} width={12} height={12} /> {tp.label}
+                        </span>
+                        <span style={{ background:st.bg, border:`1px solid ${st.border}`, borderRadius:6, padding:'2px 8px', fontSize:12, fontWeight:500, color:st.color, fontFamily:'Inter, sans-serif' }}>{st.label}</span>
                       </div>
-                      <div style={{ fontFamily:'Barlow, sans-serif', fontSize:11, color:'rgba(255,255,255,.4)' }}>
-                        {order.package} · Due {order.deliveryDue} · {order.messages} messages · {order.createdAt}
-                        {order.scheduledAt && <> · 📅 {order.scheduledAt}</>}
+                      <div style={{ fontFamily:'Inter, sans-serif', fontSize:13, color:'#9CA3AF' }}>
+                        {order.package} <span style={{color:'#4B5563'}}>•</span> Due {order.deliveryDue} <span style={{color:'#4B5563'}}>•</span> {order.messages} messages
+                        {order.scheduledAt && <> <span style={{color:'#4B5563'}}>•</span> 📅 {order.scheduledAt}</>}
                       </div>
                     </div>
 
                     {/* Price */}
-                    <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:20, color:'#4ade80', flexShrink:0 }}>${order.price}</div>
+                    <div style={{ fontFamily:'Inter, sans-serif', fontWeight:600, fontSize:20, color:'#10B981', flexShrink:0, paddingRight: 10 }}>${order.price}</div>
 
                     {/* Actions */}
-                    <div style={{ display:'flex', gap:6, flexShrink:0, flexWrap:'wrap' }}>
+                    <div style={{ display:'flex', gap:8, flexShrink:0, flexWrap:'wrap' }}>
                       {order.status==='pending'&&(
                         <>
-                          <button disabled={actionLoading===order.id} onClick={()=>{ setAcceptingOrder(order); setScheduledDate(''); setScheduledTime('') }} style={{ background:'rgba(74,222,128,.12)', border:'1px solid rgba(74,222,128,.35)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#4ade80', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap' }}>
+                          <button disabled={actionLoading===order.id} onClick={()=>{ setAcceptingOrder(order); setScheduledDate(''); setScheduledTime('') }} style={{ background:'#10B981', border:'none', borderRadius:6, padding:'8px 16px', fontSize:13, fontWeight:600, color:'#042F2E', fontFamily:'Inter, sans-serif', cursor:'pointer', whiteSpace:'nowrap' }}>
                             Accept
                           </button>
-                          <button disabled={actionLoading===order.id} onClick={()=>{ setRejectingOrder(order); setRejectReason('') }} style={{ background:'rgba(239,68,68,.1)', border:'1px solid rgba(239,68,68,.25)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#ef4444', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap' }}>
+                          <button disabled={actionLoading===order.id} onClick={()=>{ setRejectingOrder(order); setRejectReason('') }} style={{ background:'transparent', border:'1px solid #EF4444', borderRadius:6, padding:'8px 16px', fontSize:13, fontWeight:600, color:'#EF4444', fontFamily:'Inter, sans-serif', cursor:'pointer', whiteSpace:'nowrap' }}>
                             Reject
                           </button>
                         </>
@@ -540,34 +546,34 @@ export default function CoachDashboard() {
                         <button disabled={actionLoading===order.id} onClick={()=>{
                           setActionLoading(order.id)
                           coachingApi.deliverOrder({ orderId: order.orderId || order.id }).then(()=>setFetchKey(k=>k+1)).catch(()=>{}).finally(()=>setActionLoading(''))
-                        }} style={{ background:'rgba(167,139,250,.12)', border:'1px solid rgba(167,139,250,.35)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#A78BFA', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap', opacity:actionLoading===order.id?0.5:1 }}>
-                          {actionLoading===order.id?'...':'Mark Delivered'}
+                        }} style={{ background:'#8B5CF6', border:'none', borderRadius:6, padding:'8px 16px', fontSize:13, fontWeight:600, color:'#fff', fontFamily:'Inter, sans-serif', cursor:'pointer', whiteSpace:'nowrap', opacity:actionLoading===order.id?0.5:1 }}>
+                          {actionLoading===order.id?'...':'Deliver'}
                         </button>
                       )}
                       {order.status==='delivered'&&(
                         (order as any).coachConfirmed ? (
-                          <span style={{ fontSize:10, fontWeight:700, color:'#4ade80', fontFamily:'Rajdhani, sans-serif', whiteSpace:'nowrap' }}>Confirmed — waiting for buyer</span>
+                          <span style={{ fontSize:13, fontWeight:500, color:'#10B981', fontFamily:'Inter, sans-serif', whiteSpace:'nowrap', background:'#064E3B', padding:'6px 12px', borderRadius:6 }}>Waiting for buyer</span>
                         ) : (
                           <button disabled={actionLoading===order.id} onClick={()=>{
                             setActionLoading(order.id)
                             coachingApi.confirmCompletion({ orderId: order.orderId || order.id }).then(()=>setFetchKey(k=>k+1)).catch(()=>{}).finally(()=>setActionLoading(''))
-                          }} style={{ background:'rgba(74,222,128,.12)', border:'1px solid rgba(74,222,128,.35)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#4ade80', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap', opacity:actionLoading===order.id?0.5:1 }}>
-                            {actionLoading===order.id?'...':'Confirm Complete'}
+                          }} style={{ background:'#10B981', border:'none', borderRadius:6, padding:'8px 16px', fontSize:13, fontWeight:600, color:'#042F2E', fontFamily:'Inter, sans-serif', cursor:'pointer', whiteSpace:'nowrap', opacity:actionLoading===order.id?0.5:1 }}>
+                            {actionLoading===order.id?'...':'Confirm'}
                           </button>
                         )
                       )}
                       {(order.status==='pending'||order.status==='active'||order.status==='revision')&&(
-                        <button onClick={()=>setCustomOffer(order)} style={{ background:'rgba(240,170,26,.1)', border:'1px solid rgba(240,170,26,.3)', borderRadius:6, padding:'6px 12px', fontSize:10, fontWeight:700, color:'#F0AA1A', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, cursor:'pointer', whiteSpace:'nowrap' }}>
-                          Custom Offer
+                        <button onClick={()=>setCustomOffer(order)} style={{ background:'transparent', border:'1px solid #F59E0B', borderRadius:6, padding:'8px 16px', fontSize:13, fontWeight:600, color:'#F59E0B', fontFamily:'Inter, sans-serif', cursor:'pointer', whiteSpace:'nowrap' }}>
+                          Offer
                         </button>
                       )}
                       {order.conversationId ? (
-                        <Link href={`/mailbox?thread=${order.conversationId}`} style={{ background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)', borderRadius:6, padding:'6px 14px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,.7)', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, textDecoration:'none', whiteSpace:'nowrap' }}>
-                          Mailbox →
+                        <Link href={`/mailbox?thread=${order.conversationId}`} style={{ background:'#27272A', border:'none', borderRadius:6, padding:'8px 16px', fontSize:13, fontWeight:600, color:'#E5E7EB', fontFamily:'Inter, sans-serif', textDecoration:'none', whiteSpace:'nowrap' }}>
+                          Chat
                         </Link>
                       ) : (
-                        <Link href="/mailbox" style={{ background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)', borderRadius:6, padding:'6px 14px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,.7)', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, textDecoration:'none', whiteSpace:'nowrap' }}>
-                          Open →
+                        <Link href="/mailbox" style={{ background:'#27272A', border:'none', borderRadius:6, padding:'8px 16px', fontSize:13, fontWeight:600, color:'#E5E7EB', fontFamily:'Inter, sans-serif', textDecoration:'none', whiteSpace:'nowrap' }}>
+                          Open
                         </Link>
                       )}
                     </div>
@@ -686,7 +692,9 @@ export default function CoachDashboard() {
               {REVIEWS.map((r,i)=>(
                 <div key={i} style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.07)', borderRadius:10, padding:'16px 18px' }}>
                   <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-                    <div style={{ width:32, height:32, borderRadius:7, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>{r.buyerEmoji}</div>
+                    <div style={{ width:32, height:32, borderRadius:7, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, overflow:'hidden', flexShrink:0 }}>
+                      {r.buyerAvatarUrl ? <img src={r.buyerAvatarUrl} alt={r.buyer} style={{width:'100%', height:'100%', objectFit:'cover'}}/> : <Icon icon={Solar.user} width={18} height={18} />}
+                    </div>
                     <div style={{ flex:1 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2 }}>
                         <span style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:13, color:'#fff' }}>{r.buyer}</span>
@@ -717,7 +725,7 @@ export default function CoachDashboard() {
               <button onClick={()=>setAcceptingOrder(null)} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer' }}>✕</button>
             </div>
             <div style={{ fontSize:12, color:'rgba(255,255,255,.4)', fontFamily:'Barlow, sans-serif', marginBottom:18 }}>
-              {acceptingOrder.buyerEmoji} {acceptingOrder.buyer} — {acceptingOrder.package} — ${acceptingOrder.price}
+              {acceptingOrder.buyer} — {acceptingOrder.package} — ${acceptingOrder.price}
             </div>
             <div style={{ marginBottom:14 }}>
               <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:.8, marginBottom:5 }}>Scheduled Date</div>
@@ -757,7 +765,7 @@ export default function CoachDashboard() {
               <button onClick={()=>setRejectingOrder(null)} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer' }}>✕</button>
             </div>
             <div style={{ fontSize:12, color:'rgba(255,255,255,.4)', fontFamily:'Barlow, sans-serif', marginBottom:18 }}>
-              {rejectingOrder.buyerEmoji} {rejectingOrder.buyer} — {rejectingOrder.package}
+              {rejectingOrder.buyer} — {rejectingOrder.package}
             </div>
             <div style={{ marginBottom:22 }}>
               <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:.8, marginBottom:5 }}>Reason (optional)</div>
@@ -789,6 +797,12 @@ export default function CoachDashboard() {
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:22 }}>
               <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:20, color:'#fff', letterSpacing:.5 }}>Edit Coach Profile</span>
               <button onClick={()=>setEditCoachModal(false)} style={{ background:'none', border:'none', color:'rgba(255,255,255,.4)', fontSize:20, cursor:'pointer', lineHeight:1 }}>✕</button>
+            </div>
+
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:.8, marginBottom:6 }}>Title</div>
+              <input value={editTitle} onChange={e=>setEditTitle(e.target.value)} placeholder="e.g. Pro Player & IGL"
+                style={{ width:'100%', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'10px 12px', color:'#fff', fontFamily:'Barlow, sans-serif', fontSize:13, outline:'none', boxSizing:'border-box' }}/>
             </div>
 
             <div style={{ marginBottom:16 }}>
@@ -838,8 +852,8 @@ export default function CoachDashboard() {
               </button>
               <button disabled={savingProfile} onClick={()=>{
                 setSavingProfile(true)
-                coachingApi.updateCoachProfile({ bio: editBio, allowCustomRequests: editCustomReqs, gameSlugs: editGameSlugs }).then(()=>{
-                  setCOACH((prev: any) => ({ ...prev, bio: editBio, allowCustomRequests: editCustomReqs, gameSlugs: editGameSlugs }))
+                coachingApi.updateCoachProfile({ bio: editBio, title: editTitle, allowCustomRequests: editCustomReqs, gameSlugs: editGameSlugs }).then(()=>{
+                  setCOACH((prev: any) => ({ ...prev, bio: editBio, title: editTitle, allowCustomRequests: editCustomReqs, gameSlugs: editGameSlugs }))
                   setEditCoachModal(false)
                 }).catch(()=>{}).finally(()=>setSavingProfile(false))
               }} style={{ flex:2, background:'#B22D2D', border:'none', borderRadius:8, padding:'10px', color:'#fff', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:13, letterSpacing:.8, cursor:'pointer', opacity:savingProfile?0.6:1 }}>

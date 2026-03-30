@@ -19,6 +19,7 @@ interface Package {
   deliveryDays: number
   description: string
   includes: string[]
+  tags?: string[]
   popular?: boolean
   orders: number
   rating: number
@@ -313,7 +314,7 @@ export default function CoachPackagePage() {
   const [loading, setLoading] = useState(true)
   const [hiring, setHiring]   = useState<Package|null>(null)
   const [customReq, setCustomReq] = useState(false)
-  const [tab, setTab]         = useState<'packages'|'reviews'>('packages')
+  const [tab, setTab]         = useState<'guides'|'services'|'reviews'>('services')
   const [showFullBio, setShowFullBio] = useState(false)
   const [reviewDist, setReviewDist] = useState<Record<number,number>>({})
 
@@ -495,7 +496,8 @@ export default function CoachPackagePage() {
             {/* Tabs */}
             <div style={{ display:'flex', gap:4, borderBottom:'1px solid rgba(255,255,255,.07)', marginBottom:18 }}>
               {[
-                { key:'packages', label:`Packages (${PACKAGES.length})` },
+                { key:'services', label:`Coaching Services (${PACKAGES.filter(p=>p.type!=='guide').length})` },
+                { key:'guides',   label:`Guides (${PACKAGES.filter(p=>p.type==='guide').length})` },
                 { key:'reviews',  label:`Reviews (${COACH.totalReviews})` },
               ].map(t=>(
                 <button key={t.key} onClick={()=>setTab(t.key as any)} style={{
@@ -509,10 +511,10 @@ export default function CoachPackagePage() {
               ))}
             </div>
 
-            {/* ── PACKAGES ── */}
-            {tab==='packages'&&(
+            {/* ── SERVICES ── */}
+            {tab==='services'&&(
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                {PACKAGES.map(pkg=>{
+                {PACKAGES.filter(p=>p.type!=='guide').map(pkg=>{
                   const tp = TYPE_LABELS[pkg.type]
                   return (
                     <div key={pkg.id} style={{ background:'#18181C', border:`1px solid ${pkg.popular?'rgba(178,45,45,.3)':'rgba(255,255,255,.07)'}`, borderRadius:12, padding:'20px 22px', position:'relative', overflow:'hidden' }}>
@@ -593,6 +595,52 @@ export default function CoachPackagePage() {
                     </button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── GUIDES ── */}
+            {tab==='guides'&&(
+              <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                {PACKAGES.filter(p=>p.type==='guide').map(pkg=>{
+                  const tp = TYPE_LABELS[pkg.type]
+                  return (
+                    <div key={pkg.id} style={{ background:'#18181C', border:`1px solid ${pkg.popular?'rgba(178,45,45,.3)':'rgba(255,255,255,.07)'}`, borderRadius:12, padding:'20px 22px', position:'relative', overflow:'hidden' }}>
+                      {pkg.popular&&<div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,#B22D2D,#ff8080,#B22D2D)' }}/>}
+
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:16, alignItems:'start' }}>
+                        <div>
+                          {/* Type badge + popular */}
+                          <div style={{ display:'flex', gap:7, marginBottom:8, flexWrap:'wrap' }}>
+                            <span style={{ background:tp.bg, border:`1px solid ${tp.color}33`, borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:tp.color, fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, display:'inline-flex', alignItems:'center', gap:5 }}><Icon icon={TYPE_ICONS[pkg.type]} width={12} height={12} style={{ flexShrink: 0, color: tp.color }} /> {tp.label}</span>
+                            {pkg.popular&&<span style={{ background:'rgba(178,45,45,.15)', border:'1px solid rgba(178,45,45,.3)', borderRadius:4, padding:'2px 8px', fontSize:9, fontWeight:700, color:'#ff8080', fontFamily:'Rajdhani, sans-serif', letterSpacing:.3, display:'inline-flex', alignItems:'center', gap:4 }}><Icon icon={Solar.fire} width={11} height={11} style={{ flexShrink: 0 }} /> MOST POPULAR</span>}
+                          </div>
+
+                          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:20, color:'#fff', letterSpacing:.3, marginBottom:8 }}>{pkg.title}</div>
+                          
+                          <p style={{ fontFamily:'Barlow, sans-serif', fontSize:12, color:'rgba(255,255,255,.45)', lineHeight:1.7, margin:'0 0 12px' }}>{pkg.description}</p>
+                          
+                          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                            {pkg.tags?.map((t,i)=>(
+                              <span key={i} style={{ background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.06)', borderRadius:6, padding:'2px 8px', fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.4)', letterSpacing:.4 }}>{t}</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign:'right', minWidth:110 }}>
+                          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:28, color:'#4ade80', lineHeight:1, marginBottom:4 }}>${pkg.price}</div>
+                          <div style={{ fontSize:10, color:'rgba(255,255,255,.3)', fontFamily:'Barlow, sans-serif', marginBottom:12 }}>{pkg.deliveryDays}d delivery</div>
+                          {isOwnProfile ? (
+                            <div style={{ background:'rgba(255,255,255,.05)', borderRadius:8, padding:'8px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:12, color:'rgba(255,255,255,.3)', textAlign:'center' }}>YOUR PACKAGE</div>
+                          ) : (
+                            <button onClick={()=>setHiring(pkg)} style={{ width:'100%', background:tp.color, border:'none', borderRadius:8, padding:'10px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:14, letterSpacing:.6, color:'#000', cursor:'pointer' }}>
+                              BUY NOW
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             )}
 

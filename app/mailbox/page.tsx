@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { mailboxApi, usersApi } from '@/lib/api'
@@ -9,27 +9,49 @@ import { sendActivity } from '@/lib/socket'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 
-type Message = { id?: string; side: string; initials: string; color: string; date: string; time: string; body: string; editedAt?: string | null }
-type Thread  = { id: string; from: string; fromSlug: string; initials: string; color: string; subject: string; date: string; time: string; unread: boolean; preview: string }
+type Message = { id?: string; side: string; initials: string; pfp?: string; color: string; date: string; time: string; body: string; editedAt?: string | null }
+type Thread  = { id: string; from: string; fromSlug: string; initials: string; pfp?: string; color: string; subject: string; date: string; time: string; unread: boolean; preview: string }
 type Friend  = { _id: string; username: string; slug: string; avatarUrl: string; avatarEmoji: string; isOnline: boolean; presenceStatus?: string; activityText?: string; lastActiveAt?: string; lastSeen: string; role: string; isPremium: boolean; level: number }
 
-// Render simple markdown: **bold**, *italic*, __underline__
+// Render simple markdown: **bold**, *italic*, __underline__, [links](url), ![img](url), [color=red]text[/color]
 function renderFormatted(text: string) {
   const parts: React.ReactNode[] = []
-  // Process: **bold** → <strong>, *italic* → <em>, __underline__ → <u>
-  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(__(.+?)__)/g
+  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(__(.+?)__)|(!\[([^\]]*)\]\([^)]+\))|(\[[^\]]+\]\([^)]+\))|(\[color=([^\]]+)\](.*?)\[\/color\])|(https?:\/\/[^\s<]+)/g
   let lastIndex = 0
   let match: RegExpExecArray | null
   let key = 0
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index))
-    if (match[1]) parts.push(<strong key={key++} style={{ fontWeight: 700 }}>{match[2]}</strong>)
-    else if (match[3]) parts.push(<em key={key++}>{match[4]}</em>)
-    else if (match[5]) parts.push(<u key={key++}>{match[6]}</u>)
-    lastIndex = match.index + match[0].length
+    const m = match[0]
+    if (m.startsWith('**')) parts.push(<strong key={key++} style={{ fontWeight: 700, color: '#fff' }}>{match[2] || m.slice(2,-2)}</strong>)
+    else if (m.startsWith('*') && !m.startsWith('**')) parts.push(<em key={key++} style={{ color: '#d0d0e0' }}>{match[4] || m.slice(1,-1)}</em>)
+    else if (m.startsWith('__')) parts.push(<u key={key++}>{match[6] || m.slice(2,-2)}</u>)
+    else if (m.startsWith('![')) {
+      const altMatch = m.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+      if (altMatch) parts.push(<img key={key++} src={altMatch[2]} alt={altMatch[1]} style={{ maxWidth: '100%', borderRadius: 8, marginTop: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.1)' }} />)
+    }
+    else if (m.startsWith('[color=')) {
+      const colorMatch = m.match(/\[color=([^\]]+)\](.*?)\[\/color\]/);
+      if (colorMatch) parts.push(<span key={key++} style={{ color: colorMatch[1] }}>{colorMatch[2]}</span>)
+    }
+    else if (m.startsWith('[')) {
+      const linkMatch = m.match(/\[([^\]]+)\]\(([^)]+)\)/);
+      if (linkMatch) parts.push(<a key={key++} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: '#e74c3c', textDecoration: 'underline', fontWeight: 600 }}>{linkMatch[1]}</a>)
+    }
+    else if (m.startsWith('http')) {
+      parts.push(<a key={key++} href={m} target="_blank" rel="noopener noreferrer" style={{ color: '#e74c3c', textDecoration: 'underline', wordBreak: 'break-all' }}>{m}</a>)
+    }
+    lastIndex = match.index + m.length
   }
   if (lastIndex < text.length) parts.push(text.slice(lastIndex))
-  return parts
+  return parts.length ? parts : [text]
+}
+
+function Avatar({ src, size = 38, style }: { src?: string; size?: number; style?: React.CSSProperties }) {
+  if (src && (src.startsWith('http') || src.startsWith('/') || src.startsWith('data:image'))) {
+    return <img src={src} alt="" style={{ width: size, height: size, borderRadius: 8, objectFit: 'cover', ...style }} />
+  }
+  return <div style={{ width: size, height: size, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', ...style }}><Icon icon={Solar.user} width={size*0.6} height={size*0.6} style={{ color: '#6B7280' }} /></div>
 }
 
 // Draft compose state — when user navigates with ?to=slug, we show a compose view
@@ -47,6 +69,7 @@ export default function MailboxPageWrapper() {
 function MailboxPage() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [threads,    setThreads]    = useState<Thread[]>([])
   const [selected,   setSelected]   = useState<Thread | null>(null)
   const [reply,      setReply]      = useState('')
@@ -59,6 +82,32 @@ function MailboxPage() {
   const [sendingDraft, setSendingDraft] = useState(false)
   const [editingMsg, setEditingMsg] = useState<{ id: string; body: string } | null>(null)
   const replyRef = useRef<HTMLTextAreaElement>(null)
+
+  const [unreadCountChat, setUnreadCountChat] = useState(0)
+  const chatBoxRef = useRef<HTMLDivElement>(null)
+  const atBottomRef = useRef(true)
+
+  const scrollToBottom = useCallback((force?: boolean) => {
+    const el = chatBoxRef.current
+    if (!el) return
+    if (force || atBottomRef.current) {
+      el.scrollTop = el.scrollHeight
+      setUnreadCountChat(0)
+    }
+  }, [])
+
+  const prevMsgCountRef = useRef(0)
+  useEffect(() => {
+    if (!selected) return
+    const msgs = messages[selected.id] || []
+    const newCount = msgs.length - prevMsgCountRef.current
+    prevMsgCountRef.current = msgs.length
+    if (newCount > 0 && !atBottomRef.current) {
+      setUnreadCountChat(u => u + newCount)
+    } else {
+      setTimeout(() => scrollToBottom(), 0)
+    }
+  }, [messages, selected, scrollToBottom])
 
   useEffect(() => { sendActivity('Messaging') }, [])
 
@@ -124,15 +173,16 @@ function MailboxPage() {
     mailboxApi.getThreads().then((res: any) => {
       const list = (Array.isArray(res) ? res : res.threads || []).map((t: any, i: number) => ({
         id:       t._id || t.id || String(i),
-        from:     t.otherParticipant?.username || t.participantNames?.[0] || 'Unknown',
-        fromSlug: t.otherParticipant?.slug || '',
-        initials: (t.otherParticipant?.username || t.participantNames?.[0] || 'UN').slice(0, 2).toUpperCase(),
-        color:    COLORS[i % COLORS.length],
+        from:     t.from || t.otherParticipant?.username || t.participantNames?.[0] || 'Unknown',
+        fromSlug: t.fromSlug || t.otherParticipant?.slug || '',
+        initials: (t.initials || t.otherParticipant?.username || t.participantNames?.[0] || 'UN').slice(0, 2).toUpperCase(),
+        pfp:      t.pfp || t.avatarUrl || t.otherParticipant?.avatarUrl || t.otherParticipant?.pfp || '',
+        color:    t.color || COLORS[i % COLORS.length],
         subject:  t.subject || t.lastMessage?.text?.slice(0, 60) || 'No subject',
-        date:     t.updatedAt ? new Date(t.updatedAt).toLocaleDateString('en-US') : '',
-        time:     t.updatedAt ? new Date(t.updatedAt).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }) : '',
+        date:     t.date || (t.updatedAt ? new Date(t.updatedAt).toLocaleDateString('en-US') : ''),
+        time:     t.time || (t.updatedAt ? new Date(t.updatedAt).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }) : ''),
         unread:   t.unread ?? false,
-        preview:  t.lastMessage?.text?.slice(0, 80) || '',
+        preview:  t.preview || t.lastMessage?.text?.slice(0, 80) || '',
       }))
       setThreads(list)
     }).catch(() => {})
@@ -143,6 +193,8 @@ function MailboxPage() {
   const selectThread = (thread: Thread) => {
     setDraft(null)
     setSelected(thread)
+    atBottomRef.current = true
+    setUnreadCountChat(0)
     if (!messages[thread.id]) {
       setLoadingMsgs(true)
       mailboxApi.getMessages(thread.id).then((res: any) => {
@@ -150,6 +202,7 @@ function MailboxPage() {
           id:       m.id || m._id || '',
           side:     m.side || 'theirs',
           initials: m.initials || '??',
+          pfp:      m.pfp || m.avatarUrl || '',
           color:    m.color || thread.color,
           date:     m.date || '',
           time:     m.time || '',
@@ -178,6 +231,7 @@ function MailboxPage() {
         body:     text,
       }
       setMessages(prev => ({ ...prev, [selected.id]: [...(prev[selected.id] || []), newMsg] }))
+      setTimeout(() => scrollToBottom(true), 0)
     }).catch(() => {})
   }
 
@@ -242,24 +296,35 @@ function MailboxPage() {
   }
 
   return (
-    <div style={{ background:'#0C0C11', minHeight:'100vh', padding:'28px 0 40px' }}>
-      <div className="container">
+    <div style={{ background:'var(--bg-1, #0C0C11)', minHeight:'100vh', paddingBottom: 60 }}>
+      {/* ── MAILBOX HEADER ── */}
+      <div style={{ position: 'relative', padding: '32px 0 32px', width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', background: 'var(--bg-2)', borderBottom: '1px solid var(--border)', overflow: 'hidden', marginBottom: 24 }}>
+        {/* Background effects */}
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 20% 0%, rgba(232,0,13,0.12) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.6, pointerEvents: 'none', maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)' }} />
 
-        {/* Page title */}
-        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-          <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:'#F0F0F8', margin:0 }}>Mailbox</h1>
+        <div className="container" style={{ position: 'relative', zIndex: 1, display:'flex', alignItems:'center', gap:12 }}>
+          <button onClick={() => router.back()} style={{ background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:8, width:36, height:36, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-muted)', cursor:'pointer', transition:'all 0.2s', padding:0, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}
+            onMouseEnter={e=>(e.currentTarget.style.color='#fff', e.currentTarget.style.borderColor='rgba(232,0,13,0.4)')}
+            onMouseLeave={e=>(e.currentTarget.style.color='var(--text-muted)', e.currentTarget.style.borderColor='var(--border)')}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+          <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, textTransform: 'uppercase', color:'#fff', margin:0, letterSpacing: 0.5 }}>Mailbox</h1>
           {unreadCount > 0 && (
-            <span style={{ background:'#C0392B', color:'#fff', fontFamily:"'Roboto',sans-serif", fontWeight:700, fontSize:11, padding:'2px 9px', borderRadius:10 }}>{unreadCount} unread</span>
+            <span style={{ background:'rgba(232,0,13,0.15)', border:'1px solid rgba(232,0,13,0.3)', color:'var(--red)', fontFamily:"'Roboto',sans-serif", fontWeight:700, fontSize:12, padding:'3px 10px', borderRadius:20, marginLeft: 8, boxShadow: '0 0 12px rgba(232,0,13,0.2)' }}>{unreadCount} unread</span>
           )}
         </div>
+      </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'300px 1fr 240px', background:'#19191D', borderRadius:12, overflow:'hidden', border:'1px solid #202023', height:'calc(100vh - 180px)', minHeight:600 }}>
+      <div className="container">
+        <div style={{ display:'grid', gridTemplateColumns:'300px 1fr 240px', background:'var(--bg-2)', borderRadius:12, border:'1px solid var(--border)', height:'calc(100vh - 200px)', minHeight:600, boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}>
 
           {/* ── THREAD LIST ── */}
-          <div style={{ borderRight:'1px solid #202023', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+          <div style={{ borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', overflow:'hidden', background:'rgba(0,0,0,0.2)' }}>
             {/* Search */}
-            <div style={{ padding:'12px 14px', borderBottom:'1px solid #202023' }}>
-              <input placeholder="Search messages..." style={{ width:'100%', background:'#303034', border:'none', borderRadius:6, padding:'7px 10px', fontFamily:"'Roboto',sans-serif", fontSize:11, color:'#fff', outline:'none', boxSizing:'border-box' }} />
+            <div style={{ padding:'12px 14px', borderBottom:'1px solid var(--border)' }}>
+              <input placeholder="Search messages..." style={{ width:'100%', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, padding:'8px 12px', fontFamily:"'Roboto',sans-serif", fontSize:12, color:'#fff', outline:'none', boxSizing:'border-box', transition:'all 0.2s' }} onFocus={e => e.target.style.borderColor='rgba(232,0,13,0.4)'} onBlur={e => e.target.style.borderColor='var(--border)'} />
             </div>
 
             {/* Thread items */}
@@ -269,110 +334,144 @@ function MailboxPage() {
                   key={t.id}
                   onClick={() => selectThread(t)}
                   className="mailbox-thread-row"
-                  style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'13px 14px', borderBottom:'1px solid #202023', cursor:'pointer', background:selected?.id===t.id ? 'rgba(192,57,43,0.07)' : 'transparent', borderLeft:selected?.id===t.id ? '2px solid #C0392B' : '2px solid transparent', position:'relative', transition:'background 0.15s' }}
+                  style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'13px 14px', borderBottom:'1px solid var(--border)', cursor:'pointer', background:selected?.id===t.id ? 'rgba(232,0,13,0.1)' : 'transparent', borderLeft:selected?.id===t.id ? '2px solid var(--red)' : '2px solid transparent', position:'relative', transition:'all 0.15s' }}
                 >
                   {/* Avatar */}
-                  <div style={{ width:42, height:42, background:t.color+'18', border:'1px solid '+t.color+'33', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:14, color:t.color }}>{t.initials}</span>
+                  <div style={{ width:42, height:42, borderRadius:10, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', background:t.color+'18', border:'1px solid '+t.color+'33' }}>
+                    <Avatar src={t.pfp} size={42} />
                   </div>
 
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:2 }}>
-                      <span style={{ fontFamily:"'Roboto',sans-serif", fontWeight:t.unread?700:500, fontSize:12, color:t.unread?'#fff':'#9CA3AF', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:120 }}>{t.from}</span>
-                      <span style={{ fontFamily:"'Roboto',sans-serif", fontSize:9, color:'#4A5568', flexShrink:0, marginLeft:4 }}>{t.time}</span>
+                  <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', justifyContent:'center' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                      <span style={{ fontFamily:"'Barlow',sans-serif", fontWeight:t.unread?700:600, fontSize:14, color:t.unread?'#fff':'#E0E0E0', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:120 }}>{t.from}</span>
+                      <span style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:10, color:'var(--text-muted)', flexShrink:0, marginLeft:4 }}>{t.time}</span>
                     </div>
-                    <div style={{ fontFamily:"'Roboto',sans-serif", fontWeight:t.unread?600:400, fontSize:11, color:t.unread?'#F0F0F8':'#6B7280', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', marginBottom:3 }}>{t.subject}</div>
-                    <div style={{ fontFamily:"'Roboto',sans-serif", fontSize:10, color:'#4A5568', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{t.preview}</div>
+                    <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:12, color:t.unread?'#9CA3AF':'var(--text-muted)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{t.preview}</div>
                   </div>
 
-                  {t.unread && <div style={{ width:7, height:7, background:'#C0392B', borderRadius:'50%', flexShrink:0, marginTop:4 }} />}
+                  {t.unread && <div style={{ width:7, height:7, background:'var(--red)', borderRadius:'50%', flexShrink:0, marginTop:4, boxShadow:'0 0 8px rgba(232,0,13,0.6)' }} />}
 
                   {/* Delete on hover */}
-                  <button type="button" onClick={e => deleteThread(t.id, e)} className="thread-delete-btn" aria-label="Delete thread" style={{ position:'absolute', top:8, right:8, background:'rgba(255,255,255,0.06)', border:'none', color:'#6B7280', cursor:'pointer', padding:'4px 6px', borderRadius:4, opacity:0, transition:'opacity 0.15s', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.close} width={14} height={14} /></button>
+                  <button type="button" onClick={e => deleteThread(t.id, e)} className="thread-delete-btn" aria-label="Delete thread" style={{ position:'absolute', top:8, right:8, background:'rgba(255,255,255,0.06)', border:'none', color:'var(--text-muted)', cursor:'pointer', padding:'4px 6px', borderRadius:4, opacity:0, transition:'opacity 0.15s', display:'flex', alignItems:'center', justifyContent:'center' }} onMouseEnter={e=>(e.currentTarget.style.color='#fff', e.currentTarget.style.background='rgba(232,0,13,0.5)')} onMouseLeave={e=>(e.currentTarget.style.color='var(--text-muted)', e.currentTarget.style.background='rgba(255,255,255,0.06)')}><Icon icon={Solar.close} width={14} height={14} /></button>
                 </div>
               ))}
             </div>
           </div>
 
           {/* ── MESSAGE VIEW ── */}
-          <div style={{ display:'flex', flexDirection:'column', overflow:'hidden' }}>
+          <div style={{ display:'flex', flexDirection:'column', overflow:'hidden', background:'var(--bg-2)' }}>
             {selected ? (
               <>
                 {/* Message header */}
-                <div style={{ padding:'18px 28px 14px', borderBottom:'1px solid #202023', flexShrink:0 }}>
-                  <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
-                    <div>
-                      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:22, color:'#fff', lineHeight:1.2 }}>{selected.subject}</div>
-                      <div style={{ fontFamily:"'Roboto',sans-serif", fontSize:11, color:'#6B7280', marginTop:4 }}>From: <span style={{ color:'#9CA3AF' }}>{selected.from}</span> · {selected.date}</div>
+                <div style={{ padding:'18px 28px 14px', borderBottom:'1px solid var(--border)', flexShrink:0, background:'var(--bg-2)' }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                      <Avatar src={selected.pfp} size={42} style={{ borderRadius:10 }} />
+                      <div>
+                        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:22, color:'#fff', lineHeight:1.2 }}>{selected.from}</div>
+                        <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:13, color:'var(--text-muted)', marginTop:2 }}>Conversation started {selected.date}</div>
+                      </div>
                     </div>
-                    <button onClick={e => { deleteThread(selected.id, e); }} style={{ background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, padding:'6px 10px', color:'#6B7280', fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <button onClick={e => { deleteThread(selected.id, e); }} style={{ background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, padding:'8px 12px', color:'var(--text-muted)', fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:6, transition:'all 0.2s' }} onMouseEnter={e=>(e.currentTarget.style.color='var(--red)', e.currentTarget.style.borderColor='rgba(232,0,13,0.4)')} onMouseLeave={e=>(e.currentTarget.style.color='var(--text-muted)', e.currentTarget.style.borderColor='var(--border)')}>
+                      <Icon icon={Solar.trash} width={14} height={14} />
                       Delete
                     </button>
                   </div>
                 </div>
 
-                {/* Messages scroll area */}
-                <div style={{ flex:1, overflowY:'auto', padding:'24px 28px', display:'flex', flexDirection:'column', gap:24 }}>
-                  {selectedMsgs.map((msg, i) => {
-                    const isMine = msg.side === 'mine'
-                    const isEditing = editingMsg?.id === msg.id
-                    return (
-                      <div key={msg.id || i} style={{ display:'flex', flexDirection:isMine?'row-reverse':'row', gap:16, alignItems:'flex-start' }}>
-                        {/* Avatar */}
-                        <div style={{ width:48, height:48, background:msg.color+'18', border:`1px solid ${msg.color}33`, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:msg.color }}>{msg.initials}</span>
-                        </div>
-                        {/* Bubble */}
-                        <div style={{ maxWidth:'75%' }}>
-                          <div style={{ fontFamily:"'Roboto',sans-serif", fontSize:10, color:'#4A5568', marginBottom:6, textAlign:isMine?'right':'left', display:'flex', alignItems:'center', gap:6, justifyContent:isMine?'flex-end':'flex-start' }}>
-                            <span>{msg.date} · {msg.time}</span>
-                            {msg.editedAt && <span style={{ color:'#6B7280', fontStyle:'italic' }}>(edited)</span>}
-                            {isMine && msg.id && !isEditing && (
-                              <button
-                                onClick={() => setEditingMsg({ id: msg.id!, body: msg.body })}
-                                style={{ background:'none', border:'none', color:'#4A5568', cursor:'pointer', fontSize:10, padding:'0 2px', fontFamily:"'Roboto',sans-serif" }}
-                                title="Edit message"
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                              </button>
+                <div style={{ position:'relative', flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+                  {/* Messages scroll area */}
+                  <div
+                    ref={chatBoxRef}
+                    onScroll={() => {
+                      const el = chatBoxRef.current
+                      if (!el) return
+                      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40
+                      atBottomRef.current = isAtBottom
+                      if (isAtBottom) setUnreadCountChat(0)
+                    }}
+                    style={{ flex:1, overflowY:'auto', padding:'24px 28px', display:'flex', flexDirection:'column', gap:24 }}
+                  >
+                    {selectedMsgs.map((msg, i) => {
+                      const isMine = msg.side === 'mine'
+                      const isEditing = editingMsg?.id === msg.id
+                      return (
+                        <div key={msg.id || i} style={{ display:'flex', flexDirection:isMine?'row-reverse':'row', gap:16, alignItems:'flex-start' }}>
+                          {/* Avatar */}
+                          <div style={{ width:48, height:48, borderRadius:10, flexShrink:0, overflow:'hidden', background:msg.color+'18', border:`1px solid ${msg.color}33`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                            <Avatar src={isMine ? (user?.avatarUrl ?? undefined) : (msg.pfp || selected?.pfp || undefined)} size={48} />
+                          </div>
+                          {/* Bubble */}
+                          <div style={{ maxWidth:'75%' }}>
+                            <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'var(--text-muted)', marginBottom:6, textAlign:isMine?'right':'left', display:'flex', alignItems:'center', gap:6, justifyContent:isMine?'flex-end':'flex-start' }}>
+                              <span>Sent by <strong style={{ color:isMine?'#F0F0F8':'#9CA3AF', fontWeight:700 }}>{isMine ? 'You' : selected?.from}</strong> on {msg.date} at {msg.time}</span>
+                              {msg.editedAt && <span style={{ color:'var(--text-muted)', fontStyle:'italic' }}>(edited)</span>}
+                              {isMine && msg.id && !isEditing && (
+                                <button
+                                  onClick={() => setEditingMsg({ id: msg.id!, body: msg.body })}
+                                  style={{ background:'none', border:'none', color:'var(--text-dim)', cursor:'pointer', fontSize:12, padding:'0 2px', fontFamily:"'Roboto',sans-serif", transition: 'color 0.2s' }}
+                                  title="Edit message"
+                                  onMouseEnter={e=>(e.currentTarget.style.color='#fff')} onMouseLeave={e=>(e.currentTarget.style.color='var(--text-dim)')}
+                                >
+                                  <Icon icon={Solar.pen} width={12} height={12} />
+                                </button>
+                              )}
+                            </div>
+                            {isEditing && editingMsg ? (
+                              <div style={{ background:'rgba(232,0,13,0.08)', border:'1px solid rgba(232,0,13,0.3)', borderRadius:12, padding:'10px 14px' }}>
+                                <textarea
+                                  value={editingMsg.body}
+                                  onChange={e => setEditingMsg({ ...editingMsg, body: e.target.value })}
+                                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit() } if (e.key === 'Escape') setEditingMsg(null) }}
+                                  rows={3}
+                                  autoFocus
+                                  style={{ width:'100%', background:'var(--bg-3)', border:'1px solid rgba(232,0,13,0.4)', borderRadius:6, padding:'8px 10px', fontFamily:"'Barlow',sans-serif", fontSize:13, color:'#fff', outline:'none', resize:'vertical', lineHeight:'1.5', boxSizing:'border-box' }}
+                                />
+                                <div style={{ display:'flex', gap:6, marginTop:8, justifyContent:'flex-end' }}>
+                                  <button onClick={() => setEditingMsg(null)} style={{ background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:4, padding:'6px 12px', fontFamily:"'Roboto',sans-serif", fontSize:11, color:'var(--text-muted)', cursor:'pointer', transition:'all 0.2s' }} onMouseEnter={e=>(e.currentTarget.style.color='#fff', e.currentTarget.style.background='var(--bg-4)')} onMouseLeave={e=>(e.currentTarget.style.color='var(--text-muted)', e.currentTarget.style.background='var(--bg-3)')}>Cancel</button>
+                                  <button onClick={saveEdit} className="btn-primary" style={{ padding:'6px 12px', fontSize:11 }}>Save Edit</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div style={{ background:isMine?'rgba(232,0,13,0.15)':'var(--bg-4)', border:`1px solid ${isMine?'rgba(232,0,13,0.3)':'var(--border)'}`, borderRadius:isMine?'12px 4px 12px 12px':'4px 12px 12px 12px', padding:'14px 18px', fontFamily:"'Barlow',sans-serif", fontWeight:500, fontSize:13, color:'#E0E0E0', lineHeight:'1.6', whiteSpace:'pre-line', boxShadow:isMine?'0 4px 12px rgba(232,0,13,0.1)':'0 4px 12px rgba(0,0,0,0.1)' }}>
+                                {renderFormatted(msg.body)}
+                              </div>
                             )}
                           </div>
-                          {isEditing && editingMsg ? (
-                            <div style={{ background:'rgba(192,57,43,0.08)', border:'1px solid rgba(192,57,43,0.25)', borderRadius:12, padding:'10px 14px' }}>
-                              <textarea
-                                value={editingMsg.body}
-                                onChange={e => setEditingMsg({ ...editingMsg, body: e.target.value })}
-                                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit() } if (e.key === 'Escape') setEditingMsg(null) }}
-                                rows={3}
-                                autoFocus
-                                style={{ width:'100%', background:'#303034', border:'none', borderRadius:6, padding:'8px 10px', fontFamily:"'Roboto',sans-serif", fontSize:12, color:'#fff', outline:'none', resize:'none', lineHeight:'16px', boxSizing:'border-box' }}
-                              />
-                              <div style={{ display:'flex', gap:6, marginTop:6, justifyContent:'flex-end' }}>
-                                <button onClick={() => setEditingMsg(null)} style={{ background:'rgba(255,255,255,0.06)', border:'none', borderRadius:4, padding:'4px 10px', fontFamily:"'Roboto',sans-serif", fontSize:10, color:'#9CA3AF', cursor:'pointer' }}>Cancel</button>
-                                <button onClick={saveEdit} style={{ background:'#C0392B', border:'none', borderRadius:4, padding:'4px 10px', fontFamily:"'Roboto',sans-serif", fontSize:10, color:'#fff', cursor:'pointer', fontWeight:600 }}>Save</button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div style={{ background:isMine?'rgba(192,57,43,0.08)':'#202023', border:`1px solid ${isMine?'rgba(192,57,43,0.15)':'rgba(255,255,255,0.04)'}`, borderRadius:isMine?'12px 4px 12px 12px':'4px 12px 12px 12px', padding:'14px 18px', fontFamily:"'Roboto',sans-serif", fontWeight:400, fontSize:12, color:'#E0E0E0', lineHeight:'18px', whiteSpace:'pre-line' }}>
-                              {renderFormatted(msg.body)}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
+                  {/* Unread badge — shown when scrolled up and new messages arrive */}
+                  {unreadCountChat > 0 && (
+                    <button
+                      onClick={() => scrollToBottom(true)}
+                      style={{ position:'absolute', bottom:16, left:'50%', transform:'translateX(-50%)', display:'flex', alignItems:'center', gap:6, background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:20, padding:'6px 16px', cursor:'pointer', boxShadow:'0 4px 16px rgba(0,0,0,0.4)', zIndex:10, transition: 'all 0.2s' }}
+                      onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(232,0,13,0.4)', e.currentTarget.style.transform='translateX(-50%) scale(1.05)')}
+                      onMouseLeave={e=>(e.currentTarget.style.borderColor='var(--border)', e.currentTarget.style.transform='translateX(-50%) scale(1)')}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-6-6h12l-6 6z" fill="var(--red)"/></svg>
+                      <span style={{ fontSize:12, fontWeight:700, color:'var(--red)', fontFamily:"'Barlow', sans-serif" }}>
+                        {unreadCountChat} new {unreadCountChat === 1 ? 'message' : 'messages'}
+                      </span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Reply bar */}
-                <div style={{ background:'#202023', borderTop:'1px solid #303034', flexShrink:0 }}>
+                <div style={{ background:'var(--bg-2)', borderTop:'1px solid var(--border)', flexShrink:0 }}>
                   {/* Formatting tools */}
-                  <div style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px 0', borderBottom:'1px solid #2A2A2E' }}>
-                    <button onClick={() => applyFormat('**', '**')} title="Bold (**text**)" style={{ width:24, height:24, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, fontSize:11, fontFamily:"'Roboto',sans-serif", fontWeight:700, color:'#9CA3AF', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>B</button>
-                    <button onClick={() => applyFormat('*', '*')} title="Italic (*text*)" style={{ width:24, height:24, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, fontSize:11, fontFamily:"'Roboto',sans-serif", fontWeight:400, fontStyle:'italic', color:'#9CA3AF', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>I</button>
-                    <button onClick={() => applyFormat('__', '__')} title="Underline (__text__)" style={{ width:24, height:24, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, fontSize:11, fontFamily:"'Roboto',sans-serif", fontWeight:400, textDecoration:'underline', color:'#9CA3AF', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>U</button>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderBottom:'1px solid var(--border)', flexWrap:'wrap', background:'var(--bg-3)' }}>
+                    <button onClick={() => applyFormat('**', '**')} title="Bold (**text**)" style={{ width:26, height:26, background:'transparent', border:'none', borderRadius:4, fontSize:13, fontFamily:"'Roboto',sans-serif", fontWeight:800, color:'var(--text-muted)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-4)', e.currentTarget.style.color='#fff')} onMouseLeave={e=>(e.currentTarget.style.background='transparent', e.currentTarget.style.color='var(--text-muted)')}>B</button>
+                    <button onClick={() => applyFormat('*', '*')} title="Italic (*text*)" style={{ width:26, height:26, background:'transparent', border:'none', borderRadius:4, fontSize:13, fontFamily:"'Roboto',sans-serif", fontWeight:400, fontStyle:'italic', color:'var(--text-muted)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-4)', e.currentTarget.style.color='#fff')} onMouseLeave={e=>(e.currentTarget.style.background='transparent', e.currentTarget.style.color='var(--text-muted)')}>I</button>
+                    <button onClick={() => applyFormat('__', '__')} title="Underline (__text__)" style={{ width:26, height:26, background:'transparent', border:'none', borderRadius:4, fontSize:13, fontFamily:"'Roboto',sans-serif", fontWeight:600, textDecoration:'underline', color:'var(--text-muted)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-4)', e.currentTarget.style.color='#fff')} onMouseLeave={e=>(e.currentTarget.style.background='transparent', e.currentTarget.style.color='var(--text-muted)')}>U</button>
+                    <div style={{ width:1, height:18, background:'var(--border)', margin:'0 4px' }} />
+                    <button onClick={() => applyFormat('[', '](https://)')} title="Link" style={{ width:26, height:26, background:'transparent', border:'none', borderRadius:4, fontSize:13, color:'var(--text-muted)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-4)', e.currentTarget.style.color='#fff')} onMouseLeave={e=>(e.currentTarget.style.background='transparent', e.currentTarget.style.color='var(--text-muted)')}><Icon icon={Solar.link} width={15} height={15} /></button>
+                    <button onClick={() => applyFormat('![', '](https://)')} title="Image" style={{ width:26, height:26, background:'transparent', border:'none', borderRadius:4, fontSize:13, color:'var(--text-muted)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-4)', e.currentTarget.style.color='#fff')} onMouseLeave={e=>(e.currentTarget.style.background='transparent', e.currentTarget.style.color='var(--text-muted)')}><Icon icon={Solar.gallery} width={15} height={15} /></button>
+                    <div style={{ width:1, height:18, background:'var(--border)', margin:'0 4px' }} />
+                    <button onClick={() => applyFormat('[color=var(--red)]', '[/color]')} title="Color" style={{ height:26, padding:'0 8px', background:'transparent', border:'none', borderRadius:4, fontSize:12, color:'var(--red)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, transition:'all 0.2s' }} onMouseEnter={e=>(e.currentTarget.style.background='rgba(232,0,13,0.1)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>Color</button>
                   </div>
-                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', background:'var(--bg-2)' }}>
                     <textarea
                       ref={replyRef}
                       value={reply}
@@ -380,10 +479,12 @@ function MailboxPage() {
                       onKeyDown={e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendReply() } }}
                       placeholder="Write a reply... (Enter to send, Shift+Enter for new line)"
                       rows={2}
-                      style={{ flex:1, background:'#303034', border:'none', borderRadius:6, padding:'8px 12px', fontFamily:"'Roboto',sans-serif", fontSize:12, color:'#fff', outline:'none', resize:'none', lineHeight:'16px' }}
+                      style={{ flex:1, background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 14px', fontFamily:"'Barlow',sans-serif", fontSize:13, color:'#fff', outline:'none', resize:'none', lineHeight:'1.5', transition:'all 0.2s' }}
+                      onFocus={e => (e.target.style.borderColor = 'rgba(232,0,13,0.4)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border)')}
                     />
-                    <button onClick={sendReply} disabled={!reply.trim()} style={{ background:reply.trim()?'#C0392B':'#303034', border:'none', borderRadius:6, padding:'10px 18px', fontFamily:"'Roboto',sans-serif", fontWeight:600, fontSize:12, color:reply.trim()?'#fff':'#4A5568', cursor:reply.trim()?'pointer':'default', transition:'background 0.2s', flexShrink:0 }}>
-                      Send
+                    <button onClick={sendReply} disabled={!reply.trim()} className={reply.trim() ? "btn-primary" : ""} style={{ background:reply.trim()?'':'var(--bg-3)', border:reply.trim()?'':'1px solid var(--border)', borderRadius:8, padding:'12px 24px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:14, textTransform:'uppercase', color:reply.trim()?'#fff':'var(--text-dim)', cursor:reply.trim()?'pointer':'default', flexShrink:0, display:'flex', alignItems:'center', gap:6, transition:'all 0.2s' }}>
+                      Send <Icon icon={Solar.plain} width={14} height={14} />
                     </button>
                   </div>
                 </div>
@@ -391,19 +492,19 @@ function MailboxPage() {
             ) : draft ? (
               /* ── DRAFT COMPOSE VIEW ── */
               <>
-                <div style={{ padding:'18px 28px 14px', borderBottom:'1px solid #202023', flexShrink:0 }}>
+                <div style={{ padding:'18px 28px 14px', borderBottom:'1px solid var(--border)', flexShrink:0, background:'var(--bg-2)' }}>
                   <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:22, color:'#fff', lineHeight:1.2 }}>New Message</div>
-                  <div style={{ fontFamily:"'Roboto',sans-serif", fontSize:11, color:'#6B7280', marginTop:4 }}>To: <span style={{ color:'#3498DB' }}>{draft.username}</span></div>
+                  <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:13, color:'var(--text-muted)', marginTop:4 }}>To: <span style={{ color:'var(--red)', fontWeight:600 }}>{draft.username}</span></div>
                 </div>
-                <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'#4A5568', padding:28 }}>
-                  <div style={{ width:64, height:64, background:'rgba(52,152,219,0.1)', border:'1px solid rgba(52,152,219,0.25)', borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16 }}>
-                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:22, color:'#3498DB' }}>{draft.initials}</span>
+                <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'var(--text-muted)', padding:28 }}>
+                  <div style={{ width:72, height:72, background:'rgba(232,0,13,0.1)', border:'1px solid rgba(232,0,13,0.3)', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:20, boxShadow:'0 0 20px rgba(232,0,13,0.15)' }}>
+                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:28, color:'var(--red)' }}>{draft.initials}</span>
                   </div>
-                  <div style={{ fontFamily:"'Roboto',sans-serif", fontSize:13, color:'#9CA3AF', marginBottom:4 }}>Start a conversation with <strong style={{ color:'#fff' }}>{draft.username}</strong></div>
-                  <div style={{ fontFamily:"'Roboto',sans-serif", fontSize:11, color:'#4A5568' }}>Type your message below and hit Send</div>
+                  <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:16, color:'var(--text-muted)', marginBottom:4 }}>Start a conversation with <strong style={{ color:'#fff' }}>{draft.username}</strong></div>
+                  <div style={{ fontFamily:"'Roboto',sans-serif", fontSize:12, color:'var(--text-dim)' }}>Type your message below and hit Send</div>
                 </div>
-                <div style={{ background:'#202023', borderTop:'1px solid #303034', flexShrink:0 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px' }}>
+                <div style={{ background:'var(--bg-2)', borderTop:'1px solid var(--border)', flexShrink:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px' }}>
                     <textarea
                       value={draftMsg}
                       onChange={e => setDraftMsg(e.target.value)}
@@ -411,38 +512,42 @@ function MailboxPage() {
                       placeholder={`Write a message to ${draft.username}... (Enter to send)`}
                       rows={2}
                       autoFocus
-                      style={{ flex:1, background:'#303034', border:'none', borderRadius:6, padding:'8px 12px', fontFamily:"'Roboto',sans-serif", fontSize:12, color:'#fff', outline:'none', resize:'none', lineHeight:'16px' }}
+                      style={{ flex:1, background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 14px', fontFamily:"'Barlow',sans-serif", fontSize:13, color:'#fff', outline:'none', resize:'none', lineHeight:'1.5', transition:'all 0.2s' }}
+                      onFocus={e => (e.target.style.borderColor = 'rgba(232,0,13,0.4)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border)')}
                     />
-                    <button onClick={sendDraft} disabled={!draftMsg.trim() || sendingDraft} style={{ background:draftMsg.trim() && !sendingDraft ?'#C0392B':'#303034', border:'none', borderRadius:6, padding:'10px 18px', fontFamily:"'Roboto',sans-serif", fontWeight:600, fontSize:12, color:draftMsg.trim() && !sendingDraft ?'#fff':'#4A5568', cursor:draftMsg.trim() && !sendingDraft ?'pointer':'default', transition:'background 0.2s', flexShrink:0 }}>
-                      {sendingDraft ? 'Sending...' : 'Send'}
+                    <button onClick={sendDraft} disabled={!draftMsg.trim() || sendingDraft} className={(draftMsg.trim() && !sendingDraft) ? "btn-primary" : ""} style={{ background:(draftMsg.trim() && !sendingDraft)?'':'var(--bg-3)', border:(draftMsg.trim() && !sendingDraft)?'':'1px solid var(--border)', borderRadius:8, padding:'12px 24px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:14, textTransform:'uppercase', color:(draftMsg.trim() && !sendingDraft)?'#fff':'var(--text-dim)', cursor:(draftMsg.trim() && !sendingDraft)?'pointer':'default', flexShrink:0, display:'flex', alignItems:'center', gap:6, transition:'all 0.2s' }}>
+                      {sendingDraft ? 'Sending...' : <>Send <Icon icon={Solar.plain} width={14} height={14} /></>}
                     </button>
                   </div>
                 </div>
               </>
             ) : (
-              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'#4A5568' }}>
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style={{ marginBottom:12 }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#4A5568" strokeWidth="2"/><path d="M22 6l-10 7L2 6" stroke="#4A5568" strokeWidth="2" strokeLinecap="round"/></svg>
-                <div style={{ fontFamily:"'Roboto',sans-serif", fontSize:13 }}>Select a message to read it</div>
+              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'var(--text-dim)' }}>
+                <Icon icon={Solar.chat} width={64} height={64} style={{ marginBottom:16, opacity: 0.15 }} />
+                <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:16, fontWeight:500, color:'var(--text-muted)' }}>Select a message to read it</div>
               </div>
             )}
           </div>
 
           {/* ── FRIENDS PANEL ── */}
-          <div style={{ borderLeft:'1px solid #202023', display:'flex', flexDirection:'column', overflow:'hidden' }}>
-            <div style={{ padding:'12px 14px', borderBottom:'1px solid #202023', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:13, textTransform:'uppercase', letterSpacing:0.5, color:'#fff' }}>Friends</span>
-              <span style={{ fontFamily:"'Roboto',sans-serif", fontSize:10, color:'#4ade80', fontWeight:600 }}>
-                {friends.filter(f => f.isOnline).length} online
+          <div style={{ borderLeft:'1px solid var(--border)', display:'flex', flexDirection:'column', overflow:'hidden', background:'rgba(0,0,0,0.2)' }}>
+            <div style={{ padding:'12px 14px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:14, textTransform:'uppercase', letterSpacing:0.5, color:'#fff' }}>Friends</span>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, color:'#4ade80', fontWeight:700, letterSpacing:0.5 }}>
+                {friends.filter(f => f.isOnline).length} ONLINE
               </span>
             </div>
 
             {/* Search friends */}
-            <div style={{ padding:'8px 12px', borderBottom:'1px solid #202023' }}>
+            <div style={{ padding:'8px 12px', borderBottom:'1px solid var(--border)' }}>
               <input
                 placeholder="Search friends..."
                 value={friendSearch}
                 onChange={e => setFriendSearch(e.target.value)}
-                style={{ width:'100%', background:'#303034', border:'none', borderRadius:6, padding:'6px 10px', fontFamily:"'Roboto',sans-serif", fontSize:10, color:'#fff', outline:'none', boxSizing:'border-box' }}
+                style={{ width:'100%', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, padding:'8px 10px', fontFamily:"'Roboto',sans-serif", fontSize:11, color:'#fff', outline:'none', boxSizing:'border-box', transition:'all 0.2s' }}
+                onFocus={e => (e.target.style.borderColor = 'rgba(232,0,13,0.4)')}
+                onBlur={e => (e.target.style.borderColor = 'var(--border)')}
               />
             </div>
 
@@ -460,7 +565,7 @@ function MailboxPage() {
 
                 if (sorted.length === 0) {
                   return (
-                    <div style={{ padding:'24px 14px', textAlign:'center', color:'#4A5568', fontFamily:"'Roboto',sans-serif", fontSize:11 }}>
+                    <div style={{ padding:'24px 14px', textAlign:'center', color:'var(--text-muted)', fontFamily:"'Roboto',sans-serif", fontSize:12 }}>
                       {friends.length === 0 ? 'No friends yet' : 'No matches'}
                     </div>
                   )
@@ -474,51 +579,51 @@ function MailboxPage() {
                       key={friend._id}
                       onClick={() => openChatWithFriend(friend)}
                       className="mailbox-friend-row"
-                      style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderBottom:'1px solid #202023', cursor:'pointer', transition:'background 0.15s' }}
+                      style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderBottom:'1px solid var(--border)', cursor:'pointer', transition:'background 0.15s' }}
                     >
                       {/* Avatar */}
                       <div style={{ position:'relative', flexShrink:0 }}>
-                        <div style={{ width:32, height:32, borderRadius:8, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)' }}>
+                        <div style={{ width:34, height:34, borderRadius:10, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg-3)', border:'1px solid var(--border)' }}>
                           {friend.avatarUrl
-                            ? <img src={friend.avatarUrl} alt="" style={{ width:32, height:32, borderRadius:8, objectFit:'cover' }} />
+                            ? <img src={friend.avatarUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                             : friend.avatarEmoji
-                              ? <Icon icon={Solar.user} width={16} height={16} style={{ display: 'block' }} />
-                              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              ? <Icon icon={Solar.user} width={18} height={18} style={{ display: 'block', color:'var(--text-muted)' }} />
+                              : <Icon icon={Solar.user} width={18} height={18} style={{ display: 'block', color:'var(--text-muted)' }} />
                           }
                         </div>
                         {/* Presence dot */}
                         <div style={{
-                          position:'absolute', bottom:-1, right:-1,
-                          width:10, height:10,
-                          background: friend.presenceStatus === 'online' ? '#4ade80' : friend.presenceStatus === 'idle' ? '#F0AA1A' : '#4A5568',
-                          border:'2px solid #19191D',
+                          position:'absolute', bottom:-2, right:-2,
+                          width:12, height:12,
+                          background: friend.presenceStatus === 'online' ? '#4ade80' : friend.presenceStatus === 'idle' ? '#F0AA1A' : 'var(--text-dim)',
+                          border:'2px solid var(--bg-2)',
                           borderRadius:'50%',
                           boxShadow: friend.presenceStatus === 'online' ? '0 0 6px rgba(74,222,128,0.4)' : friend.presenceStatus === 'idle' ? '0 0 6px rgba(240,170,26,0.3)' : 'none',
                         }} />
                       </div>
 
                       {/* Info */}
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontFamily:"'Roboto',sans-serif", fontWeight:600, fontSize:11, color: friend.presenceStatus === 'online' ? '#fff' : friend.presenceStatus === 'idle' ? '#d4d4d4' : '#6B7280', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                      <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', justifyContent:'center' }}>
+                        <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:13, color: friend.presenceStatus === 'online' ? '#fff' : friend.presenceStatus === 'idle' ? '#d4d4d4' : 'var(--text-muted)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                           {friend.username}
                         </div>
-                        <div style={{ fontFamily:"'Roboto',sans-serif", fontSize:9, color:'#4A5568', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                        <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'var(--text-muted)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                           {friend.presenceStatus === 'online'
                             ? <span style={{ color:'#4ade80' }}>{friend.activityText || 'Online'}</span>
                             : friend.presenceStatus === 'idle'
                               ? <span style={{ color:'#F0AA1A' }}>Idle</span>
                               : existingThread
                                 ? existingThread.preview.slice(0, 30) + (existingThread.preview.length > 30 ? '...' : '')
-                                : `Lv.${friend.level}`
+                                : `Lv. ${friend.level}`
                           }
                         </div>
                       </div>
 
                       {/* Unread indicator or chat icon */}
                       {existingThread?.unread ? (
-                        <div style={{ width:7, height:7, background:'#C0392B', borderRadius:'50%', flexShrink:0 }} />
+                        <div style={{ width:7, height:7, background:'var(--red)', borderRadius:'50%', flexShrink:0, boxShadow:'0 0 8px rgba(232,0,13,0.6)' }} />
                       ) : (
-                        <Link href={`/profile/${friend.slug}`} onClick={e => e.stopPropagation()} style={{ fontSize:11, color:'#4A5568', textDecoration:'none', flexShrink:0 }} title="View profile">
+                        <Link href={`/profile/${friend.slug}`} onClick={e => e.stopPropagation()} style={{ fontSize:16, color:'var(--text-dim)', textDecoration:'none', flexShrink:0, display:'flex', alignItems:'center', transition:'color 0.2s' }} onMouseEnter={e=>e.currentTarget.style.color='var(--red)'} onMouseLeave={e=>e.currentTarget.style.color='var(--text-dim)'} title="View profile">
                           →
                         </Link>
                       )}
@@ -532,9 +637,9 @@ function MailboxPage() {
       </div>
 
       <style>{`
-        .mailbox-thread-row:hover .thread-delete-btn { opacity: 1 !important; }
-        .mailbox-thread-row:hover { background: rgba(255,255,255,0.02) !important; }
-        .mailbox-friend-row:hover { background: rgba(255,255,255,0.03) !important; }
+        .mailbox-thread-row:hover .thread-delete-btn { opacity: 1 !important; transform: scale(1.05); }
+        .mailbox-thread-row:hover { background: rgba(232,0,13,0.05) !important; }
+        .mailbox-friend-row:hover { background: rgba(255,255,255,0.04) !important; }
       `}</style>
     </div>
   )

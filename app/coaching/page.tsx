@@ -50,10 +50,7 @@ const GAMES_DEFAULT = [
 
 const SERVICE_FILTERS: { label:string; value:PackageType|'all'; icon?: string }[] = [
   { label:'All Services', value:'all' },
-  { label:'VOD Review',   value:'vod',     icon: Solar.clapperboard },
-  { label:'Live Session', value:'session', icon: Solar.microphone },
-  { label:'Drill Plan',   value:'drills',  icon: Solar.tools },
-  { label:'Team',         value:'team',    icon: Solar.users },
+  { label:'Coaching Service', value:'session', icon: Solar.microphone },
   { label:'Guide',        value:'guide',   icon: Solar.book },
 ]
 
@@ -238,126 +235,119 @@ function CoachCard({ coach, serviceFilter }: { coach: CoachListing; serviceFilte
       style={{ textDecoration:'none', display:'block' }}
     >
       <div style={{
-        background: hov ? '#1E1E24' : '#18181C',
-        border: `1px solid ${hov ? coach.accentColor + '44' : 'rgba(255,255,255,.07)'}`,
-        borderRadius: 14,
+        background: hov ? '#1E1E24' : '#18181B',
+        border: `1px solid ${hov ? coach.accentColor + '55' : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: 12,
         overflow: 'hidden',
-        transition: 'all .18s',
+        transition: 'all 0.2s',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
       }}>
-        <div style={{ height: 3, background: `linear-gradient(90deg, ${coach.accentColor}, ${coach.accentColor}88, transparent)` }} />
+        {/* Cleaner top accent bar */}
+        <div style={{ height: 4, background: hov ? coach.accentColor : coach.accentColor + '88' }} />
 
-        <div style={{ padding: '18px 20px', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* Row 1 — avatar + name + badges */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{ position: 'relative', flexShrink: 0 }}>
               {coach.avatarUrl ? (
                 <img src={coach.avatarUrl} alt={coach.name} style={{
-                  width: 48, height: 48, borderRadius: 10, objectFit: 'cover',
-                  border: `1px solid ${coach.accentColor}33`,
+                  width: 52, height: 52, borderRadius: 26, objectFit: 'cover',
+                  border: `2px solid #27272A`,
                 }}/>
               ) : (
                 <div style={{
-                  width: 48, height: 48, borderRadius: 10,
-                  background: `linear-gradient(135deg, ${coach.accentColor}44, ${coach.accentColor}11)`,
-                  border: `1px solid ${coach.accentColor}33`,
+                  width: 52, height: 52, borderRadius: 26,
+                  background: '#27272A',
+                  border: `2px solid #27272A`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <Icon icon={Solar.target} width={26} height={26} style={{ display: 'block' }} />
+                  <Icon icon={Solar.target} width={24} height={24} style={{ display: 'block', color: coach.accentColor }} />
                 </div>
               )}
-              <div style={{
-                position: 'absolute', bottom: 1, right: 1,
-                width: 10, height: 10, borderRadius: '50%',
-                background: coach.online ? '#4ade80' : '#4B5563',
-                border: '2px solid #18181C',
-              }} />
+              {coach.online && (
+                 <div style={{
+                  position: 'absolute', bottom: 0, right: 0,
+                  width: 14, height: 14, borderRadius: '50%',
+                  background: '#10B981',
+                  border: '3px solid #18181B',
+                 }} />
+              )}
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3, flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 16, color: '#fff', letterSpacing: .3 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 16, color: '#F9FAFB' }}>
                   {coach.name}
                 </span>
-                {/* ✅ KEPT: Verified badge on card */}
                 {coach.verified && (
-                  <span style={{ background: 'rgba(178,45,45,.18)', border: '1px solid rgba(178,45,45,.35)', borderRadius: 3, padding: '1px 6px', fontSize: 8, fontWeight: 700, color: '#ff8080', fontFamily: 'Rajdhani, sans-serif', letterSpacing: .4, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                    <Icon icon={Solar.check} width={9} height={9} style={{ flexShrink: 0 }} /> VERIFIED
-                  </span>
-                )}
-                {coach.online && (
-                  <span style={{ background: 'rgba(74,222,128,.1)', border: '1px solid rgba(74,222,128,.25)', borderRadius: 3, padding: '1px 5px', fontSize: 8, fontWeight: 700, color: '#4ade80', fontFamily: 'Rajdhani, sans-serif', letterSpacing: .3, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                    <Icon icon={Solar.online} width={9} height={9} style={{ flexShrink: 0, color: '#4ade80' }} /> ONLINE
-                  </span>
+                  <Icon icon={Solar.check} width={14} height={14} style={{ color: '#3B82F6' }} />
                 )}
               </div>
-              <div style={{ fontFamily: 'Barlow, sans-serif', fontSize: 11, color: 'rgba(255,255,255,.4)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#9CA3AF', marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {coach.title}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <Stars n={coach.rating} />
-                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: 12, color: '#F0AA1A' }}>{coach.rating}</span>
-                <span style={{ fontFamily: 'Barlow, sans-serif', fontSize: 10, color: 'rgba(255,255,255,.25)' }}>({coach.totalReviews})</span>
-                <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,.15)', margin: '0 2px' }} />
-                <span style={{ fontFamily: 'Barlow, sans-serif', fontSize: 10, color: 'rgba(255,255,255,.25)' }}>{coach.totalOrders} orders</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#FCD34D' }}>{coach.rating}</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#6B7280' }}>({coach.totalReviews})</span>
+                <span style={{ color: '#374151' }}>•</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#9CA3AF' }}>{coach.totalOrders} orders</span>
               </div>
             </div>
           </div>
 
           <p style={{
-            fontFamily: 'Barlow, sans-serif', fontSize: 12,
-            color: 'rgba(255,255,255,.45)', lineHeight: 1.65, margin: 0,
+            fontFamily: 'Inter, sans-serif', fontSize: 14,
+            color: '#D1D5DB', lineHeight: 1.5, margin: 0,
             display: '-webkit-box', WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical', overflow: 'hidden',
           }}>
             {coach.tagline}
           </p>
 
-          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {coach.specialties.slice(0, 3).map((s, i) => (
               <span key={i} style={{
-                background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)',
-                borderRadius: 20, padding: '2px 9px',
-                fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 9,
-                color: 'rgba(255,255,255,.35)', letterSpacing: .3,
+                background: '#27272A',
+                borderRadius: 6, padding: '4px 8px',
+                fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 12,
+                color: '#E5E7EB',
               }}>{s}</span>
             ))}
             {coach.specialties.length > 3 && (
-              <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 9, color: 'rgba(255,255,255,.2)', alignSelf: 'center' }}>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 12, color: '#9CA3AF', alignSelf: 'center' }}>
                 +{coach.specialties.length - 3}
               </span>
             )}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 'auto' }}>
             {(serviceFilter === 'all' ? coach.packages.slice(0, 3) : visiblePackages).map((pkg, i) => {
               const tp = TYPE_LABELS[pkg.type]
               return (
                 <div key={i} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)',
-                  borderRadius: 7, padding: '7px 10px',
+                  background: '#27272A55',
+                  borderRadius: 6, padding: '8px 10px',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <span style={{ background: tp.bg, border: `1px solid ${tp.color}33`, borderRadius: 4, padding: '1px 6px', fontSize: 8, fontWeight: 700, color: tp.color, fontFamily: 'Rajdhani, sans-serif', letterSpacing: .3, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <Icon icon={tp.icon} width={11} height={11} style={{ flexShrink: 0, color: tp.color }} /> {tp.label}
-                    </span>
-                    <span style={{ fontFamily: 'Barlow, sans-serif', fontSize: 11, color: 'rgba(255,255,255,.45)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon icon={tp.icon} width={14} height={14} style={{ color: tp.color, flexShrink: 0 }} />
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#E5E7EB', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
                       {pkg.title}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    <span style={{ fontFamily: 'Barlow, sans-serif', fontSize: 9, color: 'rgba(255,255,255,.25)' }}>{pkg.deliveryDays}d</span>
-                    <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 14, color: '#4ade80' }}>${pkg.price}</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#9CA3AF' }}>{pkg.deliveryDays}d</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#F9FAFB' }}>${pkg.price}</span>
                   </div>
                 </div>
               )
             })}
             {serviceFilter === 'all' && coach.packages.length > 3 && (
-              <div style={{ fontFamily: 'Barlow, sans-serif', fontSize: 10, color: 'rgba(255,255,255,.2)', paddingLeft: 2 }}>
+              <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#9CA3AF', paddingLeft: 4 }}>
                 +{coach.packages.length - 3} more packages
               </div>
             )}
@@ -365,29 +355,24 @@ function CoachCard({ coach, serviceFilter }: { coach: CoachListing; serviceFilte
         </div>
 
         <div style={{
-          borderTop: '1px solid rgba(255,255,255,.05)',
+          borderTop: '1px solid #27272A',
           padding: '12px 20px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <div style={{ display: 'flex', gap: 14 }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 13, color: '#4ade80' }}>{coach.completionRate}%</div>
-              <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,.2)', textTransform: 'uppercase', letterSpacing: .5 }}>Done</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 13, color: '#60A5FA' }}>{coach.responseTime}</div>
-              <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,.2)', textTransform: 'uppercase', letterSpacing: .5 }}>Reply</div>
-            </div>
+          <div style={{ display: 'flex', gap: 16 }}>
+             <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#9CA3AF' }}>
+               <span style={{ fontWeight: 600, color: '#E5E7EB' }}>{coach.completionRate}%</span> Done
+             </div>
+             <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#9CA3AF' }}>
+               <span style={{ fontWeight: 600, color: '#E5E7EB' }}>{coach.responseTime}</span> Reply
+             </div>
           </div>
           <div style={{
-            background: hov ? coach.accentColor : 'rgba(255,255,255,.07)',
-            border: `1px solid ${hov ? coach.accentColor : 'rgba(255,255,255,.12)'}`,
-            borderRadius: 7, padding: '6px 14px',
-            fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: 11,
-            letterSpacing: .7, color: hov ? '#fff' : 'rgba(255,255,255,.5)',
-            transition: 'all .18s', whiteSpace: 'nowrap',
+            fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13,
+            color: hov ? coach.accentColor : '#9CA3AF',
+            transition: 'color 0.2s',
           }}>
-            FROM ${lowestPrice} · VIEW →
+            From ${lowestPrice} →
           </div>
         </div>
       </div>

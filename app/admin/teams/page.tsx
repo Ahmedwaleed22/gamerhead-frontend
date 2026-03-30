@@ -228,7 +228,7 @@ export default function AdminTeamsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {/* Team ID */}
             <div style={{ fontSize: 11, color: '#4F5568' }}>
-              Team ID: <span style={{ color: '#8890A4' }}>{detailModal._id}</span>
+              Team ID: <span style={{ color: '#8890A4' }}>{detailModal._id?.slice(-8)}</span>
               {detailModal.tournamentName && (
                 <span style={{ marginLeft: 12, fontWeight: 700, color: '#f59e0b' }}>Tournament: {detailModal.tournamentName}</span>
               )}
