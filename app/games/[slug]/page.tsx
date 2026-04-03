@@ -281,6 +281,28 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
   )
 }
 
+function AccordionItem({ title, body, defaultOpen = false }: { title: string; body: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  return (
+    <div className={`accordion-item-custom${open ? ' open' : ''}`}>
+      <button className="accordion-header-custom" onClick={() => setOpen(!open)}>
+        <span>{title}</span>
+        <span className="accordion-chevron">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="accordion-body-custom">
+          {body.split('\n').map((line, i) => (
+            line.startsWith('**') && line.endsWith('**')
+              ? <p key={i} style={{ fontWeight: 700, color: '#fff', marginTop: 12, marginBottom: 4 }}>{line.replace(/\*\*/g, '')}</p>
+              : <p key={i} style={{ marginBottom: line === '' ? 8 : 4 }}>{line}</p>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── OVERVIEW TAB ─────────────────────────────────────────────────────────────
 function OverviewTab({ game, xpLadders }: { game: any; xpLadders: any[] }) {
   const { user } = useAuth()
@@ -479,6 +501,7 @@ export default function GameProfilePage() {
   const params  = useParams()
   const slug    = (params?.slug as string) || ''
   const [activeTab, setActiveTab] = useState('overview')
+  const [rulesTab, setRulesTab] = useState<'general'|'game'>('general')
 
   const { data: ladderData, loading, error } = useApi(() => gamesApi.getLadders(slug), [slug])
   const { data: powData }                    = useApi(() => powApi.getCurrent())
@@ -574,17 +597,64 @@ export default function GameProfilePage() {
 
             {activeTab === 'rules' && (
               <div>
-                <div className="section-header">
+                <div className="section-header" style={{ marginBottom: 24 }}>
                   <h2 className="section-title"><span>{game.name}</span> — Game Rules</h2>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
-                  {game.rules?.length > 0 ? game.rules.map((rule: string, i: number) => (
-                    <div key={i} className="accordion-item-custom open">
-                      <div className="accordion-header-custom" style={{ cursor: 'default', color: 'var(--red)' }}><span>Rule {i + 1}</span></div>
-                      <div className="accordion-body-custom">{rule}</div>
-                    </div>
-                  )) : (
-                    <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 13, color: '#4A5568', textAlign: 'center', padding: '40px 0' }}>No rules have been set for this game yet.</div>
+                
+                <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                  {[
+                    { key: 'general', label: 'General Match Rules', icon: Solar.clipboard },
+                    { key: 'game', label: 'Game Rules', icon: Solar.gamepad }
+                  ].map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setRulesTab(tab.key as any)}
+                      style={{
+                        padding: '10px 22px',
+                        borderRadius: 8,
+                        border: `1.5px solid ${rulesTab === tab.key ? 'rgba(178,45,45,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                        background: rulesTab === tab.key ? 'rgba(178,45,45,0.12)' : 'var(--bg-2)',
+                        color: rulesTab === tab.key ? '#fff' : 'var(--text-muted)',
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: 'pointer',
+                        transition: 'all .15s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      <Icon icon={tab.icon} width={18} height={18} style={{ flexShrink: 0 }} />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {rulesTab === 'general' && (
+                    <>
+                      {['General Match Rules', 'Wager Match Rules', 'Reporting Results', 'Dispute Process'].map((section, i) => (
+                        <AccordionItem 
+                          key={`gen-${i}`} 
+                          title={section} 
+                          body="All matches must be played under fair conditions. Results must be submitted within 15 minutes with screenshot proof. Exploits or cheating result in an immediate ban." 
+                          defaultOpen={i === 0} 
+                        />
+                      ))}
+                    </>
+                  )}
+                  {rulesTab === 'game' && (
+                    <>
+                      {(!game.rules || game.rules.length === 0) && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No specific game rules provided.</p>}
+                      {game.rules && game.rules.map((rule: string, i: number) => (
+                        <AccordionItem 
+                          key={`gr-${i}`} 
+                          title={`Rule ${i + 1}`} 
+                          body={rule} 
+                          defaultOpen={i === 0} 
+                        />
+                      ))}
+                    </>
                   )}
                 </div>
               </div>

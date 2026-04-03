@@ -467,22 +467,31 @@ export default function CoachingBrowsePage() {
   }
 
   return (
-    <div style={{ minHeight:'100vh', background:'#0C0C11', paddingBottom:80 }}>
+    <div className="container" style={{ paddingBottom: 80 }}>
 
-      {/* ── HERO — no breadcrumb, no stat pills, no sort bar ── */}
-      <div style={{ background:'linear-gradient(180deg,#13131a 0%,#0C0C11 100%)', borderBottom:'1px solid rgba(255,255,255,.06)', padding:'40px 0 28px' }}>
-        <div className="container">
-          <h1 style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:40, color:'#fff', letterSpacing:.5, margin:'0 0 8px', lineHeight:1 }}>
-            Find a <span style={{ color:'var(--red)' }}>Coach</span>
+      {/* ── PAGE HEADER ──────────────────────────────── */}
+      <div style={{
+        padding: '40px 0 24px',
+        borderBottom: '1px solid var(--border)',
+        marginBottom: 24,
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+      }}>
+        <div>
+          <h1 style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: 40, fontWeight: 900,
+            textTransform: 'uppercase', letterSpacing: '0.02em',
+            color: '#fff', marginBottom: 6,
+          }}>
+            Find a <span style={{ color: 'var(--red)' }}>Coach</span>
           </h1>
-          <p style={{ fontFamily:'Barlow, sans-serif', fontSize:14, color:'rgba(255,255,255,.4)', margin:0, lineHeight:1.6 }}>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>
             Hire verified competitive coaches. VOD reviews, live sessions, drill plans & team coaching.
           </p>
         </div>
       </div>
 
-      <div className="container" style={{ marginTop:24 }}>
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(268px, 300px) 1fr', gap:28, alignItems:'start' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'minmax(268px, 300px) 1fr', gap:28, alignItems:'start' }}>
 
           {/* ── LEFT: unified filter rail (single surface, not stacked identical cards) ── */}
           <aside style={{ position:'sticky', top:20, display:'flex', flexDirection:'column', gap:14 }}>
@@ -740,12 +749,6 @@ export default function CoachingBrowsePage() {
 
           {/* ── RIGHT — results only, no sort pills ── */}
           <div>
-            <div style={{ marginBottom:16 }}>
-              <span style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:11, color:'rgba(255,255,255,.3)', letterSpacing:.4 }}>
-                {filtered.length} coach{filtered.length!==1?'es':''} found
-              </span>
-            </div>
-
             {filtered.length > 0 ? (
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:14 }}>
                 {filtered.map(coach => (
@@ -769,7 +772,6 @@ export default function CoachingBrowsePage() {
             )}
           </div>
         </div>
-      </div>
     </div>
   )
 }
