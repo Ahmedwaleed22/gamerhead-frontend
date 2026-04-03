@@ -24,15 +24,28 @@ type Tournament = {
   registeredCount: number
   region: string
   platform: string
+  bracketType: string
 }
 
-function formatDate(dateStr: string, timeStr: string): string {
+function formatDate(dateStr: string): string {
   if (!dateStr) return 'Date TBD'
   try {
-    const d = new Date(`${dateStr}T${timeStr || '00:00'}`)
-    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    const d = new Date(`${dateStr}T00:00`)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   } catch {
     return dateStr
+  }
+}
+
+function formatTime(timeStr: string): string {
+  if (!timeStr) return ''
+  try {
+    const [h, m] = timeStr.split(':').map(Number)
+    const period = h >= 12 ? 'PM' : 'AM'
+    const hour = h % 12 || 12
+    return `${hour}:${String(m).padStart(2, '0')} ${period}`
+  } catch {
+    return timeStr
   }
 }
 
@@ -145,15 +158,45 @@ export default function LandingPageTournamentsSection() {
                 <div className="tournament-game-tag">{t.game}</div>
                 <div className="tournament-name">{t.name}</div>
                 {t.prizePool > 0 && (
-                  <div style={{ fontSize: 12, color: '#F0AA1A', fontWeight: 700, marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, color: '#F0AA1A', fontWeight: 700, marginBottom: 8 }}>
                     <Icon icon="solar:wallet-money-bold-duotone" width="14" style={{ display: 'inline', marginRight: 4 }} />
                     ${(t.prizePool / 100).toLocaleString()} Prize Pool
                   </div>
                 )}
+
+                {/* Date & Time */}
                 <div className="tournament-date-row">
-                  <Icon icon="mdi:calendar-blank-outline" width="18" />
-                  {formatDate(t.startDate, t.startTime)}
+                  <Icon icon="mdi:calendar-blank-outline" width="15" />
+                  {formatDate(t.startDate)}
+                  {t.startTime && (
+                    <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>
+                      · {formatTime(t.startTime)}
+                    </span>
+                  )}
                 </div>
+
+                {/* Meta row: Platform · Bracket · Region */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 10px', marginBottom: 8 }}>
+                  {t.platform && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <Icon icon="mdi:controller-classic-outline" width="13" />
+                      {t.platform}
+                    </span>
+                  )}
+                  {t.bracketType && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <Icon icon="mdi:tournament" width="13" />
+                      {t.bracketType}
+                    </span>
+                  )}
+                  {t.region && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <Icon icon="mdi:earth" width="13" />
+                      {t.region}
+                    </span>
+                  )}
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>
                   <Icon icon="mdi:account-group-outline" width="16" />
                   {t.registeredCount}/{t.maxTeams} Teams
