@@ -60,7 +60,7 @@ type DraftCompose = { slug: string; userId: string; username: string; initials: 
 
 export default function MailboxPageWrapper() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen text-white flex items-center justify-center" style={{ background: 'var(--bg)' }}>Loading...</div>}>
       <MailboxPage />
     </Suspense>
   )
@@ -296,7 +296,7 @@ function MailboxPage() {
   }
 
   return (
-    <div style={{ background:'var(--bg-1, #0C0C11)', minHeight:'100vh', paddingBottom: 60 }}>
+    <div style={{ minHeight:'100vh', paddingBottom: 60 }}>
       {/* ── MAILBOX HEADER ── */}
       <div style={{ position: 'relative', padding: '32px 0 32px', width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', background: 'var(--bg-2)', borderBottom: '1px solid var(--border)', overflow: 'hidden', marginBottom: 24 }}>
         {/* Background effects */}
