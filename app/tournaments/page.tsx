@@ -152,16 +152,22 @@ export default function TournamentsPage() {
       {/* ── GRID ─────────────────────────────────────── */}
       <div className="tournaments-grid">
         {visible.map((t, i) => (
-          <HoverCard className="tournament-card" key={t.id} delay={i * 0.05}>
+          <HoverCard className="tournament-card" key={t.slug || t.id || i} delay={i * 0.05}>
             <div className="tournament-card-header">
               {t.bannerUrl ? (
                 <img src={t.bannerUrl} alt={t.game} className="tournament-card-header-img" />
               ) : (
-                <div style={{
-                  width: '100%', height: '100%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 64, background: 'var(--bg-3)',
-                }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 64,
+                    background: 'var(--bg-3)',
+                  }}
+                >
                   {t.gameEmoji || '🎮'}
                 </div>
               )}
@@ -181,8 +187,10 @@ export default function TournamentsPage() {
                 }}>
                   <span style={{
                     width: 6, height: 6, borderRadius: '50%',
-                    background: '#4ade80', boxShadow: '0 0 6px #4ade80',
-                    display: 'inline-block', flexShrink: 0,
+                    background: '#4ade80',
+                    boxShadow: '0 0 6px #4ade80',
+                    display: 'inline-block',
+                    flexShrink: 0,
                   }} />
                   LIVE
                 </div>
@@ -209,7 +217,7 @@ export default function TournamentsPage() {
                 )}
               </div>
 
-              {/* Platform · Bracket Type · Region */}
+              {/* Meta row: Platform · Bracket · Region */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 10px', marginBottom: 8 }}>
                 {t.platform && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>

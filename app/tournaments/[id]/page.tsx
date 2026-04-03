@@ -623,6 +623,28 @@ function EntryOptionBtn({ icon, title, sub, onClick }: { icon: ReactNode; title:
   )
 }
 
+function AccordionItem({ title, body, defaultOpen = false }: { title: string; body: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  return (
+    <div className={`accordion-item-custom${open ? ' open' : ''}`}>
+      <button className="accordion-header-custom" onClick={() => setOpen(!open)}>
+        <span>{title}</span>
+        <span className="accordion-chevron">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="accordion-body-custom">
+          {body.split('\n').map((line, i) => (
+            line.startsWith('**') && line.endsWith('**')
+              ? <p key={i} style={{ fontWeight: 700, color: '#fff', marginTop: 12, marginBottom: 4 }}>{line.replace(/\*\*/g, '')}</p>
+              : <p key={i} style={{ marginBottom: line === '' ? 8 : 4 }}>{line}</p>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Entry Modal ──────────────────────────────────────────────────────────────
 function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?: boolean) => void; tournament: TournamentData; onRegistered?: () => void }) {
   const { entryCredits, name, maxTeamSize } = tournament
@@ -892,6 +914,7 @@ export default function TournamentOverviewPage() {
   const tabParam = searchParams?.get('tab')
   const initialTab = (tabParam === 'bracket' || tabParam === 'teams' || tabParam === 'rules') ? tabParam : 'overview'
   const [activeTab,    setActiveTab]    = useState<'overview'|'bracket'|'teams'|'rules'>(initialTab)
+  const [rulesTab,     setRulesTab]     = useState<'general'|'game'|'tournament'>('general')
   const [showEntry,    setShowEntry]    = useState(false)
 
   useEffect(() => {
@@ -930,7 +953,7 @@ export default function TournamentOverviewPage() {
     <div style={{ paddingBottom: 60 }}>
 
       {/* BANNER */}
-      <div style={{ background:'linear-gradient(135deg, #06080e 0%, #0d1520 40%, #0f0f18 100%)', borderBottom:'1px solid rgba(26,92,158,0.25)', padding:'36px 0 0', position:'relative', overflow:'hidden' }}>
+      <div style={{ background:'linear-gradient(135deg, #06080e 0%, #0d1520 40%, #0f0f18 100%)', borderBottom:'1px solid rgba(26,92,158,0.25)', padding:'80px 0 0', position:'relative', overflow:'hidden' }}>
         <div style={{ position:'absolute', inset:0, backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(26,92,158,.04) 60px,rgba(26,92,158,.04) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(26,92,158,.04) 60px,rgba(26,92,158,.04) 61px)', pointerEvents:'none' }} />
         <div style={{ position:'absolute', top:-80, right:-80, width:400, height:400, background:'radial-gradient(ellipse, rgba(26,92,158,.12) 0%, transparent 70%)', pointerEvents:'none' }} />
         <div className="container">
@@ -1189,28 +1212,79 @@ export default function TournamentOverviewPage() {
         {/* RULES — same accordion style as game profile page */}
         {activeTab === 'rules' && (
           <div>
-            <div className="section-header">
+            <div className="section-header" style={{ marginBottom: 24 }}>
               <h2 className="section-title"><span>{TOURNAMENT.game}</span> — Game Rules</h2>
             </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:12, marginTop:16 }}>
-              {['General Match Rules', 'Wager Match Rules', 'Reporting Results', 'Dispute Process'].map((section, i) => (
-                <div key={i} className="accordion-item-custom open">
-                  <div className="accordion-header-custom" style={{ cursor:'default', color:'var(--red)' }}><span>{section}</span></div>
-                  <div className="accordion-body-custom">All matches must be played under fair conditions. Results must be submitted within 15 minutes with screenshot proof. Exploits or cheating result in an immediate ban.</div>
-                </div>
+            
+            <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+              {[
+                { key: 'general', label: 'General Match Rules', icon: Solar.clipboard },
+                { key: 'game', label: 'Game Rules', icon: Solar.gamepad },
+                { key: 'tournament', label: 'Tournament Rules', icon: Solar.trophy }
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setRulesTab(tab.key as any)}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: 8,
+                    border: `1.5px solid ${rulesTab === tab.key ? 'rgba(178,45,45,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                    background: rulesTab === tab.key ? 'rgba(178,45,45,0.12)' : 'var(--bg-2)',
+                    color: rulesTab === tab.key ? '#fff' : 'var(--text-muted)',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    transition: 'all .15s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <Icon icon={tab.icon} width={18} height={18} style={{ flexShrink: 0 }} />
+                  {tab.label}
+                </button>
               ))}
-              {TOURNAMENT.gameRules.map((rule, i) => (
-                <div key={`gr-${i}`} className="accordion-item-custom open">
-                  <div className="accordion-header-custom" style={{ cursor:'default', color:'var(--red)' }}><span>Rule {i + 1}</span></div>
-                  <div className="accordion-body-custom">{rule}</div>
-                </div>
-              ))}
-              {TOURNAMENT.rules.map((rule, i) => (
-                <div key={`tr-${i}`} className="accordion-item-custom open">
-                  <div className="accordion-header-custom" style={{ cursor:'default', color:'var(--red)' }}><span>Tournament Rule {i + 1}</span></div>
-                  <div className="accordion-body-custom">{rule}</div>
-                </div>
-              ))}
+            </div>
+
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              {rulesTab === 'general' && (
+                <>
+                  {['General Match Rules', 'Wager Match Rules', 'Reporting Results', 'Dispute Process'].map((section, i) => (
+                    <AccordionItem 
+                      key={`gen-${i}`} 
+                      title={section} 
+                      body="All matches must be played under fair conditions. Results must be submitted within 15 minutes with screenshot proof. Exploits or cheating result in an immediate ban." 
+                      defaultOpen={i === 0} 
+                    />
+                  ))}
+                </>
+              )}
+              {rulesTab === 'game' && (
+                <>
+                  {(!TOURNAMENT.gameRules || TOURNAMENT.gameRules.length === 0) && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No specific game rules provided.</p>}
+                  {TOURNAMENT.gameRules && TOURNAMENT.gameRules.map((rule, i) => (
+                    <AccordionItem 
+                      key={`gr-${i}`} 
+                      title={`Rule ${i + 1}`} 
+                      body={rule} 
+                      defaultOpen={i === 0} 
+                    />
+                  ))}
+                </>
+              )}
+              {rulesTab === 'tournament' && (
+                <>
+                  {(!TOURNAMENT.rules || TOURNAMENT.rules.length === 0) && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No specific tournament rules provided.</p>}
+                  {TOURNAMENT.rules && TOURNAMENT.rules.map((rule, i) => (
+                    <AccordionItem 
+                      key={`tr-${i}`} 
+                      title={`Tournament Rule ${i + 1}`} 
+                      body={rule} 
+                      defaultOpen={i === 0} 
+                    />
+                  ))}
+                </>
+              )}
             </div>
           </div>
         )}
