@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { adminApi } from '@/lib/api'
 import DataTable, { Column } from '../components/DataTable'
 import SearchFilter from '../components/SearchFilter'
@@ -20,13 +20,54 @@ interface MatchRow {
   totalPot: number
   teamAName: string
   teamAEmoji: string
+  teamALogoUrl?: string
+  teamAWins?: number
+  teamALosses?: number
   teamBName: string
   teamBEmoji: string
+  teamBLogoUrl?: string
+  teamBWins?: number
+  teamBLosses?: number
   scoreA: number
   scoreB: number
   isDisputed: boolean
   disputeReason: string
   createdAt: string
+}
+
+const AVATAR_COLORS = ['#6366f1','#8b5cf6','#3b82f6','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899']
+function nameToColor(name: string) {
+  let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return AVATAR_COLORS[h % AVATAR_COLORS.length]
+}
+function teamInitials(name: string) {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase()
+}
+
+function TeamChip({ name, logo, wins, losses }: { name: string; logo?: string; wins?: number; losses?: number }) {
+  const accent = nameToColor(name)
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{
+        width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+        background: logo ? `url(${logo}) center/cover no-repeat` : '#0d0d14',
+        border: `1.5px solid ${accent}`,
+        boxShadow: `0 0 8px ${accent}55`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 11, fontWeight: 900, color: accent, letterSpacing: 0.5,
+      }}>
+        {!logo && teamInitials(name)}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25 }}>
+        <span style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA' }}>{name}</span>
+        {(wins !== undefined || losses !== undefined) && (
+          <span style={{ fontSize: 10, color: '#4F5568' }}>{wins ?? 0}W · {losses ?? 0}L</span>
+        )}
+      </div>
+    </div>
+  )
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -144,11 +185,11 @@ export default function AdminMatchesPage() {
     { key: 'game', label: 'Game', width: '100px' },
     { key: 'teams', label: 'Teams', width: '2fr',
       render: (row) => (
-        <span>
-          <span style={{ fontWeight: 700 }}>{row.teamAEmoji} {row.teamAName}</span>
-          <span style={{ color: '#4F5568', margin: '0 6px' }}>vs</span>
-          <span style={{ fontWeight: 700 }}>{row.teamBEmoji || ''} {row.teamBName || '—'}</span>
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <TeamChip name={row.teamAName} logo={row.teamALogoUrl} wins={row.teamAWins} losses={row.teamALosses} />
+          <span style={{ color: '#4F5568', fontSize: 10, fontWeight: 700 }}>VS</span>
+          <TeamChip name={row.teamBName || '—'} logo={row.teamBLogoUrl} wins={row.teamBWins} losses={row.teamBLosses} />
+        </div>
       ),
     },
     { key: 'matchType', label: 'Type', width: '60px',
@@ -347,11 +388,16 @@ export default function AdminMatchesPage() {
         <Modal title={`Match ${detailModal.matchId}`} onClose={() => setDetailModal(null)} width={680}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {/* Teams summary */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0d0d14', borderRadius: 8, padding: '12px 16px', border: '1px solid rgba(255,255,255,.05)' }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#DDE0EA' }}>{detailModal.teamAEmoji} {detailModal.teamAName}</span>
-              <span style={{ fontSize: 12, color: '#4F5568', margin: '0 4px' }}>vs</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#DDE0EA' }}>{detailModal.teamBEmoji || ''} {detailModal.teamBName || '—'}</span>
-              {detailModal.winnerName && <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 5, padding: '3px 10px' }}>Winner: {detailModal.winnerName}</span>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#0d0d14', borderRadius: 8, padding: '14px 18px', border: '1px solid rgba(255,255,255,.05)' }}>
+              <TeamChip name={detailModal.teamAName} logo={detailModal.teamALogoUrl} wins={detailModal.teamAWins} losses={detailModal.teamALosses} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: '#4F5568', letterSpacing: 1, textTransform: 'uppercase' }}>vs</span>
+                {(detailModal.scoreA != null && detailModal.scoreB != null) && (
+                  <span style={{ fontSize: 14, fontWeight: 900, color: '#DDE0EA' }}>{detailModal.scoreA} – {detailModal.scoreB}</span>
+                )}
+              </div>
+              <TeamChip name={detailModal.teamBName || '—'} logo={detailModal.teamBLogoUrl} wins={detailModal.teamBWins} losses={detailModal.teamBLosses} />
+              {detailModal.winnerName && <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 5, padding: '4px 12px' }}>Winner: {detailModal.winnerName}</span>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 8, fontSize: 12 }}>
               {[

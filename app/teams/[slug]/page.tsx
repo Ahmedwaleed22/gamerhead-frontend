@@ -142,7 +142,7 @@ export default function TeamProfilePage() {
 
             {/* Logo */}
             <div style={{ width: 88, height: 88, background: '#18181C', border: `2px solid ${cfg.accent}33`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, flexShrink: 0, overflow: 'hidden' }}>
-              {team.logoUrl ? <img src={team.logoUrl} alt={team.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ ...BC, fontWeight: 900, fontSize: 28, color: cfg.accent }}>{team.name?.charAt(0).toUpperCase()}</span>}
+              {(team.logoUrl || team.gameImage) ? <img src={team.logoUrl || team.gameImage} alt={team.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ ...BC, fontWeight: 900, fontSize: 28, color: cfg.accent }}>{team.name?.charAt(0).toUpperCase()}</span>}
             </div>
 
             {/* Info */}
@@ -541,8 +541,10 @@ export default function TeamProfilePage() {
             <Link href={`/games/${team.gameSlug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#18181C', borderRadius: 12, padding: '16px 20px', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.04)', transition: 'border-color .15s' }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = cfg.accent + '44')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)')}>
-              <div style={{ width: 44, height: 44, background: cfg.dim, border: `1px solid ${cfg.bdr}`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 11h4V7H6v4zm8 0h4V7h-4v4zM2 19h20V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14zm4-2a1 1 0 110-2 1 1 0 010 2zm12 0a1 1 0 110-2 1 1 0 010 2zm-4 2h-4l-1 3h6l-1-3z" fill={cfg.accent}/></svg>
+              <div style={{ width: 44, height: 44, background: cfg.dim, border: `1px solid ${cfg.bdr}`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                {team.gameImage
+                  ? <img src={team.gameImage} alt={team.game} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 11h4V7H6v4zm8 0h4V7h-4v4zM2 19h20V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14zm4-2a1 1 0 110-2 1 1 0 010 2zm12 0a1 1 0 110-2 1 1 0 010 2zm-4 2h-4l-1 3h6l-1-3z" fill={cfg.accent}/></svg>}
               </div>
               <div>
                 <div style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#fff' }}>{team.game}</div>
@@ -597,6 +599,7 @@ export default function TeamProfilePage() {
           _id:        team._id,
           name:       team.name,
           emoji:      team.emoji,
+          logoUrl:    team.logoUrl || team.gameImage,
           slug:       team.slug,
           game:       team.game,
           gameSlug:   team.gameSlug,

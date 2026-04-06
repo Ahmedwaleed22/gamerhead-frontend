@@ -7,6 +7,7 @@ import SearchFilter from '../components/SearchFilter'
 import StatCard from '../components/StatCard'
 import { Solar } from '@/lib/solar-duotone'
 import ActionBtn from '../components/ActionBtn'
+import { RichEditor, RichContent } from '@/app/components/RichEditor'
 
 const R: React.CSSProperties = {  }
 
@@ -194,9 +195,9 @@ function TicketDetail({ ticketId, onBack, onRefresh }: { ticketId: string; onBac
       </div>
 
       {/* Chat / Messages */}
-      <div style={{ background: '#18181C', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 400, maxHeight: 'calc(100vh - 380px)' }}>
+      <div style={{ background: '#18181C', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 290px)', minHeight: 480 }}>
         {/* Messages area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {messages.map((msg: any, i: number) => {
             const isSystem = msg.isSystem
             const isStaff = !isSystem && msg.senderId?.toString() !== ticket.userId?.toString()
@@ -204,9 +205,9 @@ function TicketDetail({ ticketId, onBack, onRefresh }: { ticketId: string; onBac
             if (isSystem) {
               return (
                 <div key={i} style={{ display: 'flex', justifyContent: 'center' }}>
-                  <div style={{ background: 'rgba(139,92,246,.08)', border: '1px solid rgba(139,92,246,.2)', borderRadius: 10, padding: '12px 20px', maxWidth: '80%' }}>
-                    <div style={{ ...R, fontSize: 12, color: '#a78bfa', whiteSpace: 'pre-line', lineHeight: 1.6 }}>{msg.text}</div>
-                    <div style={{ ...R, fontSize: 10, color: '#4F5568', marginTop: 6, textAlign: 'center' }}>{fmtTime(msg.sentAt)}</div>
+                  <div style={{ background: 'rgba(139,92,246,.08)', border: '1px solid rgba(139,92,246,.2)', borderRadius: 10, padding: '14px 24px', maxWidth: '80%' }}>
+                    <RichContent text={msg.text} style={{ fontSize: 13, color: '#a78bfa', lineHeight: '1.65' }} />
+                    <div style={{ ...R, fontSize: 11, color: '#4F5568', marginTop: 6, textAlign: 'center' }}>{fmtTime(msg.sentAt)}</div>
                   </div>
                 </div>
               )
@@ -214,32 +215,32 @@ function TicketDetail({ ticketId, onBack, onRefresh }: { ticketId: string; onBac
 
             return (
               <div key={i} style={{ display: 'flex', justifyContent: isStaff ? 'flex-end' : 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: isStaff ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 16, maxWidth: '75%' }}>
+                <div style={{ display: 'flex', flexDirection: isStaff ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 12, maxWidth: '72%' }}>
                   {/* Avatar */}
                   <div style={{
-                    width: 34, height: 34, borderRadius: isStaff ? '50%' : 8, flexShrink: 0,
+                    width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
                     background: isStaff ? 'rgba(59,130,246,.15)' : 'rgba(245,158,11,.1)',
-                    border: `1.5px solid ${isStaff ? '#3b82f644' : '#f59e0b44'}`,
+                    border: `1.5px solid ${isStaff ? '#3b82f666' : '#f59e0b66'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    ...R, fontWeight: 900, fontSize: 12, color: isStaff ? '#3b82f6' : '#f59e0b',
+                    ...R, fontWeight: 900, fontSize: 13, color: isStaff ? '#3b82f6' : '#f59e0b',
                   }}>
                     {msg.initials || msg.senderName?.slice(0, 2).toUpperCase() || '??'}
                   </div>
                   {/* Bubble */}
                   <div style={{
-                    background: isStaff ? 'rgba(59,130,246,.08)' : 'rgba(255,255,255,.03)',
-                    border: `1px solid ${isStaff ? 'rgba(59,130,246,.2)' : 'rgba(255,255,255,.06)'}`,
-                    borderRadius: isStaff ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
-                    padding: '10px 16px',
+                    background: isStaff ? 'rgba(59,130,246,.09)' : 'rgba(255,255,255,.04)',
+                    border: `1px solid ${isStaff ? 'rgba(59,130,246,.25)' : 'rgba(255,255,255,.08)'}`,
+                    borderRadius: isStaff ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                    padding: '12px 18px',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ ...R, fontSize: 12, fontWeight: 700, color: isStaff ? '#3b82f6' : '#f59e0b' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <span style={{ ...R, fontSize: 13, fontWeight: 700, color: isStaff ? '#60A5FA' : '#f59e0b' }}>
                         {msg.senderName || 'Unknown'}
                       </span>
-                      {isStaff && <span style={{ ...R, fontSize: 9, fontWeight: 700, color: '#3b82f6', background: 'rgba(59,130,246,.12)', padding: '1px 6px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: .5 }}>Staff</span>}
-                      <span style={{ ...R, fontSize: 10, color: '#4F5568' }}>{fmtTime(msg.sentAt)}</span>
+                      {isStaff && <span style={{ ...R, fontSize: 9, fontWeight: 800, color: '#60A5FA', background: 'rgba(59,130,246,.15)', padding: '1px 6px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: .5 }}>Staff</span>}
+                      <span style={{ ...R, fontSize: 11, color: '#4F5568' }}>{fmtTime(msg.sentAt)}</span>
                     </div>
-                    <div style={{ ...R, fontSize: 13, color: '#DDE0EA', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                    <RichContent text={msg.text} style={{ fontSize: 14, lineHeight: '1.65', color: '#DDE0EA' }} />
                   </div>
                 </div>
               </div>
@@ -250,13 +251,13 @@ function TicketDetail({ ticketId, onBack, onRefresh }: { ticketId: string; onBac
 
         {/* Reply input */}
         {!isClosed ? (
-          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <textarea
-              style={{ width: '100%', minHeight: 90, background: '#0d0d14', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '12px 16px', ...R, fontSize: 13, color: '#fff', outline: 'none', resize: 'none', lineHeight: '1.6', boxSizing: 'border-box' }}
-              placeholder="Type a reply to the user... (Shift+Enter for new line)"
+          <div style={{ borderTop: '1px solid #25252C', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <RichEditor
               value={replyText}
-              onChange={e => setReplyText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply() } }}
+              onChange={setReplyText}
+              onSubmit={handleReply}
+              placeholder="Type a reply to the user... (Shift+Enter for new line)"
+              minHeight={90}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button onClick={handleReply} disabled={sending || !replyText.trim()} style={{ background: '#3b82f6', border: 'none', borderRadius: 10, padding: '10px 28px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: sending ? 'wait' : 'pointer', opacity: !replyText.trim() ? .5 : 1 }}>

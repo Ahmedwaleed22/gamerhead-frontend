@@ -38,6 +38,7 @@ interface PostMatchModalProps {
     _id:        string
     name:       string
     emoji:      string
+    logoUrl?:   string
     slug:       string
     game:       string
     gameSlug:   string
@@ -226,7 +227,11 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
                     const tCash = t.matchType === 'cash'
                     return (
                       <button key={t._id} onClick={() => setSelectedTeam(t)} style={{ display: 'flex', alignItems: 'center', gap: 14, background: isSel ? '#1E1E28' : '#25252C', border: `1.5px solid ${isSel ? '#B22D2D' : 'rgba(255,255,255,0.06)'}`, borderRadius: 10, padding: '12px 16px', cursor: 'pointer', textAlign: 'left', transition: 'all .15s' }}>
-                        <div style={{ width: 40, height: 40, background: '#18181C', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{t.emoji || <Icon icon={Solar.gamepad} width={20} height={20} />}</div>
+                        <div style={{ width: 40, height: 40, background: '#18181C', border: `1px solid ${tCash ? 'rgba(212,146,10,0.3)' : 'rgba(124,58,237,0.3)'}`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                          {t.logoUrl
+                            ? <img src={t.logoUrl} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                            : <span style={{ ...BC, fontWeight: 900, fontSize: 16, color: tCash ? '#F0AA1A' : '#A78BFA' }}>{t.name?.charAt(0)?.toUpperCase()}</span>}
+                        </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ ...BC, fontWeight: 900, fontSize: 16, color: '#fff' }}>{t.name}</div>
                           <div style={{ ...R, fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{t.ladder} · {t.roster?.length || 1}/{t.maxMembers} members</div>
@@ -245,7 +250,11 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
           {/* ── TEAM PREVIEW (Team page pre-load) ── */}
           {preTeam && selectedTeam && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#25252C', borderRadius: 10, padding: '14px 16px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ width: 48, height: 48, background: '#18181C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>{selectedTeam.emoji || <Icon icon={Solar.gamepad} width={26} height={26} />}</div>
+              <div style={{ width: 48, height: 48, background: '#18181C', border: `2px solid ${cfg.accent}33`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                {selectedTeam.logoUrl
+                  ? <img src={selectedTeam.logoUrl} alt={selectedTeam.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                  : <span style={{ ...BC, fontWeight: 900, fontSize: 20, color: cfg.accent }}>{selectedTeam.name?.charAt(0)?.toUpperCase()}</span>}
+              </div>
               <div style={{ flex: 1 }}>
                 <div style={{ ...BC, fontWeight: 900, fontSize: 18, color: '#fff' }}>{selectedTeam.name}</div>
                 <div style={{ ...R, fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{selectedTeam.game} · {selectedTeam.ladder} · {selectedTeam.roster?.length || 1}/{selectedTeam.maxMembers}</div>
@@ -371,8 +380,8 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
                   <span style={{flexShrink:0,display:'inline-flex',color:'#6B7280',marginTop:1}}><Icon icon={Solar.map} width={14} height={14} /></span>
                   <div style={{ ...R, fontSize: 11, color: '#6B7280', lineHeight: 1.5 }}>
                     {gamemode === 'Random'
-                      ? 'A random gamemode and map will be revealed when your opponent accepts.'
-                      : `A valid ${gamemode} map will be randomly assigned on acceptance.`}
+                      ? 'Gamemode & map picked randomly — revealed when opponent accepts.'
+                      : `Map drawn at random from ${gamemode} maps when opponent accepts.`}
                   </div>
                 </div>
               )}
@@ -432,8 +441,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
               </button>
 
               <div style={{ ...R, fontSize: 11, color: '#4A5568', textAlign: 'center', lineHeight: 1.5 }}>
-                Your match will appear on the <strong style={{ color: '#9CA3AF' }}>{selectedTeam.game}</strong> game page.
-                Opponent teams can accept — map is revealed on acceptance.
+                Goes live on the <strong style={{ color: '#9CA3AF' }}>{selectedTeam.game}</strong> page for opponents to accept.
               </div>
             </>
           )}
