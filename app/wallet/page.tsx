@@ -229,7 +229,7 @@ export default function WalletPage() {
                           const statusCap = status.charAt(0).toUpperCase() + status.slice(1)
                           return (
                             <div key={pId} style={{ background:'#0C0C11', border:'1px solid #25252C', borderRadius:12, padding:'20px 24px', display:'flex', alignItems:'center', gap:18 }}>
-                              <div style={{ width:50, height:50, background:'rgba(243,156,18,0.1)', border:'1px solid rgba(243,156,18,0.2)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Icon icon={Solar.trophy} width={28} height={28} /></div>
+                              <div style={{ width:50, height:50, background:'rgba(243,156,18,0.1)', border:'1px solid rgba(243,156,18,0.2)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#f39c12"/><path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#f39c12"/><rect x="10" y="14" width="4" height="4" fill="#f39c12"/><rect x="7" y="18" width="10" height="3" rx="1" fill="#f39c12"/></svg></div>
                               <div style={{ flex:1 }}>
                                 <div style={{ ...R, fontWeight:700, fontSize:15, color:'#fff' }}>{p.tournament || p.description || 'Prize'}</div>
                                 <div style={{ ...R, fontSize:12, color:'#9CA3AF', marginTop:3 }}>Prize: <span style={{ color:'#F39C12', fontWeight:700, fontSize:14 }}>${((p.amount || 0) / 100).toFixed(2)}</span> - Earned: {p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US') : '—'}</div>

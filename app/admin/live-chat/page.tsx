@@ -146,7 +146,7 @@ export default function AdminLiveChatPage() {
           {/* Active Chats */}
           <div style={{ background: '#13131E', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: 12, flex: 1 }}>
             <div style={{ fontSize: 9, fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: .8, marginBottom: 8 }}>
-              My Active ({active.length})
+              Active Chats ({active.length})
             </div>
             {active.length === 0 ? (
               <div style={{ fontSize: 10, color: '#4F5568', textAlign: 'center', padding: 12 }}>No active chats</div>
@@ -199,19 +199,19 @@ export default function AdminLiveChatPage() {
               </div>
 
               {/* Messages */}
-              <div style={{ flex: 1, padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ flex: 1, padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {(selected.messages || []).map((msg: any, i: number) => (
                   <div key={i} style={{
                     alignSelf: msg.isAdmin ? 'flex-end' : 'flex-start',
-                    maxWidth: '70%', padding: '8px 12px', borderRadius: 8,
+                    maxWidth: '75%', padding: '10px 14px', borderRadius: 10,
                     background: msg.isAdmin ? 'rgba(59,130,246,.15)' : 'rgba(255,255,255,.06)',
-                    border: `1px solid ${msg.isAdmin ? 'rgba(59,130,246,.3)' : 'rgba(255,255,255,.06)'}`,
+                    border: `1px solid ${msg.isAdmin ? 'rgba(59,130,246,.3)' : 'rgba(255,255,255,.07)'}`,
                   }}>
-                    <div style={{ fontSize: 9, color: msg.isAdmin ? '#3b82f6' : '#f59e0b', fontWeight: 700, marginBottom: 2 }}>
-                      {msg.senderName}
+                    <div style={{ fontSize: 11, color: msg.isAdmin ? '#60A5FA' : '#F39C12', fontWeight: 700, marginBottom: 4 }}>
+                      {msg.senderName}{msg.isAdmin && <span style={{ marginLeft: 5, fontSize: 9, background: 'rgba(59,130,246,0.12)', padding: '1px 5px', borderRadius: 3, textTransform: 'uppercase', letterSpacing: 0.4 }}>Staff</span>}
                     </div>
-                    <div style={{ fontSize: 11, color: '#DDE0EA' }}>{msg.text}</div>
-                    <div style={{ fontSize: 8, color: '#4F5568', marginTop: 2, textAlign: 'right' }}>
+                    <div style={{ fontSize: 13, color: '#DDE0EA', lineHeight: '1.55', whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                    <div style={{ fontSize: 10, color: '#4F5568', marginTop: 4, textAlign: 'right' }}>
                       {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
@@ -220,18 +220,21 @@ export default function AdminLiveChatPage() {
               </div>
 
               {/* Input */}
-              <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', gap: 8 }}>
-                <input
+              <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <textarea
                   value={message}
                   onChange={e => setMessage(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSend()}
-                  placeholder="Type a message..."
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
+                  placeholder="Type a message... (Shift+Enter for new line)"
                   style={{
-                    flex: 1, padding: '8px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
-                    borderRadius: 6, fontSize: 11, color: '#fff', outline: 'none',
+                    width: '100%', minHeight: 80, padding: '10px 12px', background: '#0d0d14', border: '1px solid rgba(255,255,255,.09)',
+                    borderRadius: 8, fontSize: 12, color: '#fff', outline: 'none', resize: 'none',
+                    lineHeight: '1.5', boxSizing: 'border-box',
                   }}
                 />
-                <ActionBtn label="SEND" color="#3b82f6" onClick={handleSend} />
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <ActionBtn label="SEND" color="#3b82f6" size="md" onClick={handleSend} />
+                </div>
               </div>
             </>
           )}

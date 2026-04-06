@@ -19,7 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading || !user || !isAdmin) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ fontSize: 14, color: '#4F5568' }}>Loading...</div>
       </div>
     )

@@ -3618,10 +3618,10 @@ footer {
   position: fixed;
   bottom: 88px;
   right: 24px;
-  width: 300px;
+  width: 360px;
   background: var(--bg-3);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   z-index: 999;
   overflow: hidden;
   box-shadow: 0 16px 48px rgba(0,0,0,0.6);

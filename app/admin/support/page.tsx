@@ -250,17 +250,19 @@ function TicketDetail({ ticketId, onBack, onRefresh }: { ticketId: string; onBac
 
         {/* Reply input */}
         {!isClosed ? (
-          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', gap: 16 }}>
-            <input
-              style={{ flex: 1, background: '#0d0d14', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '12px 16px', ...R, fontSize: 13, color: '#fff', outline: 'none' }}
-              placeholder="Type a reply to the user..."
+          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <textarea
+              style={{ width: '100%', minHeight: 90, background: '#0d0d14', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '12px 16px', ...R, fontSize: 13, color: '#fff', outline: 'none', resize: 'none', lineHeight: '1.6', boxSizing: 'border-box' }}
+              placeholder="Type a reply to the user... (Shift+Enter for new line)"
               value={replyText}
               onChange={e => setReplyText(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleReply()}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply() } }}
             />
-            <button onClick={handleReply} disabled={sending || !replyText.trim()} style={{ background: '#3b82f6', border: 'none', borderRadius: 10, padding: '12px 24px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: sending ? 'wait' : 'pointer', opacity: !replyText.trim() ? .5 : 1 }}>
-              {sending ? '...' : 'Send'}
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={handleReply} disabled={sending || !replyText.trim()} style={{ background: '#3b82f6', border: 'none', borderRadius: 10, padding: '10px 28px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: sending ? 'wait' : 'pointer', opacity: !replyText.trim() ? .5 : 1 }}>
+                {sending ? 'Sending...' : 'Send Reply'}
+              </button>
+            </div>
           </div>
         ) : (
           <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', textAlign: 'center' }}>

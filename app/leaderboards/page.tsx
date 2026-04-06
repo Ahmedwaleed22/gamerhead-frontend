@@ -113,15 +113,30 @@ function Cell({ colKey, player }: { colKey: ColKey; player: any }) {
         <td style={{ padding: '14px 14px', whiteSpace: 'nowrap' }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Icon icon={Solar.trophy} width={15} height={15} style={{ flexShrink: 0, color: '#F0C040' }} />
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#F0C040"/>
+                <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#F0C040"/>
+                <rect x="10" y="14" width="4" height="4" fill="#F0C040"/>
+                <rect x="7" y="18" width="10" height="3" rx="1" fill="#F0C040"/>
+              </svg>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 14, color: '#F0C040' }}>{player.trophies.gold}</span>
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Icon icon={Solar.medalRibbon} width={15} height={15} style={{ flexShrink: 0, color: '#C0C0C0' }} />
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#C0C0C0"/>
+                <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#C0C0C0"/>
+                <rect x="10" y="14" width="4" height="4" fill="#C0C0C0"/>
+                <rect x="7" y="18" width="10" height="3" rx="1" fill="#C0C0C0"/>
+              </svg>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 14, color: '#C0C0C0' }}>{player.trophies.silver}</span>
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Icon icon={Solar.medalRibbon} width={15} height={15} style={{ flexShrink: 0, color: '#CD7F32' }} />
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#CD7F32"/>
+                <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#CD7F32"/>
+                <rect x="10" y="14" width="4" height="4" fill="#CD7F32"/>
+                <rect x="7" y="18" width="10" height="3" rx="1" fill="#CD7F32"/>
+              </svg>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 14, color: '#CD7F32' }}>{player.trophies.bronze}</span>
             </span>
           </div>
@@ -319,7 +334,14 @@ export default function LeaderboardsPage() {
                             color: rankColor(p.rank),
                             minWidth: 28,
                           }}>
-                            {p.rank === 1 ? <Icon icon={Solar.crown} width={18} height={18} style={{ color: '#F0C040' }} /> : ordinal(p.rank)}
+                            {p.rank === 1 ? (
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                                <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#F0C040"/>
+                                <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#F0C040"/>
+                                <rect x="10" y="14" width="4" height="4" fill="#F0C040"/>
+                                <rect x="7" y="18" width="10" height="3" rx="1" fill="#F0C040"/>
+                              </svg>
+                            ) : ordinal(p.rank)}
                           </span>
                           {p.rank > 3 && p.trend === 'up'   && <span style={{ fontSize: 9, color: '#4ADE80', fontWeight: 800 }}>▲</span>}
                           {p.rank > 3 && p.trend === 'down' && <span style={{ fontSize: 9, color: '#E8000D', fontWeight: 800 }}>▼</span>}

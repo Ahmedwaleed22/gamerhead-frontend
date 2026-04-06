@@ -6,6 +6,7 @@ import { supportApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
+import { RichEditor, RichContent } from '@/app/components/RichEditor'
 
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
 
@@ -494,7 +495,7 @@ function LiveChatView({ userId, onClose }: { userId: string; onClose: () => void
                       <span style={{ ...R, fontSize: 10, color: '#555' }}>·</span>
                       <span style={{ ...R, fontSize: 10, color: '#6B7280' }}>{fmtTime(msg.sentAt)}</span>
                     </div>
-                    <div style={{ ...R, fontSize: 13, color: '#E0E0E0', lineHeight: '1.55', whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                    <RichContent text={msg.text} style={{ fontSize: 13, lineHeight: '1.55' }} />
                   </div>
                 </div>
               </div>
@@ -505,18 +506,20 @@ function LiveChatView({ userId, onClose }: { userId: string; onClose: () => void
 
         {/* Input */}
         {!isClosed ? (
-          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', gap: 10, flexShrink: 0 }}>
-            <input
-              style={{ flex: 1, background: '#0C0C11', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', ...R, fontSize: 13, color: '#fff', outline: 'none' }}
-              placeholder={isQueued ? 'Waiting for agent to connect...' : 'Type your message...'}
+          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
+            <RichEditor
               value={text}
-              onChange={e => setText(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+              onChange={setText}
+              onSubmit={send}
+              placeholder="Type your message... (Shift+Enter for new line)"
+              minHeight={80}
               disabled={isQueued}
             />
-            <button onClick={send} disabled={sending || !text.trim() || isQueued} style={{ background: '#22c55e', border: 'none', borderRadius: 10, padding: '12px 24px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: sending || isQueued ? 'not-allowed' : 'pointer', opacity: !text.trim() || isQueued ? 0.5 : 1 }}>
-              {sending ? '...' : 'Send'}
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={send} disabled={sending || !text.trim() || isQueued} style={{ background: '#22c55e', border: 'none', borderRadius: 10, padding: '10px 28px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: sending || isQueued ? 'not-allowed' : 'pointer', opacity: !text.trim() || isQueued ? 0.5 : 1 }}>
+                {sending ? 'Sending...' : 'Send'}
+              </button>
+            </div>
           </div>
         ) : (
           <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', textAlign: 'center', flexShrink: 0 }}>
@@ -693,7 +696,7 @@ function TicketChat({ ticket, userId, userRole, onBack, onRefresh }: { ticket: a
                         {fmtTime(msg.sentAt)}
                       </span>
                     </div>
-                    <div style={{ ...R, fontSize: 13, color: '#E0E0E0', lineHeight: '1.55', whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                    <RichContent text={msg.text} style={{ fontSize: 13, lineHeight: '1.55' }} />
                   </div>
                 </div>
               </div>
@@ -704,17 +707,19 @@ function TicketChat({ ticket, userId, userRole, onBack, onRefresh }: { ticket: a
 
         {/* Input */}
         {!isClosed ? (
-          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', gap: 10, flexShrink: 0 }}>
-            <input
-              style={{ flex: 1, background: '#0C0C11', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', ...R, fontSize: 13, color: '#fff', outline: 'none' }}
-              placeholder="Type your message..."
+          <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
+            <RichEditor
               value={text}
-              onChange={e => setText(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+              onChange={setText}
+              onSubmit={send}
+              placeholder="Type your message... (Shift+Enter for new line)"
+              minHeight={90}
             />
-            <button onClick={send} disabled={sending || !text.trim()} style={{ background: '#B22D2D', border: 'none', borderRadius: 10, padding: '12px 24px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: sending ? 'wait' : 'pointer', opacity: !text.trim() ? 0.5 : 1 }}>
-              {sending ? '...' : 'Send'}
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={send} disabled={sending || !text.trim()} style={{ background: '#B22D2D', border: 'none', borderRadius: 10, padding: '10px 28px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: sending ? 'wait' : 'pointer', opacity: !text.trim() ? 0.5 : 1 }}>
+                {sending ? 'Sending...' : 'Send'}
+              </button>
+            </div>
           </div>
         ) : (
           <div style={{ borderTop: '1px solid #25252C', padding: '16px 24px', textAlign: 'center', flexShrink: 0 }}>
@@ -748,11 +753,11 @@ export default function SupportPage() {
     setLoading(false)
   }
 
-  // Check for existing live chat on load
+  // Check for existing live chat on load — only restore if actively claimed
   useEffect(() => {
     fetchTickets()
     supportApi.getMyLiveChat().then((s: any) => {
-      if (s && (s.status === 'queued' || s.status === 'active')) setShowLiveChat(true)
+      if (s && s.status === 'active') setShowLiveChat(true)
     }).catch(() => {})
   }, [])
 
@@ -789,7 +794,7 @@ export default function SupportPage() {
   // If viewing live chat, show that
   if (showLiveChat) {
     return (
-      <div style={{ background: '#0C0C11', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg)', height: '100vh', overflow: 'hidden' }}>
         <div className="container" style={{ maxWidth: 1440, padding: '0 30px', height: '100%' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, paddingTop: 28, height: '100%', alignItems: 'start' }}>
             <DashSidebar active="support" />
@@ -803,7 +808,7 @@ export default function SupportPage() {
   // If viewing a ticket, show chat — lock page height so only chat scrolls
   if (viewTicket) {
     return (
-      <div style={{ background: '#0C0C11', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg)', height: '100vh', overflow: 'hidden' }}>
         <div className="container" style={{ maxWidth: 1440, padding: '0 30px', height: '100%' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, paddingTop: 28, height: '100%', alignItems: 'start' }}>
             <DashSidebar active="support" />
@@ -821,7 +826,7 @@ export default function SupportPage() {
   }
 
   return (
-    <div style={{ background: '#0C0C11', minHeight: '100vh', paddingBottom: 80 }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 80 }}>
       {showCreate && <CreateModal isPremium={user?.isPremium || false} onClose={() => setShowCreate(false)} onCreated={fetchTickets} />}
       {showLiveSupport && <LiveSupportModal onClose={() => setShowLiveSupport(false)} onStarted={() => { setShowLiveSupport(false); setShowLiveChat(true) }} />}
 
@@ -842,8 +847,8 @@ export default function SupportPage() {
                   Live Support
                   <style>{`@keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }`}</style>
                 </button>
-                <button onClick={() => setShowCreate(true)} style={{ background: '#B22D2D', border: 'none', borderRadius: 10, padding: '12px 28px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', letterSpacing: 0.5, boxShadow: '0 0 20px rgba(178,45,45,0.3)' }}>
-                  + Create Ticket
+                <button onClick={() => setShowCreate(true)} style={{ background: '#B22D2D', border: 'none', borderRadius: 10, padding: '12px 28px', ...R, fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', letterSpacing: 0.5, boxShadow: '0 0 20px rgba(178,45,45,0.3)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> New Ticket
                 </button>
               </div>
             </div>

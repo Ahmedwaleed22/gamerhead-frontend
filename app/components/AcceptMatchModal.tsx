@@ -87,8 +87,7 @@ export function AcceptMatchModal({ match, onClose, onAccepted }: AcceptMatchModa
       onAccepted()
       onClose()
       // Redirect to match page
-      const type = match.matchType === 'cash' ? 'cash' : 'xp'
-      router.push(`/matches/${type}/${match.matchId}`)
+      router.push(`/matches/${match.matchId}`)
     } catch { /* shown via error */ }
   }
 

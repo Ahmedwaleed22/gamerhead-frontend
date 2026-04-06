@@ -403,7 +403,14 @@ function OverviewTab({ game, xpLadders }: { game: any; xpLadders: any[] }) {
                 {selectedLadder.standings.map((row: any, i: number) => (
                   <tr key={i}>
                     <td style={{ color: i===0?'#f0c040':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--text-muted)', fontWeight: 700, width: 40 }}>
-                      {i === 0 ? <Icon icon={Solar.crown} width={16} height={16} style={{ display: 'inline-block', verticalAlign: 'middle', color: '#f0c040' }} /> : row.position}
+                      {i === 0 ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}>
+                          <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#f0c040"/>
+                          <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#f0c040"/>
+                          <rect x="10" y="14" width="4" height="4" fill="#f0c040"/>
+                          <rect x="7" y="18" width="10" height="3" rx="1" fill="#f0c040"/>
+                        </svg>
+                      ) : row.position}
                     </td>
                     <td style={{ color: '#fff', fontWeight: 600 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -455,7 +462,12 @@ function TopLadderStandings({ xpLadders, cashLadders }: { xpLadders: any[]; cash
   return (
     <div className="gp-sidebar-card">
       <div className="gp-sidebar-card-header">
-        <Icon icon={Solar.trophy} width={22} height={22} style={{ color: '#f0c040', flexShrink: 0 }} />
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ color: '#f0c040', flexShrink: 0 }}>
+          <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="currentColor"/>
+          <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="currentColor"/>
+          <rect x="10" y="14" width="4" height="4" fill="currentColor"/>
+          <rect x="7" y="18" width="10" height="3" rx="1" fill="currentColor"/>
+        </svg>
         <div className="gp-sidebar-title">Top Ladder Standings</div>
       </div>
       <div className="gp-sidebar-divider" />
@@ -474,7 +486,14 @@ function TopLadderStandings({ xpLadders, cashLadders }: { xpLadders: any[]; cash
             {standings.slice(0, 7).map((row: any, i: number) => (
               <tr key={i}>
                 <td style={{ color: i===0?'#f0c040':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--text-muted)', fontWeight: 700 }}>
-                  {i === 0 ? <Icon icon={Solar.crown} width={14} height={14} style={{ display: 'inline-block', verticalAlign: 'middle', color: '#f0c040' }} /> : row.position}
+                  {i === 0 ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}>
+                      <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#f0c040"/>
+                      <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#f0c040"/>
+                      <rect x="10" y="14" width="4" height="4" fill="#f0c040"/>
+                      <rect x="7" y="18" width="10" height="3" rx="1" fill="#f0c040"/>
+                    </svg>
+                  ) : row.position}
                 </td>
                 <td style={{ fontSize: 11 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -668,7 +687,12 @@ export default function GameProfilePage() {
           <div className="game-profile-sidebar">
             <div className="gp-sidebar-card">
               <div className="gp-sidebar-card-header">
-                <Icon icon={Solar.crown} width={22} height={22} style={{ color: '#f0c040', flexShrink: 0 }} />
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#f0c040"/>
+                  <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#f0c040"/>
+                  <rect x="10" y="14" width="4" height="4" fill="#f0c040"/>
+                  <rect x="7" y="18" width="10" height="3" rx="1" fill="#f0c040"/>
+                </svg>
                 <div>
                   <div className="gp-sidebar-update">Updates weekly</div>
                   <div className="gp-sidebar-title">Player of the Week</div>

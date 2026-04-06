@@ -56,8 +56,8 @@ function GameIconCell({ icon, size = 18 }: { icon?: string; size?: number }) {
 }
 
 function matchHref(m: any) {
-  if (m.type === 'Tournament' && m.tournamentSlug) return `/tournaments/${m.tournamentSlug}/matches/${m.id}`
-  return `/matches/${m.id}`
+  if (m.type === 'Tournament' && m.tournamentSlug) return `/tournaments/${m.tournamentSlug}/matches/${m.matchId}`
+  return `/matches/${m.matchId}`
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -104,10 +104,11 @@ function BadgeTile({ b, selectable, selected, onToggle }: {
       <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#9CA3AF', textAlign:'center', lineHeight:1.3 }}>{b.name}</div>
       <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:9, letterSpacing:1, color:rc, textTransform:'uppercase' }}>{b.rarity}</div>
       {hover && !selectable && (
-        <div style={{ position:'absolute', bottom:'calc(100% + 8px)', left:'50%', transform:'translateX(-50%)', width:180, background:'#1A1A2E', border:`1px solid ${rc}44`, borderRadius:8, padding:'10px 12px', zIndex:50, pointerEvents:'none', boxShadow:'0 8px 24px rgba(0,0,0,0.6)' }}>
-          <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:700, fontSize:12, color:'#F0F0F8', marginBottom:4 }}>{b.name}</div>
-          <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#9CA3AF', lineHeight:1.4, marginBottom:8 }}>{b.desc}</div>
-          <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#4A5568' }}>{b.date}</div>
+        <div style={{ position:'absolute', bottom:'calc(100% + 10px)', left:'50%', transform:'translateX(-50%)', width:200, background:'#1A1A2E', border:`1px solid ${rc}55`, borderRadius:10, padding:'12px 14px', zIndex:9999, pointerEvents:'none', boxShadow:'0 12px 32px rgba(0,0,0,0.8)' }}>
+          <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:700, fontSize:13, color:'#F0F0F8', marginBottom:4 }}>{b.name}</div>
+          <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:700, fontSize:9, letterSpacing:1.2, textTransform:'uppercase', color:rc, marginBottom:6 }}>{b.rarity}</div>
+          {b.desc && <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#9CA3AF', lineHeight:1.5, marginBottom:6 }}>{b.desc}</div>}
+          {b.date && <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#4A5568' }}>Earned {b.date}</div>}
           <div style={{ position:'absolute', bottom:-5, left:'50%', transform:'translateX(-50%) rotate(45deg)', width:8, height:8, background:'#1A1A2E', borderRight:`1px solid ${rc}44`, borderBottom:`1px solid ${rc}44` }} />
         </div>
       )}
@@ -143,8 +144,8 @@ function MatchRow({ m, cols }: { m: any; cols: string }) {
 
 function Skeleton() {
   return (
-    <div style={{ background:'#080810', minHeight:'100vh' }}>
-      <div style={{ height:280, background:'linear-gradient(101deg,#0A0A18 0%,#1A0A12 40%,#0D0D1F 100%)' }} />
+    <div style={{ background:'var(--bg)', minHeight:'100vh' }}>
+      <div style={{ height:280, background:'linear-gradient(101deg,#0D121B 0%,#1A0A12 40%,#0D121B 100%)' }} />
       <div className="container" style={{ marginTop:-60, display:'flex', gap:24, alignItems:'flex-end' }}>
         <div style={{ width:120, height:120, background:'#1A1A2E', border:'3px solid #2D1B2E', borderRadius:12 }} />
         <div style={{ paddingBottom:8 }}>
@@ -168,7 +169,7 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
   const favFriendIds = U._local_favFriends ?? (U.favoriteFriendIds || [])
   const favTeamIds   = U._local_favTeams   ?? (U.favoriteTeamIds   || [])
 
-  const FAVE_BADGES  = favBadgeIds.length  > 0 ? ALL_BADGES.filter((b:any)=>favBadgeIds.includes(String(b._id||b.id))).slice(0,6)  : ALL_BADGES.slice(0,6)
+  const FAVE_BADGES  = favBadgeIds.length  > 0 ? ALL_BADGES.filter((b:any)=>favBadgeIds.includes(String(b._id||b.id))).slice(0,12) : ALL_BADGES.slice(0,12)
   const FAVE_FRIENDS = favFriendIds.length > 0 ? ALL_FRIENDS.filter((f:any)=>favFriendIds.includes(f.slug)).slice(0,5)              : ALL_FRIENDS.slice(0,5)
   const FAVE_TEAMS   = favTeamIds.length   > 0 ? ALL_TEAMS.filter((t:any)=>favTeamIds.includes(t.slug)).slice(0,3)                  : ALL_TEAMS.slice(0,3)
   const RECENT       = ALL_MATCHES.slice(0,3)
@@ -256,14 +257,14 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
 
       {/* CENTER */}
       <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-        <div style={S.card}>
+        <div style={{ ...S.card, overflow:'visible' }}>
           <div style={S.cardHeader}>
             <span style={S.headLabel}>Favorite Badges</span>
-            <button style={S.seeAll} onClick={()=>setActiveTab('Badges')}>See All →</button>
+            <button style={S.seeAll} onClick={()=>setActiveTab('Badges')}>See All</button>
           </div>
           {FAVE_BADGES.length === 0
             ? <div style={{ padding:'24px 20px', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:12, textAlign:'center' }}>No favorite badges set yet</div>
-            : <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', padding:16, gap:10 }}>
+            : <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', padding:16, gap:10 }}>
                 {FAVE_BADGES.map((b:any,i:number)=><BadgeTile key={i} b={b} />)}
               </div>
           }
@@ -272,7 +273,7 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
         <div style={S.card}>
           <div style={S.cardHeader}>
             <span style={S.headLabel}>Recent Activity</span>
-            <button style={S.seeAll} onClick={()=>setActiveTab('Matches')}>See all →</button>
+            <button style={S.seeAll} onClick={()=>setActiveTab('Matches')}>See All</button>
           </div>
           {RECENT.length === 0
             ? <div style={{ padding:'24px 20px', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:12, textAlign:'center' }}>No recent matches</div>
@@ -303,9 +304,8 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
       <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
         <div style={S.card}>
           <div style={S.cardHeader}>
-            <span style={S.headLabel}>Friends</span>
-            <span style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#4A5568' }}>({U.friendCount ?? 0})</span>
-            <button style={S.seeAll} onClick={()=>setActiveTab('Friends')}>All →</button>
+            <span style={S.headLabel}>Friends <span style={{ fontFamily:"'Barlow',sans-serif", fontWeight:400, fontSize:10, color:'#4A5568', letterSpacing:0, textTransform:'none' }}>{U.friendCount ?? 0}</span></span>
+            <button style={S.seeAll} onClick={()=>setActiveTab('Friends')}>See All</button>
           </div>
           {FAVE_FRIENDS.length === 0
             ? <div style={{ padding:'16px 20px', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:12, textAlign:'center' }}>No friends yet</div>
@@ -331,9 +331,8 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
 
         <div style={S.card}>
           <div style={S.cardHeader}>
-            <span style={S.headLabel}>Teams</span>
-            <span style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#4A5568' }}>({ALL_TEAMS.length})</span>
-            <button style={S.seeAll} onClick={()=>setActiveTab('Teams')}>All →</button>
+            <span style={S.headLabel}>Teams <span style={{ fontFamily:"'Barlow',sans-serif", fontWeight:400, fontSize:10, color:'#4A5568', letterSpacing:0, textTransform:'none' }}>{ALL_TEAMS.length}</span></span>
+            <button style={S.seeAll} onClick={()=>setActiveTab('Teams')}>See All</button>
           </div>
           {FAVE_TEAMS.length === 0
             ? <div style={{ padding:'16px 20px', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:12, textAlign:'center' }}>No teams yet</div>
@@ -376,7 +375,7 @@ function EditModal({ profile, onClose, onSave }: {
   const [bannerFile, setBannerFile] = useState<string|null>(null)
   const [avatarFile, setAvatarFile] = useState<string|null>(null)
 
-  const MAX = { badges:6, friends:5, teams:3 }
+  const MAX = { badges:12, friends:5, teams:3 }
 
   function toggle(id:string, list:string[], set:(v:string[])=>void, max:number) {
     if (list.includes(id)) { set(list.filter(x=>x!==id)); return }
@@ -389,28 +388,49 @@ function EditModal({ profile, onClose, onSave }: {
     r.readAsDataURL(file)
   }
 
-  const secBtn = (key: typeof section, label: string) => (
-    <button key={key} onClick={()=>setSection(key)} style={{ background:section===key?'rgba(192,57,43,0.15)':'rgba(255,255,255,0.04)', border:`1px solid ${section===key?'#C0392B':'rgba(255,255,255,0.08)'}`, borderRadius:8, padding:'8px 18px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:12, letterSpacing:1, textTransform:'uppercase', color:section===key?'#E74C3C':'#6B7280', cursor:'pointer' }}>
-      {label}
-    </button>
-  )
+  const secBtn = (key: typeof section, label: string) => {
+    const isActive = section === key;
+    return (
+      <button key={key} onClick={()=>setSection(key)} style={{
+        position: 'relative',
+        background: isActive ? 'linear-gradient(180deg, rgba(232,0,13,0.1) 0%, transparent 100%)' : 'transparent',
+        border: `1px solid ${isActive ? 'rgba(232,0,13,0.4)' : 'transparent'}`,
+        borderRadius: 8, padding: '10px 20px',
+        fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:13, letterSpacing:1, textTransform:'uppercase',
+        color: isActive ? '#fff' : '#8890A4', transition: 'all 0.2s ease', cursor:'pointer'
+      }}
+      onMouseEnter={e => !isActive && (e.currentTarget.style.color = '#fff')}
+      onMouseLeave={e => !isActive && (e.currentTarget.style.color = '#8890A4')}>
+        {label}
+        {isActive && <div style={{ position: 'absolute', top: -1, left: '20%', right: '20%', height: 1, background: 'linear-gradient(90deg, transparent, #e8000d, transparent)', boxShadow: '0 1px 8px #e8000d' }} />}
+      </button>
+    )
+  }
 
   const allBadges  = profile.badges      || []
   const allFriends = profile.friendsList  || []
   const allTeams   = profile.teamsList    || []
 
   return (
-    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div onClick={e=>e.stopPropagation()} style={{ width:'min(820px,96vw)', maxHeight:'90vh', background:'#0F0F1A', border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div onClick={e=>e.stopPropagation()} style={{ width:'min(760px,96vw)', maxHeight:'90vh', background:'rgba(13,13,20,0.95)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:20, display:'flex', flexDirection:'column', overflow:'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04)' }}>
 
         {/* Header */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'#F0F0F8' }}>Edit Profile</span>
-          <button type="button" onClick={onClose} style={{ background:'none', border:'none', color:'#6B7280', cursor:'pointer', display:'flex', alignItems:'center' }} aria-label="Close"><Icon icon={Solar.close} width={18} height={18} /></button>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'24px 28px', background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)' }}>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'#F0F0F8', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 10 }}>
+             <div style={{ width: 36, height: 36, background: 'rgba(232,0,13,0.1)', border: '1px solid rgba(232,0,13,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <Icon icon={Solar.pen} width={18} height={18} style={{ color: '#e8000d' }} />
+             </div>
+             Edit Profile
+          </span>
+          <button type="button" onClick={onClose} style={{ width: 32, height: 32, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius: '50%', color:'#8890A4', cursor:'pointer', display:'flex', alignItems:'center', justifyContent: 'center', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff' }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#8890A4' }} aria-label="Close">
+            <Icon icon={Solar.close} width={16} height={16} />
+          </button>
         </div>
 
         {/* Section tabs */}
-        <div style={{ display:'flex', gap:8, padding:'16px 24px', borderBottom:'1px solid rgba(255,255,255,0.06)', flexWrap:'wrap' }}>
+        <div style={{ display:'flex', gap:6, padding:'0 28px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', flexWrap:'wrap' }}>
           {secBtn('main',    'Profile')}
           {secBtn('badges',  `Badges (${selBadges.length}/${MAX.badges})`)}
           {secBtn('friends', `Friends (${selFriends.length}/${MAX.friends})`)}
@@ -418,61 +438,78 @@ function EditModal({ profile, onClose, onSave }: {
         </div>
 
         {/* Body */}
-        <div style={{ flex:1, overflowY:'auto', padding:24 }}>
+        <div style={{ flex:1, overflowY:'auto', padding:'24px 28px' }}>
 
           {/* ── Main ── */}
           {section === 'main' && (
-            <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:28 }}>
               {/* Banner */}
               <div>
-                <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1.5, textTransform:'uppercase', color:'#6B7280', marginBottom:10 }}>Banner Image</div>
-                <div style={{ position:'relative', height:120, background:bannerFile||profile.bannerUrl?'none':'linear-gradient(135deg,#1A1A2E,#0D0D1F)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:12, letterSpacing:1.5, textTransform:'uppercase', color:'#8890A4', marginBottom:12 }}>Banner Image</div>
+                <div style={{ position:'relative', height:140, background:bannerFile||profile.bannerUrl?'none':'rgba(0,0,0,0.3)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius:12, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', transition: 'all 0.2s ease' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(232,0,13,0.5)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'}>
                   {(bannerFile||profile.bannerUrl) && <img src={bannerFile||profile.bannerUrl} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }} />}
-                  <label style={{ position:'relative', zIndex:1, background:'rgba(0,0,0,0.55)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:7, padding:'8px 16px', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontFamily:"'Barlow',sans-serif", fontSize:12, color:'#fff', fontWeight:600 }}>
-                    <Icon icon={Solar.gallery} width={14} height={14} /> {bannerFile||profile.bannerUrl ? 'Change Banner' : 'Upload Banner'}
+                  <label style={{ position:'relative', zIndex:1, background:bannerFile||profile.bannerUrl?'rgba(13,13,20,0.85)':'rgba(255,255,255,0.04)', backdropFilter: 'blur(8px)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'10px 20px', cursor:'pointer', display:'flex', alignItems:'center', gap:8, fontFamily:"'Barlow',sans-serif", fontSize:13, color:'#fff', fontWeight:600, transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                    onMouseLeave={e => e.currentTarget.style.background = bannerFile||profile.bannerUrl?'rgba(13,13,20,0.85)':'rgba(255,255,255,0.04)'}>
+                    <Icon icon={Solar.gallery} width={18} height={18} style={{ color: '#e8000d' }} /> {bannerFile||profile.bannerUrl ? 'Change Banner' : 'Upload Banner'}
                     <input type="file" accept="image/*" style={{ display:'none' }} onChange={e=>e.target.files?.[0]&&readFile(e.target.files[0],setBannerFile)} />
                   </label>
                 </div>
               </div>
 
               {/* Avatar */}
-              <div style={{ display:'flex', alignItems:'center', gap:20 }}>
-                <div style={{ width:88, height:88, background:'linear-gradient(135deg,#1A1A2E,#2D1B2E)', border:'2px solid #C0392B', borderRadius:12, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                  {(avatarFile||profile.avatarUrl)
-                    ? <img src={avatarFile||profile.avatarUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                    : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, color:'#E74C3C' }}>{safeInitials(profile.username)}</span>
-                  }
-                </div>
-                <div>
-                  <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1.5, textTransform:'uppercase', color:'#6B7280', marginBottom:8 }}>Profile Picture</div>
-                  <label style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, padding:'8px 16px', cursor:'pointer', fontFamily:"'Barlow',sans-serif", fontSize:12, color:'#F0F0F8', fontWeight:600 }}>
-                    <Icon icon={Solar.camera} width={14} height={14} /> {avatarFile||profile.avatarUrl ? 'Change Photo' : 'Upload Photo'}
+              <div style={{ display:'flex', alignItems:'center', gap:28 }}>
+                <div style={{ position: 'relative', width:100, height:100, borderRadius:'50%', padding: 3, background:'linear-gradient(135deg, #e8000d 0%, rgba(232,0,13,0.1) 100%)', flexShrink:0, boxShadow: '0 8px 24px rgba(232,0,13,0.2)' }}>
+                  <div style={{ width: '100%', height: '100%', borderRadius: '50%', background:'#0d0d14', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+                    {(avatarFile||profile.avatarUrl)
+                      ? <img src={avatarFile||profile.avatarUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                      : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:40, color:'#e8000d' }}>{safeInitials(profile.username)}</span>
+                    }
+                  </div>
+                  <label style={{ position: 'absolute', bottom: 0, right: 0, width: 30, height: 30, background: '#e8000d', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid #0d0d14', color: '#fff', cursor: 'pointer', transition: 'transform 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'} title="Upload Photo">
+                    <Icon icon={Solar.camera} width={14} height={14} />
                     <input type="file" accept="image/*" style={{ display:'none' }} onChange={e=>e.target.files?.[0]&&readFile(e.target.files[0],setAvatarFile)} />
                   </label>
-                  <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#4A5568', marginTop:6 }}>JPG, PNG or GIF · max 5MB</div>
+                </div>
+                <div>
+                  <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:12, letterSpacing:1.5, textTransform:'uppercase', color:'#8890A4', marginBottom:10 }}>Profile Picture</div>
+                  <label style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'10px 20px', cursor:'pointer', fontFamily:"'Barlow',sans-serif", fontSize:13, color:'#F0F0F8', fontWeight:600, transition: 'all 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}>
+                    <Icon icon={Solar.camera} width={16} height={16} style={{ color: '#8890A4' }} />
+                    Upload New Image
+                    <input type="file" accept="image/*" style={{ display:'none' }} onChange={e=>e.target.files?.[0]&&readFile(e.target.files[0],setAvatarFile)} />
+                  </label>
+                  <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:12, color:'#4F5568', marginTop:10 }}>JPG, PNG or GIF · Max 5MB</div>
                 </div>
               </div>
 
-              <div style={{ background:'rgba(52,152,219,0.08)', border:'1px solid rgba(52,152,219,0.2)', borderRadius:8, padding:'12px 16px', fontFamily:"'Barlow',sans-serif", fontSize:12, color:'#6B7280', lineHeight:1.6 }}>
-                To change your <strong style={{ color:'#F0F0F8' }}>username</strong>, <strong style={{ color:'#F0F0F8' }}>gamertags</strong>, or <strong style={{ color:'#F0F0F8' }}>social links</strong> visit <Link href="/settings" style={{ color:'#3498DB' }}>Settings → Profile</Link>.
+              <div style={{ display: 'flex', gap: 14, background:'rgba(232,0,13,0.04)', border:'1px solid rgba(232,0,13,0.15)', borderRadius:12, padding:'18px 20px', alignItems: 'flex-start' }}>
+                <Icon icon={Solar.info} width={22} height={22} style={{ color: '#e8000d', flexShrink: 0 }} />
+                <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:13, color:'#8890A4', lineHeight:1.6 }}>
+                  To change your <strong style={{ color:'#DDE0EA', fontWeight: 600 }}>username</strong>, <strong style={{ color:'#DDE0EA', fontWeight: 600 }}>gamertags</strong>, or <strong style={{ color:'#DDE0EA', fontWeight: 600 }}>social links</strong>, please visit <Link href="/settings" style={{ color:'#e8000d', textDecoration:'none', fontWeight: 600 }}>Settings</Link>.
+                </div>
               </div>
             </div>
           )}
 
           {/* ── Badges ── */}
           {section === 'badges' && (
-            <div>
-              <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:13, color:'#6B7280', marginBottom:16 }}>
-                Select up to <strong style={{ color:'#F0F0F8' }}>{MAX.badges} badges</strong> to show on your Overview. ({selBadges.length}/{MAX.badges})
+            <div style={{ animation: 'fadeIn 0.3s ease' }}>
+              <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:14, color:'#8890A4', marginBottom:20 }}>
+                Select up to <strong style={{ color:'#fff' }}>{MAX.badges} badges</strong> to show on your Overview. ({selBadges.length}/{MAX.badges})
               </div>
               {allBadges.length === 0
-                ? <div style={{ textAlign:'center', padding:'32px 0', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:13 }}>No badges earned yet.</div>
-                : <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+                ? <div style={{ textAlign:'center', padding:'40px 0', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 12, color:'#4F5568', fontFamily:"'Barlow',sans-serif", fontSize:14 }}>No badges earned yet.</div>
+                : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(90px,1fr))', gap:12 }}>
                     {allBadges.map((b:any)=>{
                       const id = String(b._id||b.id)
                       const sel = selBadges.includes(id)
                       return (
-                        <div key={id} style={{ opacity:!sel&&selBadges.length>=MAX.badges?0.4:1, transition:'opacity 0.15s' }}>
+                        <div key={id} style={{ opacity:!sel&&selBadges.length>=MAX.badges?0.4:1, transition:'opacity 0.2s', filter: !sel && selBadges.length>=MAX.badges ? 'grayscale(0.8)' : 'none' }}>
                           <BadgeTile b={b} selectable selected={sel} onToggle={()=>toggle(id,selBadges,setSelBadges,MAX.badges)} />
                         </div>
                       )
@@ -484,28 +521,32 @@ function EditModal({ profile, onClose, onSave }: {
 
           {/* ── Friends ── */}
           {section === 'friends' && (
-            <div>
-              <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:13, color:'#6B7280', marginBottom:16 }}>
-                Select up to <strong style={{ color:'#F0F0F8' }}>{MAX.friends} friends</strong> to show on your Overview. ({selFriends.length}/{MAX.friends})
+            <div style={{ animation: 'fadeIn 0.3s ease' }}>
+              <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:14, color:'#8890A4', marginBottom:20 }}>
+                Select up to <strong style={{ color:'#fff' }}>{MAX.friends} friends</strong> to show on your Overview. ({selFriends.length}/{MAX.friends})
               </div>
               {allFriends.length === 0
-                ? <div style={{ textAlign:'center', padding:'32px 0', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:13 }}>No friends yet.</div>
-                : <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+                ? <div style={{ textAlign:'center', padding:'40px 0', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 12, color:'#4F5568', fontFamily:"'Barlow',sans-serif", fontSize:14 }}>No friends added yet.</div>
+                : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:12 }}>
                     {allFriends.map((f:any)=>{
                       const sel = selFriends.includes(f.slug)
                       const maxed = !sel && selFriends.length >= MAX.friends
                       return (
                         <div key={f.slug} onClick={()=>!maxed&&toggle(f.slug,selFriends,setSelFriends,MAX.friends)}
-                          style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', background:sel?'rgba(192,57,43,0.1)':'rgba(255,255,255,0.03)', border:`1px solid ${sel?'#C0392B':'rgba(255,255,255,0.06)'}`, borderRadius:10, cursor:maxed&&!sel?'default':'pointer', opacity:maxed&&!sel?0.4:1, transition:'all 0.15s' }}>
-                          <div style={{ position:'relative', width:36, height:36, background:(f.color||'#E74C3C')+'1A', border:`1px solid ${f.color||'#E74C3C'}44`, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:f.color||'#E74C3C' }}>{f.initials}</span>
-                            <div style={{ position:'absolute', bottom:-2, right:-2, width:10, height:10, background:f.statusColor||'#4A5568', border:'2px solid #0F0F1A', borderRadius:'50%' }} />
+                          style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px', background:sel?'rgba(232,0,13,0.06)':'rgba(255,255,255,0.02)', border:`1px solid ${sel?'rgba(232,0,13,0.3)':'rgba(255,255,255,0.05)'}`, borderRadius:12, cursor:maxed&&!sel?'default':'pointer', opacity:maxed&&!sel?0.4:1, transition:'all 0.2s' }}
+                          onMouseEnter={e => !maxed && (e.currentTarget.style.background = sel ? 'rgba(232,0,13,0.1)' : 'rgba(255,255,255,0.04)')}
+                          onMouseLeave={e => !maxed && (e.currentTarget.style.background = sel ? 'rgba(232,0,13,0.06)' : 'rgba(255,255,255,0.02)')}>
+                          <div style={{ position:'relative', width:40, height:40, background:(f.color||'#e8000d')+'1A', border:`1px solid ${f.color||'#e8000d'}44`, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:f.color||'#e8000d' }}>{f.initials}</span>
+                            <div style={{ position:'absolute', bottom:0, right:0, width:12, height:12, background:f.statusColor||'#4A5568', border:'2px solid #0d0d14', borderRadius:'50%' }} />
                           </div>
-                          <div style={{ flex:1 }}>
-                            <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:13, color:'#F0F0F8' }}>{f.name}</div>
-                            <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#4A5568' }}>{f.statusLabel}</div>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:14, color:'#F0F0F8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</div>
+                            <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#8890A4' }}>{f.statusLabel}</div>
                           </div>
-                          {sel && <Icon icon={Solar.checkRead} width={14} height={14} style={{ color:'#E74C3C' }} />}
+                          {sel && <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#e8000d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Icon icon={Solar.checkRead} width={14} height={14} style={{ color:'#fff' }} />
+                          </div>}
                         </div>
                       )
                     })}
@@ -516,29 +557,35 @@ function EditModal({ profile, onClose, onSave }: {
 
           {/* ── Teams ── */}
           {section === 'teams' && (
-            <div>
-              <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:13, color:'#6B7280', marginBottom:16 }}>
-                Select up to <strong style={{ color:'#F0F0F8' }}>{MAX.teams} teams</strong> to show on your Overview. ({selTeams.length}/{MAX.teams})
+            <div style={{ animation: 'fadeIn 0.3s ease' }}>
+              <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:14, color:'#8890A4', marginBottom:20 }}>
+                Select up to <strong style={{ color:'#fff' }}>{MAX.teams} teams</strong> to show on your Overview. ({selTeams.length}/{MAX.teams})
               </div>
               {allTeams.length === 0
-                ? <div style={{ textAlign:'center', padding:'32px 0', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:13 }}>No teams yet.</div>
-                : <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                ? <div style={{ textAlign:'center', padding:'40px 0', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 12, color:'#4F5568', fontFamily:"'Barlow',sans-serif", fontSize:14 }}>No teams joined yet.</div>
+                : <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                     {allTeams.map((t:any)=>{
                       const sel = selTeams.includes(t.slug)
                       const maxed = !sel && selTeams.length >= MAX.teams
                       return (
                         <div key={t.slug} onClick={()=>!maxed&&toggle(t.slug,selTeams,setSelTeams,MAX.teams)}
-                          style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', background:sel?'rgba(192,57,43,0.1)':'rgba(255,255,255,0.03)', border:`1px solid ${sel?'#C0392B':'rgba(255,255,255,0.06)'}`, borderRadius:10, cursor:maxed&&!sel?'default':'pointer', opacity:maxed&&!sel?0.4:1, transition:'all 0.15s' }}>
-                          <div style={{ width:40, height:40, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0 }}>{t.icon}</div>
+                          style={{ display:'flex', alignItems:'center', gap:16, padding:'16px 20px', background:sel?'rgba(232,0,13,0.06)':'rgba(255,255,255,0.02)', border:`1px solid ${sel?'rgba(232,0,13,0.3)':'rgba(255,255,255,0.05)'}`, borderRadius:12, cursor:maxed&&!sel?'default':'pointer', opacity:maxed&&!sel?0.4:1, transition:'all 0.2s' }}
+                          onMouseEnter={e => !maxed && (e.currentTarget.style.background = sel ? 'rgba(232,0,13,0.1)' : 'rgba(255,255,255,0.04)')}
+                          onMouseLeave={e => !maxed && (e.currentTarget.style.background = sel ? 'rgba(232,0,13,0.06)' : 'rgba(255,255,255,0.02)')}>
+                          <div style={{ width:44, height:44, background:'#1A1A2E', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0, overflow:'hidden' }}>
+                            <GameIconCell icon={t.logoUrl || t.icon} size={26} />
+                          </div>
                           <div style={{ flex:1 }}>
-                            <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:13, color:'#F0F0F8' }}>{t.name}</div>
-                            <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#4A5568', marginTop:1 }}>{t.game} · {t.ladder}</div>
+                            <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:15, color:'#F0F0F8' }}>{t.name}</div>
+                            <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:12, color:'#8890A4', marginTop:2 }}>{t.game} · {t.ladder}</div>
                           </div>
-                          <div style={{ textAlign:'right' }}>
-                            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, color:'#4ade80' }}>{t.wins}W</div>
-                            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, color:'#E74C3C' }}>{t.losses}L</div>
+                          <div style={{ textAlign:'right', marginRight: 16 }}>
+                            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:'#4ade80' }}>{t.wins}W</div>
+                            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:'#E74C3C' }}>{t.losses}L</div>
                           </div>
-                          {sel && <Icon icon={Solar.checkRead} width={14} height={14} style={{ color:'#E74C3C' }} />}
+                          {sel && <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#e8000d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Icon icon={Solar.checkRead} width={14} height={14} style={{ color:'#fff' }} />
+                          </div>}
                         </div>
                       )
                     })}
@@ -549,10 +596,13 @@ function EditModal({ profile, onClose, onSave }: {
         </div>
 
         {/* Footer */}
-        <div style={{ display:'flex', justifyContent:'flex-end', gap:10, padding:'16px 24px', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-          <button onClick={onClose} style={{ background:'none', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'10px 20px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:12, letterSpacing:1, textTransform:'uppercase', color:'#6B7280', cursor:'pointer' }}>Cancel</button>
+        <div style={{ display:'flex', justifyContent:'flex-end', gap:12, padding:'20px 28px', borderTop:'1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)' }}>
+          <button onClick={onClose} style={{ background:'transparent', border:'none', padding:'12px 24px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:13, letterSpacing:1, textTransform:'uppercase', color:'#8890A4', cursor:'pointer', transition: 'color 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#8890A4'}>Cancel</button>
           <button onClick={()=>{ onSave({ bannerFile, avatarFile, favoriteBadgeIds:selBadges, favoriteFriendIds:selFriends, favoriteTeamIds:selTeams }); onClose() }}
-            style={{ background:'#C0392B', border:'none', borderRadius:8, padding:'10px 24px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:12, letterSpacing:1, textTransform:'uppercase', color:'#fff', cursor:'pointer' }}>
+            style={{ background:'#e8000d', border:'none', borderRadius:8, padding:'12px 28px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:13, letterSpacing:1, textTransform:'uppercase', color:'#fff', cursor:'pointer', boxShadow: '0 4px 16px rgba(232,0,13,0.3)', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(232,0,13,0.4)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(232,0,13,0.3)' }}>
             Save Changes
           </button>
         </div>
@@ -719,10 +769,10 @@ export default function ProfilePage() {
   const MATCH_COLS = '40px 1fr 130px 100px 80px 80px 80px'
 
   return (
-    <div style={{ background:'#080810', minHeight:'100vh', paddingBottom:80 }}>
+    <div style={{ background:'var(--bg)', minHeight:'100vh', paddingBottom:80 }}>
 
       {/* ── BANNER ── */}
-      <div style={{ position:'relative', height:280, overflow:'hidden', background:'linear-gradient(101deg,#0A0A18 0%,#1A0A12 40%,#0D0D1F 100%)' }}>
+      <div style={{ position:'relative', height:280, overflow:'hidden', background:'linear-gradient(101deg,#0D121B 0%,#1A0A12 40%,#0D121B 100%)' }}>
         {bannerUrl
           ? <img src={bannerUrl} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }} />
           : <>
@@ -731,7 +781,7 @@ export default function ProfilePage() {
               <div style={{ position:'absolute', right:40, bottom:-20, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:160, letterSpacing:-8, color:'rgba(192,57,43,0.06)', lineHeight:1, pointerEvents:'none', userSelect:'none' }}>{initials}</div>
             </>
         }
-        <div style={{ position:'absolute', height:80, left:0, right:0, bottom:0, background:'linear-gradient(180deg,rgba(8,8,16,0) 0%,#080810 100%)' }} />
+        <div style={{ position:'absolute', height:140, left:0, right:0, bottom:0, background:'linear-gradient(180deg,transparent 0%,#0D121B 100%)' }} />
       </div>
 
       {/* ── IDENTITY ── */}
@@ -754,20 +804,22 @@ export default function ProfilePage() {
 
           {/* Info */}
           <div style={{ flex:1 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:4 }}>
               <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, color:usernameColor, letterSpacing:1, margin:0, lineHeight:1 }}>{username}</h1>
-              {profile.premium  && <div style={{ background:'rgba(243,156,18,0.15)',  border:'1px solid #F39C12', borderRadius:4, padding:'4px 9px' }}><span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1, textTransform:'uppercase', color:'#F39C12' }}>★ Premium</span></div>}
-              {profile.isCoach  && <div style={{ background:'rgba(96,165,250,0.12)',   border:'1px solid rgba(96,165,250,0.4)', borderRadius:4, padding:'4px 9px' }}><span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1, textTransform:'uppercase', color:'#60A5FA' }}>Coach</span></div>}
-              {profile.role === 'admin' && <div style={{ background:'rgba(232,0,13,0.15)', border:'1px solid rgba(232,0,13,0.3)', borderRadius:4, padding:'4px 9px' }}><span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1, textTransform:'uppercase', color:'#e8000d' }}>Admin</span></div>}
               {/* Presence status */}
               {!isOwnProfile && (
-                <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:5, marginLeft:4 }}>
                   <span style={{ width:8, height:8, borderRadius:'50%', background: profile.presenceStatus === 'online' ? '#4ade80' : profile.presenceStatus === 'idle' ? '#F0AA1A' : '#4A5568', display:'inline-block', boxShadow: profile.presenceStatus === 'online' ? '0 0 6px #4ade80' : 'none' }} />
                   <span style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color: profile.presenceStatus === 'online' ? '#4ade80' : profile.presenceStatus === 'idle' ? '#F0AA1A' : '#6B7280' }}>
                     {profile.presenceStatus === 'online' ? (profile.activityText || 'Online') : profile.presenceStatus === 'idle' ? 'Idle' : 'Offline'}
                   </span>
                 </div>
               )}
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', marginBottom:6 }}>
+              {profile.premium  && <span style={{ display:'inline-flex', alignItems:'center', gap:4, background:'rgba(243,156,18,0.12)', border:'1px solid rgba(243,156,18,0.3)', borderRadius:20, padding:'3px 10px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:10, letterSpacing:0.8, textTransform:'uppercase', color:'#F39C12' }}>★ Premium</span>}
+              {profile.isCoach  && <span style={{ display:'inline-flex', alignItems:'center', gap:4, background:'rgba(96,165,250,0.1)', border:'1px solid rgba(96,165,250,0.25)', borderRadius:20, padding:'3px 10px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:10, letterSpacing:0.8, textTransform:'uppercase', color:'#60A5FA' }}>Coach</span>}
+              {profile.role === 'admin' && <span style={{ display:'inline-flex', alignItems:'center', gap:4, background:'rgba(232,0,13,0.1)', border:'1px solid rgba(232,0,13,0.25)', borderRadius:20, padding:'3px 10px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:10, letterSpacing:0.8, textTransform:'uppercase', color:'#e8000d' }}>Admin</span>}
             </div>
             <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:12, color:'#4A5568', marginTop:6 }}>
               {profile.platformId && `ID: ${profile.platformId} · `}
@@ -900,9 +952,12 @@ export default function ProfilePage() {
         </div>
 
         {/* ── TABS ── */}
-        <div style={{ display:'flex', borderBottom:'1px solid rgba(255,255,255,0.06)', marginTop:24, overflowX:'auto' }}>
+        <div style={{ display:'flex', borderBottom:'1px solid rgba(255,255,255,0.06)', marginTop:24, overflowX:'auto', overflowY:'hidden' }}>
           {TABS.map(tab=>(
-            <button key={tab} onClick={()=>setActiveTab(tab)} style={{ background:'none', border:'none', padding:'12px 20px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:13, letterSpacing:1.5, textTransform:'uppercase', color:activeTab===tab?'#E74C3C':'#6B7280', borderBottom:activeTab===tab?'2px solid #E74C3C':'2px solid transparent', marginBottom:-1, cursor:'pointer', whiteSpace:'nowrap', flexShrink:0 }}>
+            <button key={tab} onClick={()=>setActiveTab(tab)}
+              style={{ background:'none', border:'none', padding:'12px 20px', fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:13, letterSpacing:1.5, textTransform:'uppercase', color:activeTab===tab?'#E74C3C':'#6B7280', borderBottom:activeTab===tab?'2px solid #E74C3C':'2px solid transparent', marginBottom:-1, cursor:'pointer', whiteSpace:'nowrap', flexShrink:0, transition:'color 0.15s, border-color 0.15s' }}
+              onMouseEnter={e=>{ if(activeTab!==tab)(e.currentTarget as HTMLButtonElement).style.color='#9CA3AF' }}
+              onMouseLeave={e=>{ if(activeTab!==tab)(e.currentTarget as HTMLButtonElement).style.color='#6B7280' }}>
               {tab}
             </button>
           ))}
@@ -1184,21 +1239,21 @@ export default function ProfilePage() {
                       <Link key={i} href={`/teams/${t.slug}`} style={{ ...S.card, textDecoration:'none', transition:'border-color 0.15s', display:'block' }}
                         onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.12)')}
                         onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.06)')}>
-                        <div style={{ height:80, background:t.banner?`url(${t.banner}) center/cover`:'linear-gradient(135deg,#1A1A2E,#0D0D1F)', position:'relative' }}>
-                          <div style={{ position:'absolute', bottom:-20, left:20, width:44, height:44, background:'#1A1A2E', border:'2px solid #0F0F1A', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
-                            <GameIconCell icon={t.logoUrl || t.icon} size={24} />
+                        <div style={{ height:90, background:t.banner?`url(${t.banner}) center/cover`:'linear-gradient(135deg,#1A1A2E,#0D0D1F)', position:'relative' }}>
+                          <div style={{ position:'absolute', bottom:-26, left:20, width:54, height:54, background:'#1A1A2E', border:'2px solid #0F0F1A', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+                            <GameIconCell icon={t.logoUrl || t.icon} size={30} />
                           </div>
                         </div>
-                        <div style={{ padding:'28px 20px 16px' }}>
-                          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
-                            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'#F0F0F8' }}>{t.name}</span>
-                            <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:10, letterSpacing:1, textTransform:'uppercase', color:roleColor, background:roleColor+'18', border:`1px solid ${roleColor}44`, borderRadius:4, padding:'2px 7px' }}>{t.role}</span>
+                        <div style={{ padding:'34px 20px 16px' }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'#F0F0F8', flex:1 }}>{t.name}</span>
+                            <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:10, letterSpacing:1, textTransform:'uppercase', color:roleColor, background:roleColor+'18', border:`1px solid ${roleColor}44`, borderRadius:20, padding:'3px 9px' }}>{t.role}</span>
                           </div>
-                          <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:12, color:'#4A5568', marginBottom:14 }}>{t.game} · {t.ladder}</div>
-                          <div style={{ display:'flex', gap:16 }}>
+                          <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:12, color:'#4A5568', marginBottom:16 }}>{t.game} · {t.ladder}</div>
+                          <div style={{ display:'flex', gap:20 }}>
                             {[{v:t.wins,c:'#4ade80',l:'Wins'},{v:t.losses,c:'#E74C3C',l:'Losses'},{v:`${wr}%`,c:'#F39C12',l:'Win Rate'}].map((x,j)=>(
                               <div key={j} style={{ textAlign:'center' }}>
-                                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:x.c }}>{x.v}</div>
+                                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:x.c }}>{x.v}</div>
                                 <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:9, color:'#4A5568', textTransform:'uppercase', letterSpacing:1 }}>{x.l}</div>
                               </div>
                             ))}

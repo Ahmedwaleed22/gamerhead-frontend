@@ -603,6 +603,39 @@ export default function MatchDetail({ matchType }: { matchType?: "universal" | "
     )
   }
 
+  if (!match) {
+    return (
+      <div style={{ background:'#0d121b', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding: 20 }}>
+        <div style={{ width: '100%', maxWidth: 420, background:'#0F0F18', border:'1px solid rgba(255,255,255,.055)', borderRadius:12, padding:32, textAlign:'center', boxShadow:'0 10px 40px rgba(0,0,0,.5)' }}>
+          <div style={{ width:56, height:56, background:'linear-gradient(135deg, rgba(239,68,68,.15), rgba(239,68,68,.02))', border:`1px solid rgba(239,68,68,.3)`, borderRadius:'50%', margin:'0 auto 20px', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 20px rgba(239,68,68,.1)' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-7v2h2v-2h-2zm0-8v6h2V7h-2z" fill="#ef4444"/>
+            </svg>
+          </div>
+          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:28, color:'#fff', letterSpacing:1, textTransform:'uppercase', lineHeight:1 }}>MATCH NOT FOUND</div>
+          <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:600, fontSize:14, color:'#8890A4', marginTop:12, lineHeight:1.5 }}>
+            The match you are looking for does not exist, has been cancelled, or you don't have permission to view it.
+          </div>
+          
+          {matchId && (
+            <div style={{ marginTop: 20, background:'#0B0B12', border:'1px solid rgba(255,255,255,.05)', borderRadius:6, padding:'12px', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+              <span style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:1, color:'#4F5568', fontFamily:'Rajdhani, sans-serif' }}>Match ID</span>
+              <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:16, color:'#DDE0EA', letterSpacing:1 }}>{matchId}</span>
+            </div>
+          )}
+          
+          <div style={{ marginTop: 28 }}>
+            <Link href="/dashboard" style={{ display:'block', width:'100%', background:'#191926', border:'1px solid rgba(255,255,255,.07)', borderRadius:6, padding:'12px', fontSize:13, fontWeight:700, color:'#fff', textDecoration:'none', fontFamily:'Rajdhani, sans-serif', textTransform:'uppercase', letterSpacing:1, transition:'all .15s' }}
+              onMouseEnter={e=>{e.currentTarget.style.background='#252535'; e.currentTarget.style.borderColor='rgba(255,255,255,.15)'}}
+              onMouseLeave={e=>{e.currentTarget.style.background='#191926'; e.currentTarget.style.borderColor='rgba(255,255,255,.07)'}}>
+              Return to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ background:'#0d121b', minHeight:'100vh' }}>
 

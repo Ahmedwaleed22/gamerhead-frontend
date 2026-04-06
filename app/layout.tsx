@@ -300,7 +300,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                             <div style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#A78BFA', maxWidth: '90%', whiteSpace: 'pre-line', lineHeight: 1.5 }}>{m.text}</div>
                           ) : (
                             <div style={{ background: isMine ? 'rgba(178,45,45,0.2)' : 'var(--bg-4)', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: '#e0e0e0', maxWidth: '80%' }}>
-                              {!isMine && <div style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 2, fontWeight: 600 }}>{m.senderName}</div>}
+                              <div style={{ fontSize: 10, marginBottom: 3, fontWeight: 700, color: isMine ? '#E74C3C' : '#60A5FA' }}>{m.senderName || (isMine ? 'You' : 'Support')}{!isMine && <span style={{ marginLeft: 4, fontSize: 9, background: 'rgba(96,165,250,0.12)', padding: '1px 5px', borderRadius: 3, color: '#60A5FA', textTransform: 'uppercase', letterSpacing: 0.4 }}>Staff</span>}</div>
                               {m.text}
                             </div>
                           )}
@@ -310,16 +310,18 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                     })}
                     <div ref={chatEndRef} />
                   </div>
-                  <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)', display: 'flex', gap: 8 }}>
-                    <input
+                  <div style={{ padding: '10px 12px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <textarea
                       className="site-input"
-                      placeholder="Type a message..."
+                      placeholder="Type a message... (Enter to send)"
                       value={supportInput}
                       onChange={e => setSupportInput(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleSendSupport()}
-                      style={{ flex: 1, margin: 0 }}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendSupport() } }}
+                      style={{ width: '100%', margin: 0, resize: 'none', minHeight: 70, lineHeight: '1.5', boxSizing: 'border-box' }}
                     />
-                    <button onClick={handleSendSupport} style={{ background: 'var(--red)', border: 'none', borderRadius: 4, padding: '0 14px', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>Send</button>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button onClick={handleSendSupport} style={{ background: 'var(--red)', border: 'none', borderRadius: 6, padding: '7px 18px', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Send</button>
+                    </div>
                   </div>
                 </>
               )}

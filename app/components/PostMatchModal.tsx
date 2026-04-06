@@ -4,6 +4,7 @@
 // Used by: TeamProfilePage (pre-loads team), GameProfilePage (user picks team first)
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { matchesApi, teamsApi, gamesApi, walletApi } from '@/lib/api'
 import { useMutation } from '@/lib/use-api'
 import { useAuth } from '@/lib/auth-context'
@@ -55,6 +56,7 @@ interface PostMatchModalProps {
 
 export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, gameName, gameModes }: PostMatchModalProps) {
   const { user } = useAuth()
+  const router = useRouter()
 
   // If no preTeam, user picks from their teams for this game
   const [myTeams,    setMyTeams]    = useState<any[]>([])
@@ -162,7 +164,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
     }
 
     try {
-      await post({
+      const created: any = await post({
         teamAId:       selectedTeam._id,
         teamAName:     selectedTeam.name,
         teamAEmoji:    selectedTeam.emoji || '🎮',
@@ -181,6 +183,9 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
       })
       onPosted()
       onClose()
+      if (created?.matchId) {
+        router.push(`/matches/${created.matchId}`)
+      }
     } catch { /* shown via error */ }
   }
 
@@ -362,13 +367,12 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
 
               {/* ── MAP NOTE ── */}
               {gamemode && (
-                <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 8, padding: '10px 14px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <span style={{flexShrink:0,display:'inline-flex',color:'#A78BFA'}}><Icon icon={Solar.map} width={16} height={16} /></span>
-                  <div style={{ ...R, fontSize: 12, color: '#cbd5e1', lineHeight: 1.5 }}>
-                    <strong style={{ color: '#A78BFA' }}>Map assigned on accept.</strong>{' '}
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 14px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{flexShrink:0,display:'inline-flex',color:'#6B7280',marginTop:1}}><Icon icon={Solar.map} width={14} height={14} /></span>
+                  <div style={{ ...R, fontSize: 11, color: '#6B7280', lineHeight: 1.5 }}>
                     {gamemode === 'Random'
-                      ? 'A random gamemode and its valid map will be revealed when your opponent accepts.'
-                      : `A valid ${gamemode} map will be randomly assigned when your opponent accepts.`}
+                      ? 'A random gamemode and map will be revealed when your opponent accepts.'
+                      : `A valid ${gamemode} map will be randomly assigned on acceptance.`}
                   </div>
                 </div>
               )}

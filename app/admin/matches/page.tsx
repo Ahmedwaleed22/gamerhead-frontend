@@ -154,12 +154,12 @@ export default function AdminMatchesPage() {
     { key: 'matchType', label: 'Type', width: '60px',
       render: (row) => <span style={{ color: row.matchType === 'cash' ? '#22c55e' : '#3b82f6', fontWeight: 700, fontSize: 9, textTransform: 'uppercase' }}>{row.matchType}</span>,
     },
-    { key: 'totalPot', label: 'Wager', width: '70px',
+    { key: 'totalPot', label: 'Reward', width: '80px',
       render: (row) => row.matchType === 'cash' ? `$${((row.totalPot || 0) / 100).toFixed(2)}` : `${row.wagerPerPlayer || 0} XP`,
     },
-    { key: 'status', label: 'Status', width: '85px',
+    { key: 'status', label: 'Status', width: '100px',
       render: (row) => (
-        <span style={{ padding: '2px 6px', fontSize: 8, fontWeight: 800, border: `1px solid ${STATUS_COLORS[row.status] || '#4F5568'}44`, borderRadius: 3, color: STATUS_COLORS[row.status] || '#4F5568', textTransform: 'uppercase', letterSpacing: .5 }}>
+        <span style={{ padding: '4px 10px', fontSize: 10, fontWeight: 800, border: `1px solid ${STATUS_COLORS[row.status] || '#4F5568'}55`, borderRadius: 5, color: STATUS_COLORS[row.status] || '#4F5568', textTransform: 'uppercase', letterSpacing: .6, background: (STATUS_COLORS[row.status] || '#4F5568') + '12' }}>
           {row.status}
         </span>
       ),
@@ -167,13 +167,13 @@ export default function AdminMatchesPage() {
     { key: 'createdAt', label: 'Created', width: '85px',
       render: (row) => new Date(row.createdAt).toLocaleDateString(),
     },
-    { key: 'actions', label: 'Actions', width: '150px',
+    { key: 'actions', label: 'Actions', width: '200px',
       render: (row) => (
-        <div style={{ display: 'flex', gap: 4 }}>
-          <ActionBtn label="VIEW" color="#3b82f6" onClick={() => viewDetail(row._id)} />
-          {['completed', 'disputed'].includes(row.status) && <ActionBtn label="EDIT" color="#f59e0b" onClick={() => { setEditModal(row); setEditForm({ winnerId: '', scoreA: String(row.scoreA || 0), scoreB: String(row.scoreB || 0), reason: '' }) }} />}
-          {row.status === 'disputed' && <ActionBtn label="RESOLVE" color="#22c55e" onClick={() => { setResolveModal(row); setResolveForm({ winnerId: '', scoreA: String(row.scoreA || 0), scoreB: String(row.scoreB || 0), reason: '' }) }} />}
-          {!['completed', 'cancelled', 'expired'].includes(row.status) && <ActionBtn label="CANCEL" color="#e8000d" onClick={() => setCancelModal(row)} />}
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+          <ActionBtn label="VIEW" color="#3b82f6" size="md" onClick={() => viewDetail(row._id)} />
+          {['completed', 'disputed'].includes(row.status) && <ActionBtn label="EDIT" color="#f59e0b" size="md" onClick={() => { setEditModal(row); setEditForm({ winnerId: '', scoreA: String(row.scoreA || 0), scoreB: String(row.scoreB || 0), reason: '' }) }} />}
+          {row.status === 'disputed' && <ActionBtn label="RESOLVE" color="#22c55e" size="md" onClick={() => { setResolveModal(row); setResolveForm({ winnerId: '', scoreA: String(row.scoreA || 0), scoreB: String(row.scoreB || 0), reason: '' }) }} />}
+          {!['completed', 'cancelled', 'expired'].includes(row.status) && <ActionBtn label="CANCEL" color="#e8000d" size="md" onClick={() => setCancelModal(row)} />}
         </div>
       ),
     },
@@ -344,38 +344,44 @@ export default function AdminMatchesPage() {
 
       {/* Detail Modal */}
       {detailModal && (
-        <Modal title={`Match ${detailModal.matchId}`} onClose={() => setDetailModal(null)} width={600}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 10 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 8 }}>
+        <Modal title={`Match ${detailModal.matchId}`} onClose={() => setDetailModal(null)} width={680}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Teams summary */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0d0d14', borderRadius: 8, padding: '12px 16px', border: '1px solid rgba(255,255,255,.05)' }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#DDE0EA' }}>{detailModal.teamAEmoji} {detailModal.teamAName}</span>
+              <span style={{ fontSize: 12, color: '#4F5568', margin: '0 4px' }}>vs</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#DDE0EA' }}>{detailModal.teamBEmoji || ''} {detailModal.teamBName || '—'}</span>
+              {detailModal.winnerName && <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 5, padding: '3px 10px' }}>Winner: {detailModal.winnerName}</span>}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 8, fontSize: 12 }}>
               {[
                 ['Status', detailModal.status], ['Game', detailModal.game], ['Type', detailModal.matchType],
                 ['Format', detailModal.format], ['Mode', detailModal.gamemode || '—'], ['Map', detailModal.assignedMap || '—'],
-                ['Pot', detailModal.matchType === 'cash' ? `$${((detailModal.totalPot || 0) / 100).toFixed(2)}` : `${detailModal.wagerPerPlayer || 0} XP`],
+                ['Reward', detailModal.matchType === 'cash' ? `$${((detailModal.totalPot || 0) / 100).toFixed(2)}` : `${detailModal.wagerPerPlayer || 0} XP`],
                 ['Fee', detailModal.matchType === 'cash' ? `$${((detailModal.platformFee || 0) / 100).toFixed(2)}` : '—'],
-                ['Payout', detailModal.matchType === 'cash' ? `$${((detailModal.winnerPayout || 0) / 100).toFixed(2)}` : '—'],
+                ['Winner Payout', detailModal.matchType === 'cash' ? `$${((detailModal.winnerPayout || 0) / 100).toFixed(2)}` : '—'],
                 ['Score', `${detailModal.scoreA ?? '—'} - ${detailModal.scoreB ?? '—'}`],
-                ['Winner', detailModal.winnerName || '—'],
                 ['Created', new Date(detailModal.createdAt).toLocaleString()],
               ].map(([k, v]) => (
-                <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                  <span style={{ color: '#4F5568', fontWeight: 700 }}>{k}</span>
-                  <span style={{ color: '#DDE0EA', fontWeight: 700 }}>{String(v)}</span>
+                <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+                  <span style={{ color: '#6B7280', fontWeight: 600, fontSize: 12 }}>{k}</span>
+                  <span style={{ color: '#DDE0EA', fontWeight: 700, fontSize: 12 }}>{String(v)}</span>
                 </div>
               ))}
             </div>
             {detailModal.isDisputed && (
-              <div style={{ background: 'rgba(232,0,13,.08)', border: '1px solid rgba(232,0,13,.2)', borderRadius: 6, padding: '8px 12px', color: '#e8000d' }}>
-                Dispute: {detailModal.disputeReason}
+              <div style={{ background: 'rgba(232,0,13,.08)', border: '1px solid rgba(232,0,13,.2)', borderRadius: 8, padding: '10px 14px', color: '#e8000d', fontSize: 12 }}>
+                <span style={{ fontWeight: 700 }}>Dispute Reason:</span> {detailModal.disputeReason}
               </div>
             )}
             {detailModal.chat?.length > 0 && (
               <div>
-                <div style={{ fontWeight: 700, color: '#4F5568', marginBottom: 4, textTransform: 'uppercase', letterSpacing: .6 }}>Chat Log</div>
-                <div style={{ maxHeight: 200, overflowY: 'auto', background: '#0d0d14', borderRadius: 6, padding: 8 }}>
+                <div style={{ fontWeight: 700, color: '#9CA3AF', marginBottom: 8, fontSize: 12, textTransform: 'uppercase', letterSpacing: .6 }}>Chat Log ({detailModal.chat.length} messages)</div>
+                <div style={{ maxHeight: 320, overflowY: 'auto', background: '#0d0d14', borderRadius: 8, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid rgba(255,255,255,.04)' }}>
                   {detailModal.chat.map((msg: any, i: number) => (
-                    <div key={i} style={{ padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,.03)' }}>
-                      <span style={{ color: msg.type === 'system' ? '#f59e0b' : '#3b82f6', fontWeight: 700 }}>{msg.username}: </span>
-                      <span style={{ color: '#DDE0EA' }}>{msg.text}</span>
+                    <div key={i} style={{ padding: '6px 0', borderBottom: i < detailModal.chat.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
+                      <span style={{ color: msg.type === 'system' ? '#f59e0b' : '#60A5FA', fontWeight: 700, fontSize: 12 }}>{msg.username}: </span>
+                      <span style={{ color: '#DDE0EA', fontSize: 12, lineHeight: '1.5' }}>{msg.text}</span>
                     </div>
                   ))}
                 </div>

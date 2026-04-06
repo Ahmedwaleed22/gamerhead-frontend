@@ -6,6 +6,8 @@ import { useAuth } from '@/lib/auth-context'
 import { walletApi, teamsApi, invitesApi, badgesApi, levelRewardsApi, supportApi, storeApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
 import CrateOpening from './components/CrateOpening'
+import { Icon } from '@iconify/react'
+import { Solar } from '@/lib/solar-duotone'
 
 const RARITY_COLORS: Record<string, string> = {
   Common: '#9CA3AF', Rare: '#3498DB', Epic: '#9B59B6', Legendary: '#F39C12',
@@ -21,6 +23,29 @@ const DEFAULT_TICKET_STATS = [
 
 // ─── HELPERS ────────────────────────────────────────────
 const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
+
+function GameIconCell({ icon, size = 18 }: { icon?: string; size?: number }) {
+  const [imgErr, setImgErr] = useState(false)
+  const isUrl = !!(icon && (icon.startsWith('http') || icon.startsWith('/') || icon.startsWith('data:')))
+  if (isUrl && !imgErr) {
+    return <img src={icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgErr(true)} />
+  }
+  return <Icon icon={Solar.gamepad} width={size} height={size} color="#9CA3AF" />
+}
+
+function TeamAvatar({ team }: { team: any }) {
+  const [imgErr, setImgErr] = useState(false)
+  const logo = team.logoUrl
+  const hasLogo = !!(logo && !imgErr && (logo.startsWith('http') || logo.startsWith('/') || logo.startsWith('data:')))
+  return (
+    <div style={{ width: 46, height: 46, background: '#25252C', borderRadius: 10, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {hasLogo
+        ? <img src={logo} alt={team.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={() => setImgErr(true)} />
+        : <GameIconCell icon={team.emoji || team.gameEmoji || team.icon} size={24} />
+      }
+    </div>
+  )
+}
 
 function CardWrap({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return <div style={{ background: '#18181C', borderRadius: 12, overflow: 'hidden', ...style }}>{children}</div>
@@ -146,7 +171,7 @@ export default function DashboardPage() {
   const creditsDisplay= balance?.credits ?? user.credits ?? 0
 
   return (
-    <div style={{ background: '#0C0C11', minHeight: '100vh', paddingBottom: 80 }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 80 }}>
       <div className="container" style={{ maxWidth: 1440, padding: '0 30px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, paddingTop: 28, alignItems: 'start' }}>
 
@@ -302,7 +327,9 @@ export default function DashboardPage() {
                         const invId = inv._id || inv.id
                         return (
                           <div key={invId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: i < invites.length - 1 ? '1px solid #25252C' : 'none' }}>
-                            <div style={{ width: 40, height: 40, background: '#25252C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{inv.teamEmoji || inv.logo || '🎮'}</div>
+                            <div style={{ width: 40, height: 40, background: '#25252C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                              <GameIconCell icon={inv.teamEmoji || inv.logo} size={22} />
+                            </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff' }}>{inv.teamName || inv.team}</div>
                               <div style={{ ...R, fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{inv.game || ''} {inv.mode ? `· ${inv.mode}` : ''}</div>
@@ -323,17 +350,21 @@ export default function DashboardPage() {
                         const roleEntry = (team.roster || []).find((r: any) => r.userId?.toString() === user.id)
                         const role = roleEntry?.role || (team.captainId?.toString() === user.id ? 'Leader' : 'Member')
                         const memberCount = team.members?.length || team.memberCount || 0
+                        const roleColor = role === 'Leader' || role === 'Captain' ? '#F39C12' : '#6B7280'
                         return (
-                          <div key={team._id || team.slug || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: i < teams.length - 1 ? '1px solid #25252C' : 'none' }}>
-                            <div style={{ width: 40, height: 40, background: '#25252C', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{team.emoji || team.gameEmoji || '🎮'}</div>
+                          <Link key={team._id || team.slug || i} href={`/teams/${team.slug || ''}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderBottom: i < teams.length - 1 ? '1px solid #25252C' : 'none', textDecoration: 'none', transition: 'background 0.12s' }}>
+                            <TeamAvatar team={team} />
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff' }}>{team.name}</div>
-                              <div style={{ ...R, fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{team.game || team.gameSlug || ''} · {memberCount} members</div>
+                              <div style={{ ...R, fontWeight: 700, fontSize: 14, color: '#fff', marginBottom: 3 }}>{team.name}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <span style={{ background: roleColor+'18', border: `1px solid ${roleColor}33`, borderRadius: 20, padding: '2px 8px', ...R, fontWeight: 700, fontSize: 10, color: roleColor, textTransform: 'uppercase', letterSpacing: 0.5 }}>{role}</span>
+                                {team.ladder && <span style={{ ...R, fontSize: 11, color: '#6B7280' }}>{team.ladder}</span>}
+                                {team.game && <span style={{ ...R, fontSize: 11, color: '#4A5568' }}>· {team.game || team.gameSlug}</span>}
+                                <span style={{ ...R, fontSize: 11, color: '#4A5568' }}>· {memberCount} members</span>
+                              </div>
                             </div>
-                            <span style={{ background: role === 'Leader' || role === 'Captain' ? 'rgba(243,156,18,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${role === 'Leader' || role === 'Captain' ? 'rgba(243,156,18,0.3)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 6, padding: '4px 9px', ...R, fontWeight: 700, fontSize: 10, color: role === 'Leader' || role === 'Captain' ? '#F39C12' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, flexShrink: 0 }}>
-                              {role}
-                            </span>
-                          </div>
+                            <span style={{ ...R, fontSize: 12, color: '#4A5568', flexShrink: 0 }}>→</span>
+                          </Link>
                         )
                       })
                   )}

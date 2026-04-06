@@ -161,17 +161,11 @@ function PostContent({ text }: { text: string }) {
   const renderLine = (line: string, i: number) => {
     if (!line.trim()) return <div key={i} style={{ height: 8 }} />
 
-    // Code blocks (``` ... ```)
-    // Handled at block level below
-
-    // Bullet points
     const isBullet = line.startsWith('•') || line.startsWith('- ')
     const lineText = isBullet ? line.replace(/^[•\-]\s*/, '') : line
 
-    // Parse inline formatting
     const parseInline = (text: string): React.ReactNode[] => {
       const nodes: React.ReactNode[] = []
-      // Match: **bold**, *italic*, __underline__, `code`, [text](url), ![alt](url)
       const regex = /(\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|`[^`]+`|\!\[[^\]]*\]\([^)]+\)|\[[^\]]+\]\([^)]+\)|https?:\/\/[^\s<]+)/g
       let lastIndex = 0
       let match: RegExpExecArray | null
@@ -200,8 +194,6 @@ function PostContent({ text }: { text: string }) {
             nodes.push(<a key={match.index} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--red)', textDecoration: 'underline', fontWeight: 600 }}>{linkMatch[1]}</a>)
           }
         } else if (m.startsWith('http')) {
-          // Auto-link URLs
-          // Check for YouTube embed
           const ytMatch = m.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
           if (ytMatch) {
             nodes.push(
@@ -228,17 +220,14 @@ function PostContent({ text }: { text: string }) {
     )
   }
 
-  // Handle code blocks first
   const blocks: React.ReactNode[] = []
   const codeBlockRegex = /```([\s\S]*?)```/g
   let lastIdx = 0
   let codeMatch: RegExpExecArray | null
 
   while ((codeMatch = codeBlockRegex.exec(text)) !== null) {
-    // Render lines before code block
     const before = text.slice(lastIdx, codeMatch.index)
     before.split('\n').forEach((line, i) => blocks.push(renderLine(line, blocks.length + i)))
-    // Render code block
     blocks.push(
       <pre key={`code-${codeMatch.index}`} style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '12px 16px', margin: '8px 0', overflowX: 'auto', fontSize: 12, fontFamily: 'monospace', color: '#d0d0e0', lineHeight: 1.6 }}>
         {codeMatch[1].trim()}
@@ -246,7 +235,6 @@ function PostContent({ text }: { text: string }) {
     )
     lastIdx = codeMatch.index + codeMatch[0].length
   }
-  // Remaining lines
   text.slice(lastIdx).split('\n').forEach((line, i) => blocks.push(renderLine(line, blocks.length + i)))
 
   return (
@@ -504,14 +492,16 @@ export default function ThreadPage() {
                 {thread.tags.map(tag => (
                   <span key={tag} style={{ fontSize: 11, fontWeight: 600, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: 6 }}>{tag}</span>
                 ))}
-                <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(39,174,96,0.1)', border: '1px solid rgba(39,174,96,0.2)', color: '#4ade80', padding: '4px 10px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: 0.5, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                  <Icon icon={Solar.online} width={12} height={12} style={{ flexShrink: 0, color: thread.status === 'open' ? '#4ade80' : '#888' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 16px', flexWrap: 'wrap' }}>
+                <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 36, fontWeight: 900, textTransform: 'uppercase', color: '#fff', margin: 0, lineHeight: 1.2, letterSpacing: 0.5 }}>
+                  {thread.title}
+                </h1>
+                <span style={{ fontSize: 13, fontWeight: 700, background: thread.status === 'open' ? 'rgba(39,174,96,0.1)' : 'rgba(136,136,136,0.1)', border: `1px solid ${thread.status === 'open' ? 'rgba(39,174,96,0.2)' : 'rgba(136,136,136,0.2)'}`, color: thread.status === 'open' ? '#4ade80' : '#888', padding: '4px 12px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: 0.5, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <Icon icon={thread.status === 'open' ? Solar.online : Solar.lock} width={14} height={14} style={{ flexShrink: 0 }} />
                   {thread.status === 'open' ? 'Open' : 'Locked'}
                 </span>
               </div>
-              <h1 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 36, fontWeight: 900, textTransform: 'uppercase', color: '#fff', margin: '0 0 16px', lineHeight: 1.2, letterSpacing: 0.5 }}>
-                {thread.title}
-              </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-3)', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)' }}>
                   <Icon icon={Solar.chat} width={14} height={14} style={{ color: 'var(--text-muted)' }} />
@@ -604,59 +594,61 @@ export default function ThreadPage() {
                 style={{ background: 'var(--bg-2)', border: `1px solid ${post.isReported && user?.role === 'admin' ? 'rgba(243,156,18,0.5)' : 'var(--border)'}`, borderRadius: 10, overflow: 'hidden', marginBottom: 10, boxShadow: post.isReported && user?.role === 'admin' ? '0 0 12px rgba(243,156,18,0.15)' : 'none' }}
               >
                 {/* ── HORIZONTAL USER CARD ── */}
-                <div style={{ background: 'var(--bg-3)', borderBottom: '1px solid var(--border)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ background: 'var(--bg-3)', borderBottom: '1px solid var(--border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 20 }}>
 
                   {/* Avatar + OP badge */}
                   <div style={{ position: 'relative', flexShrink: 0 }}>
-                    <div style={{ width: 38, height: 38, background: `${nameColor(post.user)}20`, border: `2px solid ${nameColor(post.user)}50`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 10px ${nameColor(post.user)}20` }}>
-                      <Avatar src={post.user.pfp} size={38} style={{ borderRadius: 8 }} />
+                    <div style={{ width: 48, height: 48, background: `${nameColor(post.user)}20`, border: `2px solid ${nameColor(post.user)}50`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 10px ${nameColor(post.user)}20` }}>
+                      <Avatar src={post.user.pfp} size={48} style={{ borderRadius: 8 }} />
                     </div>
                     {post.isOP && (
-                      <span style={{ position: 'absolute', bottom: -5, left: '50%', transform: 'translateX(-50%)', background: 'var(--red)', color: '#fff', fontSize: 7, fontWeight: 800, padding: '1px 4px', borderRadius: 2, letterSpacing: 0.4, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>OP</span>
+                      <span style={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)', background: 'var(--red)', color: '#fff', fontSize: 8, fontWeight: 800, padding: '2px 6px', borderRadius: 3, letterSpacing: 0.4, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>OP</span>
                     )}
                   </div>
 
                   {/* Username + role tag */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                     {post.user.slug ? (
-                      <Link href={`/profile/${post.user.slug}`} style={{ fontSize: 13, fontWeight: 800, color: nameColor(post.user), lineHeight: 1, textDecoration: 'none' }}
+                      <Link href={`/profile/${post.user.slug}`} style={{ fontSize: 16, fontWeight: 800, color: nameColor(post.user), lineHeight: 1, textDecoration: 'none' }}
                         onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')} onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{post.user.name}</Link>
                     ) : (
-                      <span style={{ fontSize: 13, fontWeight: 800, color: nameColor(post.user), lineHeight: 1 }}>{post.user.name}</span>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: nameColor(post.user), lineHeight: 1 }}>{post.user.name}</span>
                     )}
-                    <RoleBadge role={post.user.role} />
-                    {post.user.isCoach && post.user.role !== 'coach' && <RoleBadge role="coach" />}
-                    {post.user.isPremium && post.user.role !== 'premium' && <RoleBadge role="premium" />}
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <RoleBadge role={post.user.role} />
+                      {post.user.isCoach && post.user.role !== 'coach' && <RoleBadge role="coach" />}
+                      {post.user.isPremium && post.user.role !== 'premium' && <RoleBadge role="premium" />}
+                    </div>
                   </div>
 
                   {/* Divider */}
-                  <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />
+                  <div style={{ width: 1, height: 36, background: 'var(--border)', flexShrink: 0 }} />
 
                   {/* Rep bar */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0, minWidth: 80 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-dim)' }}>Rep</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 90 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-dim)' }}>Rep</span>
                     <RepBar value={post.user.rep} />
                   </div>
 
                   {/* Divider */}
-                  <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />
+                  <div style={{ width: 1, height: 36, background: 'var(--border)', flexShrink: 0 }} />
 
                   {/* Joined */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-dim)' }}>Joined</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#c0c0d0' }}>{post.user.joined}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-dim)' }}>Joined</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#c0c0d0' }}>{post.user.joined}</span>
                   </div>
 
                   {/* Posts */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-dim)' }}>Posts</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#c0c0d0' }}>{post.user.posts.toLocaleString()}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-dim)' }}>Posts</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#c0c0d0' }}>{post.user.posts.toLocaleString()}</span>
                   </div>
 
 
 
                   {/* Divider */}
-                  <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />
+                  <div style={{ width: 1, height: 36, background: 'var(--border)', flexShrink: 0 }} />
 
                   {/* Earned badges (rotating) — forum badges only */}
                   {(() => {
@@ -958,7 +950,7 @@ export default function ThreadPage() {
                 {[
                   { label: 'Replies',    value: thread.replies.toString()          },
                   { label: 'Views',      value: thread.views.toLocaleString()       },
-                  { label: 'Started',    value: thread.createdAt                    },
+                  { label: 'Started',    value: new Date(thread.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) },
                   { label: 'Board',      value: thread.board, isLink: true          },
                   { label: 'Status',     statusRow: true as const                   },
                 ].map(row => (

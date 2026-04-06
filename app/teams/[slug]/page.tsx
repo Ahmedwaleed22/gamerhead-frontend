@@ -66,8 +66,8 @@ const SOCIAL_META: Record<string, { icon: React.ReactNode; label: string; color:
 
 function LoadingSkeleton() {
   return (
-    <div style={{ background: '#0C0C11', minHeight: '100vh' }}>
-      <div style={{ height: 200, background: 'linear-gradient(135deg, #0d1520, #0a0a0c)' }} />
+    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+      <div style={{ height: 200, background: 'linear-gradient(135deg, #0d1520, #0D121B)' }} />
       <div style={{ height: 60, background: '#13131A' }} />
       <div className="container" style={{ padding: '28px 30px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20 }}>
         <div style={{ height: 300, background: '#18181C', borderRadius: 12, opacity: 0.5 }} />
@@ -133,10 +133,10 @@ export default function TeamProfilePage() {
   ]
 
   return (
-    <div style={{ background: '#0C0C11', minHeight: '100vh', paddingBottom: 80 }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 80 }}>
 
       {/* ── BANNER ── */}
-      <div style={{ background: team.bannerUrl ? `url(${team.bannerUrl}) center/cover no-repeat` : `linear-gradient(160deg, ${team.bannerColor || '#0d1520'} 0%, #0a0a0c 100%)`, borderBottom: '1px solid #1a1a24', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: team.bannerUrl ? `url(${team.bannerUrl}) center/cover no-repeat` : `linear-gradient(160deg, ${team.bannerColor || '#0d1520'} 0%, #0D121B 100%)`, borderBottom: '1px solid rgba(255,255,255,0.04)', position: 'relative', overflow: 'hidden' }}>
         <div className="container" style={{ padding: '36px 30px 32px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, flexWrap: 'wrap' }}>
 
@@ -152,7 +152,7 @@ export default function TeamProfilePage() {
                 {!team.tournamentId && <span style={{ background: `${cfg.accent}18`, border: `1px solid ${cfg.accent}30`, borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: cfg.accent, letterSpacing: 0.5, textTransform: 'uppercase' }}>{cfg.badge}</span>}
                 {team.isPremiumTeam && <span style={{ background: 'rgba(240,170,26,0.09)', border: '1px solid rgba(240,170,26,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#F0AA1A', letterSpacing: 0.5, textTransform: 'uppercase' }}>&#9733; Premium</span>}
                 {team.isRecruiting && <span style={{ background: 'rgba(74,222,128,0.09)', border: '1px solid rgba(74,222,128,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#4ade80', letterSpacing: 0.5, textTransform: 'uppercase' }}>Recruiting</span>}
-                {team.tournamentId && <span style={{ background: 'rgba(240,192,64,0.09)', border: '1px solid rgba(240,192,64,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#f0c040', letterSpacing: 0.5, textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon icon={Solar.trophy} width={12} height={12} /> Tournament</span>}
+                {team.tournamentId && <span style={{ background: 'rgba(240,192,64,0.09)', border: '1px solid rgba(240,192,64,0.19)', borderRadius: 4, padding: '3px 9px', ...R, fontSize: 11, fontWeight: 700, color: '#f0c040', letterSpacing: 0.5, textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 4 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="currentColor"/><path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="currentColor"/><rect x="10" y="14" width="4" height="4" fill="currentColor"/><rect x="7" y="18" width="10" height="3" rx="1" fill="currentColor"/></svg> Tournament</span>}
               </div>
 
               {/* Game + Ladder + Format tags */}
@@ -478,15 +478,15 @@ export default function TeamProfilePage() {
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
 
                       {/* Game picture */}
-                      <div style={{ width: 44, height: 44, background: '#1A1A2E', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                      <div style={{ width: 46, height: 46, background: '#1A1A2E', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', alignSelf: 'center' }}>
                         {gameImg
                           ? <img src={gameImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                          : <Icon icon={Solar.gamepad} width={22} height={22} />}
+                          : <Icon icon={Solar.gamepad} width={24} height={24} />}
                       </div>
 
                       {/* Teams: Our team vs Opponent with pfps */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
                           {/* Our team pfp */}
                           <div style={{ width: 22, height: 22, background: '#25252C', borderRadius: 5, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {teamLogo ? <img src={teamLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : <Icon icon={Solar.shield} width={14} height={14} />}
@@ -531,7 +531,7 @@ export default function TeamProfilePage() {
             <Link href={`/tournaments/${team.tournamentSlug || team.tournamentId}`} style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#18181C', borderRadius: 12, padding: '16px 20px', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.04)', transition: 'border-color .15s' }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = '#f0c04044')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)')}>
-              <div style={{ width: 44, height: 44, background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.3)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon icon={Solar.trophy} width={24} height={24} /></div>
+              <div style={{ width: 44, height: 44, background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.3)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#f0c040"/><path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#f0c040"/><rect x="10" y="14" width="4" height="4" fill="#f0c040"/><rect x="7" y="18" width="10" height="3" rx="1" fill="#f0c040"/></svg></div>
               <div>
                 <div style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#fff' }}>{team.tournamentName || 'Tournament'}</div>
                 <div style={{ ...R, fontSize: 11, color: '#f0c040', marginTop: 1 }}>View Tournament Page →</div>
@@ -568,7 +568,7 @@ export default function TeamProfilePage() {
                     </Link>
                     {team.tournamentId && (
                       <Link href={`/tournaments/${team.tournamentSlug || team.tournamentId}?tab=bracket`} style={{ display: 'block', background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.2)', borderRadius: 10, padding: '11px 20px', ...BC, fontWeight: 700, fontSize: 14, color: '#f0c040', textDecoration: 'none', textAlign: 'center', letterSpacing: 0.3 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Icon icon={Solar.trophy} width={16} height={16} /> View Bracket</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="currentColor"/><path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="currentColor"/><rect x="10" y="14" width="4" height="4" fill="currentColor"/><rect x="7" y="18" width="10" height="3" rx="1" fill="currentColor"/></svg> View Bracket</span>
                       </Link>
                     )}
                   </>

@@ -31,6 +31,41 @@ interface DashboardStats {
   }[]
 }
 
+const ACTION_LABELS: Record<string, string> = {
+  claim_live_chat:        'Claimed Live Chat',
+  close_live_chat:        'Closed Live Chat',
+  create_tournament:      'Created Tournament',
+  cancel_tournament:      'Cancelled Tournament',
+  start_tournament:       'Started Tournament',
+  complete_tournament:    'Completed Tournament',
+  ban_user:               'Banned User',
+  unban_user:             'Unbanned User',
+  close_ticket:           'Closed Ticket',
+  open_ticket:            'Opened Ticket',
+  resolve_dispute:        'Resolved Dispute',
+  cancel_match:           'Cancelled Match',
+  complete_match:         'Completed Match',
+  edit_match:             'Edited Match',
+  create_match:           'Created Match',
+  award_badge:            'Awarded Badge',
+  update_user:            'Updated User',
+  create_announcement:    'Posted Announcement',
+  set_player_of_week:     'Set Player of Week',
+  approve_withdrawal:     'Approved Withdrawal',
+  reject_withdrawal:      'Rejected Withdrawal',
+  new_user:               'New User Registered',
+  admin_action:           'Admin Action',
+  user_registered:        'New User Registered',
+  match_disputed:         'Match Disputed',
+}
+
+function formatAction(raw: string): string {
+  if (!raw) return '—'
+  if (ACTION_LABELS[raw]) return ACTION_LABELS[raw]
+  // Convert snake_case to Title Case as fallback
+  return raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
 const QUICK_ACTIONS = [
   { label: 'Resolve Disputes', href: '/admin/matches?status=disputed', icon: Solar.sword, color: '#e8000d' },
   { label: 'Review Tickets', href: '/admin/support?status=open', icon: Solar.ticket, color: '#3b82f6' },
@@ -118,18 +153,20 @@ export default function AdminDashboard() {
                 <span style={{ width: 22, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
                   <Icon icon={item.type === 'new_user' ? Solar.sparkles : item.type === 'admin_action' ? Solar.tools : Solar.clipboard} width={16} height={16} />
                 </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
                     fontSize: 11, fontWeight: 700,
                     color: '#DDE0EA', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
-                    {item.action}
+                    {formatAction(item.action)}
                     {item.username && <span style={{ color: '#8890A4' }}> — {item.username}</span>}
-                    {item.admin && <span style={{ color: '#4F5568' }}> by {item.admin}</span>}
+                    {item.admin && <span style={{ color: '#4F5568', fontWeight: 400 }}> by {item.admin}</span>}
                   </div>
-                  <div style={{ fontSize: 9, color: '#4F5568' }}>
-                    {item.targetType}/{item.targetId}
-                  </div>
+                  {item.targetType && item.targetId && (
+                    <div style={{ fontSize: 9, color: '#4F5568' }}>
+                      {item.targetType} #{item.targetId.slice(-8)}
+                    </div>
+                  )}
                 </div>
                 <div style={{ fontSize: 9, color: '#4F5568', whiteSpace: 'nowrap' }}>
                   {formatTimeAgo(item.timestamp)}

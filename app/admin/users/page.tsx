@@ -94,12 +94,15 @@ export default function AdminUsersPage() {
             backgroundImage: row.avatarUrl ? `url(${row.avatarUrl})` : 'none',
             backgroundSize: 'cover', backgroundPosition: 'center',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 10, color: '#4F5568',
+            fontSize: 10, color: '#4F5568', flexShrink: 0,
           }}>
             {!row.avatarUrl && (row.displayName || row.username)?.[0]?.toUpperCase()}
           </div>
           <div>
-            <div style={{ fontWeight: 700, color: row.usernameColor || '#DDE0EA', fontSize: 12 }}>{row.displayName || row.username}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 700, color: row.usernameColor || '#DDE0EA', fontSize: 12 }}>{row.displayName || row.username}</span>
+              <span style={{ fontSize: 9, color: '#4F5568', fontFamily: 'monospace', background: 'rgba(255,255,255,0.04)', padding: '1px 5px', borderRadius: 3 }}>#{row._id.slice(-8)}</span>
+            </div>
             <div style={{ fontSize: 10, color: '#4F5568' }}>{row.email}</div>
           </div>
         </Link>

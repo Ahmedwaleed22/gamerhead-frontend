@@ -117,8 +117,22 @@ function TrophyIcon({ place, size = 22 }: { place: string; size?: number }) {
     place.includes('2nd') ? '#c0c0c0' :
     place.includes('3rd') ? '#cd7f32' : '#5A9FD4'
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{ flexShrink: 0 }}>
-      <path d="M7 4H4a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4h.5A5 5 0 0 0 11 15.9V18H8a1 1 0 0 0 0 2h8a1 1 0 0 0 0-2h-3v-2.1A5 5 0 0 0 17.5 12H18a4 4 0 0 0 4-4V6a2 2 0 0 0-2-2h-3V3a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v1zm10 2h1v2a2 2 0 0 1-2 2h-.09A5.06 5.06 0 0 0 17 8.1V6zM6 8.1A5.06 5.06 0 0 0 6.09 10H6a2 2 0 0 1-2-2V6h2v2.1z"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+      <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill={color}/>
+      <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill={color}/>
+      <rect x="10" y="14" width="4" height="4" fill={color}/>
+      <rect x="7" y="18" width="10" height="3" rx="1" fill={color}/>
+    </svg>
+  )
+}
+
+function SimpleTrophyIcon({ size = 22, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color }}>
+      <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="currentColor"/>
+      <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="currentColor"/>
+      <rect x="10" y="14" width="4" height="4" fill="currentColor"/>
+      <rect x="7" y="18" width="10" height="3" rx="1" fill="currentColor"/>
     </svg>
   )
 }
@@ -451,13 +465,16 @@ function WinnerSpot({ match }: { match?: BracketMatch }) {
         borderRadius: 10, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, padding:16,
         boxShadow: winner ? '0 0 24px rgba(240,192,64,.12)' : '0 2px 12px rgba(0,0,0,.3)',
       }}>
-        <svg width={28} height={28} viewBox="0 0 24 24" fill={winner ? '#f0c040' : 'rgba(255,255,255,.15)'}>
-          <path d="M7 4H4a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4h.5A5 5 0 0 0 11 15.9V18H8a1 1 0 0 0 0 2h8a1 1 0 0 0 0-2h-3v-2.1A5 5 0 0 0 17.5 12H18a4 4 0 0 0 4-4V6a2 2 0 0 0-2-2h-3V3a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v1zm10 2h1v2a2 2 0 0 1-2 2h-.09A5.06 5.06 0 0 0 17 8.1V6zM6 8.1A5.06 5.06 0 0 0 6.09 10H6a2 2 0 0 1-2-2V6h2v2.1z"/>
+        <svg width={28} height={28} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+          <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill={winner ? '#f0c040' : 'rgba(255,255,255,.15)'}/>
+          <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill={winner ? '#f0c040' : 'rgba(255,255,255,.15)'}/>
+          <rect x="10" y="14" width="4" height="4" fill={winner ? '#f0c040' : 'rgba(255,255,255,.15)'}/>
+          <rect x="7" y="18" width="10" height="3" rx="1" fill={winner ? '#f0c040' : 'rgba(255,255,255,.15)'}/>
         </svg>
         {winner ? (
           <>
             <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <Icon icon={Solar.trophy} width={18} height={18} />
+              <SimpleTrophyIcon size={18} />
               <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:15, color:'#f0c040', textAlign:'center' }}>{winner.name}</span>
             </div>
             <span style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:1, color:'rgba(240,192,64,.6)', fontFamily:'Rajdhani, sans-serif' }}>Champion</span>
@@ -564,11 +581,17 @@ function DoubleEliminationBracket({ winners, losers, gf, tournamentId }: {
       <div>
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
           <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:13, textTransform:'uppercase', letterSpacing:1, color:'#f0c040', display:'flex', alignItems:'center', gap:6 }}>
-            <Icon icon={Solar.trophy} width={16} height={16} /> Grand Final
+            <SimpleTrophyIcon size={16} /> Grand Final
           </span>
           <div style={{ flex:1, height:1, background:'rgba(240,192,64,0.25)' }} />
         </div>
-        <MatchCard match={gf} tournamentId={tournamentId} accent="#f0c040" />
+        <div style={{ display:'flex', gap:0, alignItems:'flex-start' }}>
+          <MatchCard match={gf} tournamentId={tournamentId} accent="#f0c040" />
+          <div style={{ width: 32, display:'flex', alignItems:'center', justifyContent:'center', paddingTop: 102 / 2 - 1 }}>
+            <div style={{ width: 32, height: 1, background: 'rgba(240,192,64,.25)' }} />
+          </div>
+          <WinnerSpot match={gf} />
+        </div>
         <p style={{ fontSize:10, color:'var(--text-dim)', marginTop:8, lineHeight:1.5 }}>
           Winners bracket finalist vs Losers bracket finalist. If the Losers side wins, a bracket reset is played.
         </p>
@@ -690,7 +713,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
 
         {step === 'success' && (
           <div style={{ padding:52, display:'flex', flexDirection:'column', alignItems:'center', gap:18, textAlign:'center' }}>
-            <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(240,192,64,0.12)', border:'2px solid rgba(240,192,64,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon icon={Solar.trophy} width={44} height={44} /></div>
+            <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(240,192,64,0.12)', border:'2px solid rgba(240,192,64,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }}><SimpleTrophyIcon size={44} /></div>
             <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:28, fontWeight:900, textTransform:'uppercase', color:'#f0c040', letterSpacing:1 }}>You're Registered!</div>
             <p style={{ fontSize:13, color:'var(--text-muted)', lineHeight:1.7, maxWidth:310 }}>
               {entryType==='solo' ? `You've been entered into ${name}. Check-in opens at ${tournament.checkIn} on ${tournament.startDate}.`
@@ -723,7 +746,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
             <ModalTop title="Enter Tournament" onClose={onClose} />
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:16 }}>
               <InfoPill>
-                <span style={{ color:'#5A9FD4', display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.trophy} width={14} height={14} /> {name}</span>
+                <span style={{ color:'#5A9FD4', display:'inline-flex', alignItems:'center', gap:6 }}><SimpleTrophyIcon size={14} /> {name}</span>
                 <span style={{ color:'var(--text-dim)' }}>•</span>
                 <span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span>
               </InfoPill>
@@ -741,7 +764,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
           <>
             <ModalTop title="Solo Registration" onBack={entryType==='both'?back:undefined} onClose={onClose} />
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:16 }}>
-              <InfoPill><span style={{ color:'#5A9FD4', display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.trophy} width={14} height={14} /> {name}</span><span style={{ color:'var(--text-dim)' }}>•</span><span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span></InfoPill>
+              <InfoPill><span style={{ color:'#5A9FD4', display:'inline-flex', alignItems:'center', gap:6 }}><SimpleTrophyIcon size={14} /> {name}</span><span style={{ color:'var(--text-dim)' }}>•</span><span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span></InfoPill>
               <div>
                 <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.6, color:'var(--text-dim)', display:'block', marginBottom:8 }}>Your Gamertag</label>
                 <input className="site-input" placeholder="Enter your in-game username..." value={gamertag} onChange={e=>setGamertag(e.target.value)} style={{ fontSize:13 }} />
@@ -772,7 +795,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:16 }}>
               {/* Tournament info header */}
               <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'rgba(255,255,255,0.03)', borderRadius:10, border:'1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ width:42, height:42, background:'rgba(240,192,64,0.12)', border:'1px solid rgba(240,192,64,0.3)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Icon icon={Solar.trophy} width={22} height={22} /></div>
+                <div style={{ width:42, height:42, background:'rgba(240,192,64,0.12)', border:'1px solid rgba(240,192,64,0.3)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><SimpleTrophyIcon size={22} /></div>
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{name}</div>
                   <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:1 }}>{tournament.game} · Tournament · {tournament.format.replace(/\s*\(.*?\)/g, '')}</div>
@@ -877,7 +900,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
           <>
             <ModalTop title="Join a Team" onBack={back} onClose={onClose} />
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:16 }}>
-              <InfoPill><span style={{ color:'#5A9FD4', display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.trophy} width={14} height={14} /> {name}</span><span style={{ color:'var(--text-dim)' }}>•</span><span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span></InfoPill>
+              <InfoPill><span style={{ color:'#5A9FD4', display:'inline-flex', alignItems:'center', gap:6 }}><SimpleTrophyIcon size={14} /> {name}</span><span style={{ color:'var(--text-dim)' }}>•</span><span style={{ color:'#f0c040', fontWeight:700 }}>Entry: {entryCredits.toLocaleString()} Tickets</span></InfoPill>
               <div>
                 <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.6, color:'var(--text-dim)', display:'block', marginBottom:8 }}>Team Invite Code</label>
                 <input className="site-input" placeholder="Enter 6-digit invite code from your captain..." style={{ fontSize:13 }} />
@@ -983,8 +1006,11 @@ export default function TournamentOverviewPage() {
             {/* Right: Trophy icon + prize amount */}
             <div style={{ display:'flex', flexDirection:'column', gap:12, flexShrink:0, alignItems:'flex-end' }}>
               <div style={{ background:'rgba(240,192,64,0.1)', border:'1px solid rgba(240,192,64,0.3)', borderRadius:10, padding:'14px 22px', display:'flex', alignItems:'center', gap:14 }}>
-                <svg width={36} height={36} viewBox="0 0 24 24" fill="#f0c040">
-                  <path d="M7 4H4a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4h.5A5 5 0 0 0 11 15.9V18H8a1 1 0 0 0 0 2h8a1 1 0 0 0 0-2h-3v-2.1A5 5 0 0 0 17.5 12H18a4 4 0 0 0 4-4V6a2 2 0 0 0-2-2h-3V3a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v1zm10 2h1v2a2 2 0 0 1-2 2h-.09A5.06 5.06 0 0 0 17 8.1V6zM6 8.1A5.06 5.06 0 0 0 6.09 10H6a2 2 0 0 1-2-2V6h2v2.1z"/>
+                <svg width={36} height={36} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#f0c040"/>
+                  <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#f0c040"/>
+                  <rect x="10" y="14" width="4" height="4" fill="#f0c040"/>
+                  <rect x="7" y="18" width="10" height="3" rx="1" fill="#f0c040"/>
                 </svg>
                 <div>
                   <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:.7, color:'rgba(240,192,64,0.7)', marginBottom:2 }}>Prize Pool</div>
@@ -1021,7 +1047,7 @@ export default function TournamentOverviewPage() {
                 {tab==='overview' ? (
                   <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.clipboard} width={14} height={14} /> Overview</span>
                 ) : tab==='bracket' ? (
-                  <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.trophy} width={14} height={14} /> Bracket</span>
+                  <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><SimpleTrophyIcon size={14} /> Bracket</span>
                 ) : tab==='teams' ? (
                   <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><Icon icon={Solar.users} width={14} height={14} /> Teams</span>
                 ) : (
@@ -1042,7 +1068,7 @@ export default function TournamentOverviewPage() {
             <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
               {/* Prize pool — trophy icons for each place */}
-              <SectionCard title={<><Icon icon={Solar.trophy} width={16} height={16} /> Prize Pool</>}>
+              <SectionCard title={<><SimpleTrophyIcon size={16} /> Prize Pool</>}>
                 {TOURNAMENT.prizes.map((p,i)=>(
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', borderBottom:i<TOURNAMENT.prizes.length-1?'1px solid var(--border)':'none' }}>
                     <TrophyIcon place={p.place} size={24} />
@@ -1143,7 +1169,7 @@ export default function TournamentOverviewPage() {
                   : <DoubleEliminationBracket winners={doubleData!.winners} losers={doubleData!.losers} gf={doubleData!.gf} tournamentId={TOURNAMENT.id} />
               ) : (
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:200, gap:12 }}>
-                  <div style={{ opacity:0.3 }}><Icon icon={Solar.trophy} width={48} height={48} /></div>
+                  <div style={{ opacity:0.3 }}><SimpleTrophyIcon size={48} /></div>
                   <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:20, fontWeight:800, textTransform:'uppercase', color:'var(--text-muted)', letterSpacing:.5 }}>Bracket Not Yet Generated</div>
                   <div style={{ fontSize:12, color:'var(--text-dim)', maxWidth:400, textAlign:'center', lineHeight:1.6 }}>
                     The bracket will be generated when the tournament starts{TOURNAMENT.startDate ? ` on ${fmtDateTime(TOURNAMENT.startDate, TOURNAMENT.startTime)}` : ''}. Register your team now to secure your spot!
@@ -1220,7 +1246,7 @@ export default function TournamentOverviewPage() {
               {[
                 { key: 'general', label: 'General Match Rules', icon: Solar.clipboard },
                 { key: 'game', label: 'Game Rules', icon: Solar.gamepad },
-                { key: 'tournament', label: 'Tournament Rules', icon: Solar.trophy }
+                { key: 'tournament', label: 'Tournament Rules', icon: 'trophy' }
               ].map(tab => (
                 <button
                   key={tab.key}
@@ -1240,7 +1266,7 @@ export default function TournamentOverviewPage() {
                     gap: 8,
                   }}
                 >
-                  <Icon icon={tab.icon} width={18} height={18} style={{ flexShrink: 0 }} />
+                  {tab.icon === 'trophy' ? <SimpleTrophyIcon size={18} /> : <Icon icon={tab.icon} width={18} height={18} style={{ flexShrink: 0 }} />}
                   {tab.label}
                 </button>
               ))}

@@ -387,7 +387,7 @@ function SettingsPage() {
   const linkedPlatforms: any[] = (user as any).linkedPlatforms || []
 
   return (
-    <div style={{ background: '#0C0C11', minHeight: '100vh', padding: '32px 0 80px' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', padding: '32px 0 80px' }}>
       <div className="container">
         <div style={{ display: 'grid', gridTemplateColumns: '204px 1fr', gap: 20, alignItems: 'start' }}>
 
@@ -498,7 +498,19 @@ function SettingsPage() {
             {/* ════════════════════ ACCOUNT FEATURES ════════════════════ */}
             {activeTab === 'features' && (
               <>
-                <div style={{ ...R, fontWeight: 500, fontSize: 15, color: '#fff', marginBottom: 6 }}>Account Features</div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 10 }}>
+                  <div style={{ ...R, fontWeight: 500, fontSize: 15, color: '#fff' }}>Account Features</div>
+                  {/* Premium timer top-right */}
+                  {user.isPremium && (user as any).premiumExpiresAt && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(243,156,18,0.08)', border: '1px solid rgba(243,156,18,0.2)', borderRadius: 8, padding: '6px 14px' }}>
+                      <Icon icon={Solar.star} width={14} height={14} style={{ color: '#F39C12', flexShrink: 0 }} />
+                      <div>
+                        <div style={{ ...R, fontWeight: 700, fontSize: 10, color: '#F39C12', textTransform: 'uppercase', letterSpacing: 0.5 }}>Premium Active</div>
+                        <div style={{ ...R, fontSize: 10, color: '#9CA3AF', marginTop: 1 }}>Expires {new Date((user as any).premiumExpiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div style={{ ...R, fontSize: 12, color: '#9CA3AF', marginBottom: 20 }}>
                   Use your tickets to unlock features. You have <span style={{ color: '#F39C12', fontWeight: 700 }}>{credits} Tickets</span>.
                 </div>
@@ -520,8 +532,8 @@ function SettingsPage() {
 
                   {/* Tournament Entry */}
                   <div style={{ background: '#25252C', borderRadius: 10, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div><Icon icon={Solar.coin} width={28} height={28} /></div>
-                    <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>Tickets</div>
+                    <div><Icon icon={Solar.ticket} width={28} height={28} /></div>
+                    <div style={{ ...R, fontWeight: 700, fontSize: 13, color: '#fff', textAlign: 'center' }}>Tournament Entry</div>
                     <div style={{ ...R, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: '14px' }}>Free tournament entry</div>
                     <div style={{ background: 'rgba(243,156,18,0.12)', border: '1px solid rgba(243,156,18,0.35)', borderRadius: 20, padding: '2px 9px', ...R, fontWeight: 700, fontSize: 10, color: '#F39C12' }}>
                       Price varies
@@ -600,15 +612,12 @@ function SettingsPage() {
                 <div style={{ height: 1, background: '#303034', margin: '24px 0' }} />
 
                 {/* Premium Subscription */}
-                <div>
-                  <div style={{ ...R, fontWeight: 500, fontSize: 15, color: '#fff', marginBottom: 8 }}>Premium Subscription</div>
-                  <div style={{ ...R, fontSize: 12, color: '#9CA3AF', marginBottom: 16 }}>
-                    {user.isPremium
-                      ? `You have an active Premium subscription${(user as any).premiumExpiresAt ? ` (expires ${new Date((user as any).premiumExpiresAt).toLocaleDateString('en-US')})` : ''}.`
-                      : 'You are not currently subscribed to Premium.'
-                    }
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                  <div style={{ ...R, fontSize: 12, color: '#9CA3AF' }}>
+                    {user.isPremium ? 'You have an active Premium subscription.' : 'Unlock all features with Premium.'}
                   </div>
-                  <Link href="/store" style={{ display: 'inline-block', background: '#C0392B', border: 'none', borderRadius: 6, padding: '9px 28px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: 'pointer', textDecoration: 'none' }}>
+                  <Link href="/store" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#C0392B', border: 'none', borderRadius: 6, padding: '9px 22px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: 'pointer', textDecoration: 'none' }}>
+                    <Icon icon={Solar.star} width={14} height={14} />
                     {user.isPremium ? 'Manage Subscription' : 'Get Premium'}
                   </Link>
                 </div>

@@ -460,7 +460,7 @@ export default function MyTeamsPage() {
                             <span style={{ background: roleBg, border: `1px solid ${roleBdr}`, borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: roleColor, textTransform: 'uppercase', letterSpacing: 0.4 }}>{myRole}</span>
                             {team.tournamentId ? (
                               <span style={{ background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.3)', borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: '#f0c040', letterSpacing: 0.4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                <Icon icon={Solar.trophy} width={12} height={12} /> Tournament
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="currentColor"/><path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="currentColor"/><rect x="10" y="14" width="4" height="4" fill="currentColor"/><rect x="7" y="18" width="10" height="3" rx="1" fill="currentColor"/></svg> Tournament
                               </span>
                             ) : (
                               <span style={{ background: isCash ? 'rgba(212,146,10,0.12)' : 'rgba(124,58,237,0.12)', border: `1px solid ${isCash ? 'rgba(212,146,10,0.3)' : 'rgba(124,58,237,0.3)'}`, borderRadius: 4, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: isCash ? '#F0AA1A' : '#A78BFA', letterSpacing: 0.4 }}>

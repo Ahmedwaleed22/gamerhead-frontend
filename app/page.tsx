@@ -28,7 +28,14 @@ const LEADERBOARD_TABS = [
     tab: 'trophies',
     title: 'Top Tournament Champions',
     subtitle: 'Globally Ranked',
-    icon: 'solar:cup-star-bold-duotone',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="currentColor"/>
+        <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="currentColor"/>
+        <rect x="10" y="14" width="4" height="4" fill="currentColor"/>
+        <rect x="7" y="18" width="10" height="3" rx="1" fill="currentColor"/>
+      </svg>
+    ),
     statLabel: 'Victories',
     isMoney: false,
     getValue: (p: LeaderPlayer) => p.wins,
@@ -37,7 +44,7 @@ const LEADERBOARD_TABS = [
     tab: 'wins',
     title: 'Most Matches Won',
     subtitle: 'All Time',
-    icon: 'solar:gamepad-bold-duotone',
+    icon: <Icon icon="solar:gamepad-bold-duotone" width="28" height="28" />,
     statLabel: 'Matches',
     isMoney: false,
     getValue: (p: LeaderPlayer) => p.wins,
@@ -46,12 +53,12 @@ const LEADERBOARD_TABS = [
     tab: 'cash',
     title: 'Highest Earners',
     subtitle: 'All Time Legends',
-    icon: 'solar:wallet-money-bold-duotone',
+    icon: <Icon icon="solar:wallet-money-bold-duotone" width="28" height="28" />,
     statLabel: 'Earned',
     isMoney: true,
     getValue: (p: LeaderPlayer) => p.cash,
   },
-] as const
+]
 
 const heroSlides = [
   { title: 'The Future of', highlight: 'Competitive', sub: 'Gaming starts here.' },
@@ -207,7 +214,7 @@ export default function HomePage() {
                 <HoverCard className="leaderboard-card" key={bi} delay={bi * 0.1}>
                   <div className="leaderboard-card-header">
                     <div className="leaderboard-icon-wrapper">
-                      <Icon icon={board.icon} width="28" height="28" />
+                      {board.icon}
                     </div>
                     <div>
                       <div className="leaderboard-card-title">{board.title}</div>
@@ -226,7 +233,14 @@ export default function HomePage() {
                       <Link href={`/profile/${p.slug}`} key={pi} style={{ textDecoration: 'none' }}>
                         <div className="leaderboard-row">
                           <div className={`leaderboard-rank${pi === 0 ? ' top1' : pi === 1 ? ' top2' : pi === 2 ? ' top3' : ''}`}>
-                            {pi === 0 ? <Icon icon="solar:crown-bold-duotone" width="24" height="24" className="crown-icon" /> : pi + 1}
+                            {pi === 0 ? (
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                                <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#F0C040"/>
+                                <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#F0C040"/>
+                                <rect x="10" y="14" width="4" height="4" fill="#F0C040"/>
+                                <rect x="7" y="18" width="10" height="3" rx="1" fill="#F0C040"/>
+                              </svg>
+                            ) : pi + 1}
                           </div>
                           <div className="player-avatar-wrapper">
                             <div className="player-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', overflow: 'hidden' }}>
