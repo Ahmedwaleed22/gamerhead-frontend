@@ -1,32 +1,385 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Icon } from '@iconify/react'
+import { loadStripe } from '@stripe/stripe-js'
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js'
+import {
+  PayPalScriptProvider,
+  PayPalButtons,
+  usePayPalScriptReducer,
+  FUNDING,
+} from '@paypal/react-paypal-js'
 import { useAuth } from '@/lib/auth-context'
 import { walletApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
 import { Solar } from '@/lib/solar-duotone'
 
-const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
-const STATUS_COLOR: Record<string,string> = { completed:'#4ade80', pending:'#F39C12', failed:'#E74C3C', ready:'#F39C12', claimed:'#4A5568', Completed:'#4ade80', Pending:'#F39C12', Failed:'#E74C3C', Ready:'#F39C12', Claimed:'#4A5568' }
+// ─── Stripe ───────────────────────────────────────────────────────────────────
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
+const STRIPE_APPEARANCE = {
+  theme: 'night' as const,
+  variables: {
+    colorPrimary:          '#B22D2D',
+    colorBackground:       '#0C0C11',
+    colorText:             '#e5e7eb',
+    colorTextSecondary:    '#6B7280',
+    colorTextPlaceholder:  '#374151',
+    colorDanger:           '#E74C3C',
+    colorIconCardError:    '#E74C3C',
+    borderRadius:          '8px',
+    fontFamily:            'Roboto, sans-serif',
+    fontSizeBase:          '14px',
+    spacingUnit:           '5px',
+  },
+  rules: {
+    '.Input': {
+      backgroundColor: '#0C0C11',
+      border:          '1px solid rgba(255,255,255,0.09)',
+      color:           '#e5e7eb',
+      boxShadow:       'none',
+      padding:         '11px 14px',
+    },
+    '.Input:focus': {
+      border:    '1px solid rgba(178,45,45,0.55)',
+      boxShadow: '0 0 0 3px rgba(178,45,45,0.12)',
+      outline:   'none',
+    },
+    '.Input--invalid': {
+      border:    '1px solid rgba(231,76,60,0.55)',
+      boxShadow: '0 0 0 3px rgba(231,76,60,0.12)',
+    },
+    '.Label': {
+      color:          '#6B7280',
+      fontWeight:     '600',
+      fontSize:       '11px',
+      textTransform:  'uppercase',
+      letterSpacing:  '0.06em',
+    },
+    '.Tab': {
+      backgroundColor: '#0C0C11',
+      border:          '1px solid rgba(255,255,255,0.07)',
+      color:           '#6B7280',
+      boxShadow:       'none',
+    },
+    '.Tab:hover': {
+      backgroundColor: '#18181C',
+      color:           '#d1d5db',
+    },
+    '.Tab--selected': {
+      backgroundColor: 'rgba(178,45,45,0.1)',
+      border:          '1px solid rgba(178,45,45,0.35)',
+      color:           '#ffffff',
+      boxShadow:       'none',
+    },
+    '.Tab--selected:focus': {
+      boxShadow: '0 0 0 3px rgba(178,45,45,0.15)',
+    },
+    '.Block': {
+      backgroundColor: '#0C0C11',
+      border:          '1px solid rgba(255,255,255,0.07)',
+    },
+    '.CheckboxInput': {
+      backgroundColor: '#0C0C11',
+      border:          '1px solid rgba(255,255,255,0.12)',
+    },
+    '.CheckboxInput--checked': {
+      backgroundColor: '#B22D2D',
+      borderColor:     '#B22D2D',
+    },
+    '.Error': { color: '#ef4444' },
+    '.TermsText': { color: '#374151' },
+  },
+}
+
+// ─── Style tokens ─────────────────────────────────────────────────────────────
+const R: React.CSSProperties = { fontFamily: 'Roboto, sans-serif' }
+
+const STATUS_COLOR: Record<string, string> = {
+  completed: '#4ade80', pending: '#F39C12', failed: '#E74C3C',
+  ready: '#F39C12', claimed: '#4A5568',
+  Completed: '#4ade80', Pending: '#F39C12', Failed: '#E74C3C',
+  Ready: '#F39C12', Claimed: '#4A5568',
+  processing: '#60a5fa', Processing: '#60a5fa',
+}
+
+const btnRed: React.CSSProperties = {
+  background: '#B22D2D', border: 'none', borderRadius: 8,
+  padding: '11px 28px', ...R, fontWeight: 700, fontSize: 12,
+  color: '#fff', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 1,
+}
+const btnGhost: React.CSSProperties = {
+  background: 'transparent', border: '1px solid rgba(255,255,255,0.09)',
+  borderRadius: 8, padding: '11px 20px', ...R, fontWeight: 600,
+  fontSize: 12, color: '#6B7280', cursor: 'pointer',
+}
+const inputStyle: React.CSSProperties = {
+  background: '#0C0C11', border: '1px solid rgba(255,255,255,0.09)',
+  borderRadius: 8, padding: '11px 14px', ...R, fontSize: 14,
+  color: '#e5e7eb', outline: 'none', width: '100%', boxSizing: 'border-box',
+}
+
+// ─── PayPal brand icons (inline SVG — no external image dependency) ───────────
+function PayPalLogo({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M7.076 21.337H4.272a.641.641 0 0 1-.633-.74L5.893.901C5.954.537 6.27.271 6.636.271h5.75c2.273 0 3.865.533 4.73 1.586.41.495.672 1.013.8 1.584.134.598.133 1.31-.003 2.178l-.01.059v.513l.32.181c.267.142.509.322.72.537.33.34.554.764.668 1.26.117.507.11 1.12-.02 1.822-.15.817-.39 1.527-.714 2.108a4.65 4.65 0 0 1-1.123 1.408c-.43.365-.942.641-1.52.82a7.05 7.05 0 0 1-1.946.253H14.9a.96.96 0 0 0-.947.808l-.14.717-.22 1.408-.015.077a.96.96 0 0 1-.948.807H7.076z" fill="#009CDE"/>
+      <path d="M19.923 5.812a7.78 7.78 0 0 1-.068.392c-.882 4.526-3.9 6.093-7.758 6.093H10.1a.953.953 0 0 0-.942.808l-1.004 6.37-.285 1.808a.502.502 0 0 0 .496.58h3.478c.416 0 .77-.303.836-.713l.034-.177.663-4.203.042-.231a.839.839 0 0 1 .83-.714h.523c3.387 0 6.04-1.377 6.815-5.36.324-1.663.157-3.052-.699-4.029a3.34 3.34 0 0 0-.965-.624z" fill="#003087"/>
+    </svg>
+  )
+}
+
+function VenmoLogo({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <rect width="24" height="24" rx="4" fill="#008CFF"/>
+      <path d="M18.5 4.5c.4.65.58 1.32.58 2.17 0 2.7-2.3 6.21-4.17 8.68H10.6L8.88 5.3l3.6-.35 1 7.08c.93-1.52 2.08-3.9 2.08-5.53 0-.9-.15-1.5-.4-2l3.34-.99z" fill="white"/>
+    </svg>
+  )
+}
+
+function StripeLockBadge() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, marginBottom: 20 }}>
+      <Icon icon={Solar.lock} width={15} height={15} style={{ color: '#4B5563', flexShrink: 0 }} />
+      <span style={{ ...R, fontSize: 12, color: '#4B5563' }}>
+        Secured by <strong style={{ color: '#6B7280' }}>Stripe</strong> — your card details never touch our servers
+      </span>
+    </div>
+  )
+}
+
+// ─── Stripe Payment Form ──────────────────────────────────────────────────────
+function StripePayForm({ onSuccess, onBack }: { onSuccess: () => void; onBack: () => void }) {
+  const stripe   = useStripe()
+  const elements = useElements()
+  const [paying, setPaying] = useState(false)
+  const [errMsg, setErrMsg] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!stripe || !elements) return
+    setPaying(true)
+    setErrMsg('')
+    const result = await stripe.confirmPayment({
+      elements,
+      confirmParams: { return_url: window.location.href },
+      redirect: 'if_required',
+    })
+    if (result.error) {
+      setErrMsg(result.error.message ?? 'Payment failed')
+      setPaying(false)
+    } else if (result.paymentIntent?.status === 'succeeded') {
+      onSuccess()
+    } else {
+      setErrMsg('Unexpected payment status — please try again.')
+      setPaying(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <StripeLockBadge />
+      <PaymentElement options={{ layout: 'tabs' }} />
+      {errMsg && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(231,76,60,0.08)', border: '1px solid rgba(231,76,60,0.2)', borderRadius: 8, padding: '11px 14px', marginTop: 14 }}>
+          <Icon icon={Solar.warning} width={16} height={16} style={{ color: '#E74C3C', flexShrink: 0 }} />
+          <span style={{ ...R, fontSize: 13, color: '#E74C3C' }}>{errMsg}</span>
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+        <button type="submit" style={{ ...btnRed, opacity: (!stripe || paying) ? 0.55 : 1 }} disabled={!stripe || paying}>
+          {paying ? 'Processing…' : 'Confirm Payment'}
+        </button>
+        <button type="button" style={btnGhost} onClick={onBack} disabled={paying}>Back</button>
+      </div>
+    </form>
+  )
+}
+
+// ─── Single PayPal/Venmo button ───────────────────────────────────────────────
+function SinglePayPalButton({
+  amount,
+  fundingSource,
+  onSuccess,
+  onBack,
+}: {
+  amount: number
+  fundingSource: typeof FUNDING[keyof typeof FUNDING]
+  onSuccess: () => void
+  onBack: () => void
+}) {
+  const [{ isPending }] = usePayPalScriptReducer()
+  const [errMsg, setErrMsg] = useState('')
+  const isVenmo = fundingSource === FUNDING.VENMO
+
+  return (
+    <div>
+      {isPending && (
+        <div style={{ ...R, fontSize: 13, color: '#6B7280', marginBottom: 14 }}>
+          Loading {isVenmo ? 'Venmo' : 'PayPal'}…
+        </div>
+      )}
+
+      <div style={{ marginBottom: 4 }}>
+        <PayPalButtons
+          style={{ layout: 'vertical', height: 48, shape: 'rect', label: 'pay' }}
+          fundingSource={fundingSource}
+          createOrder={async () => {
+            setErrMsg('')
+            const res: any = await walletApi.createPayPalOrder({ amount })
+            return res.orderId
+          }}
+          onApprove={async (data: any) => {
+            await walletApi.capturePayPalOrder({ orderId: data.orderID })
+            onSuccess()
+          }}
+          onError={(err: any) => setErrMsg(String(err?.message ?? err ?? 'Payment error'))}
+          onCancel={() => setErrMsg('Payment was cancelled')}
+        />
+      </div>
+
+      {errMsg && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(231,76,60,0.08)', border: '1px solid rgba(231,76,60,0.2)', borderRadius: 8, padding: '11px 14px', marginTop: 10 }}>
+          <Icon icon={Solar.warning} width={16} height={16} style={{ color: '#E74C3C', flexShrink: 0 }} />
+          <span style={{ ...R, fontSize: 13, color: '#E74C3C' }}>{errMsg}</span>
+        </div>
+      )}
+
+      <div style={{ marginTop: 14 }}>
+        <button style={btnGhost} onClick={onBack}>Back</button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Method option (horizontal row, not a card) ───────────────────────────────
+function MethodRow({
+  selected, onClick, icon, label, detail,
+}: {
+  selected: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  label: string
+  detail: string
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width:           '100%',
+        display:         'flex',
+        alignItems:      'center',
+        gap:             14,
+        background:      selected ? 'rgba(178,45,45,0.07)' : 'transparent',
+        border:          `1px solid ${selected ? 'rgba(178,45,45,0.4)' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius:    10,
+        padding:         '13px 16px',
+        cursor:          'pointer',
+        textAlign:       'left',
+        transition:      'border-color 0.15s, background 0.15s',
+        marginBottom:    8,
+      }}
+    >
+      {/* Radio dot */}
+      <div style={{
+        width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+        border: `2px solid ${selected ? '#B22D2D' : 'rgba(255,255,255,0.2)'}`,
+        background: selected ? '#B22D2D' : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {selected && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
+      </div>
+
+      {/* Brand icon */}
+      <div style={{
+        width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {icon}
+      </div>
+
+      {/* Text */}
+      <div style={{ flex: 1 }}>
+        <div style={{ ...R, fontWeight: 700, fontSize: 14, color: selected ? '#fff' : '#d1d5db', lineHeight: 1 }}>
+          {label}
+        </div>
+        <div style={{ ...R, fontSize: 12, color: '#4B5563', marginTop: 3 }}>{detail}</div>
+      </div>
+
+      {selected && (
+        <Icon icon={Solar.check} width={18} height={18} style={{ color: '#B22D2D', flexShrink: 0 }} />
+      )}
+    </button>
+  )
+}
+
+// ─── Success panel ────────────────────────────────────────────────────────────
+function SuccessPanel({ method }: { method: string }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '32px 0' }}>
+      <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+        <Icon icon={Solar.check} width={28} height={28} style={{ color: '#4ade80' }} />
+      </div>
+      <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, color: '#fff', marginBottom: 6 }}>
+        Deposit Confirmed
+      </div>
+      <div style={{ ...R, fontSize: 13, color: '#6B7280' }}>
+        Your {method} payment was received. Balance updated.
+      </div>
+      <div style={{ ...R, fontSize: 11, color: '#374151', marginTop: 6 }}>
+        Redirecting to overview…
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function WalletPage() {
   const { user } = useAuth()
+
   const [tab, setTab]               = useState<'overview'|'deposit'|'withdraw'|'prizes'>('overview')
-  const [depositAmt, setDepositAmt] = useState('')
-  const [withdrawAmt, setWithdrawAmt] = useState('')
-  const [filterType, setFilterType] = useState('All')
   const [balance, setBalance]       = useState<any>(null)
   const [txHistory, setTxHistory]   = useState<any[]>([])
   const [prizes, setPrizes]         = useState<any[]>([])
-  const [loading, setLoading]       = useState(false)
+  const [filterType, setFilterType] = useState('All')
   const [page, setPage]             = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  useEffect(() => {
+  // Deposit
+  const [depositAmt, setDepositAmt]       = useState('')
+  const [payMethod, setPayMethod]         = useState<'stripe'|'paypal'|'venmo'>('stripe')
+  const [depositStep, setDepositStep]     = useState<'amount'|'pay'>('amount')
+  const [clientSecret, setClientSecret]   = useState<string|null>(null)
+  const [paySuccess, setPaySuccess]       = useState(false)
+  const [successMethod, setSuccessMethod] = useState('')
+  const [depositLoading, setDepositLoading] = useState(false)
+  const [depositErr, setDepositErr]       = useState('')
+
+  // Withdraw
+  const [withdrawAmt, setWithdrawAmt]         = useState('')
+  const [withdrawMethod, setWithdrawMethod]   = useState<'paypal'|'bank'>('paypal')
+  const [withdrawDest, setWithdrawDest]       = useState('')
+  const [withdrawLoading, setWithdrawLoading] = useState(false)
+
+  const refreshBalance = useCallback(() => {
     walletApi.getBalance().then(setBalance).catch(() => {})
-    walletApi.getPrizeClaims().then((res: any) => setPrizes(Array.isArray(res) ? res : res.claims || [])).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    refreshBalance()
+    walletApi.getPrizeClaims()
+      .then((res: any) => setPrizes(Array.isArray(res) ? res : res.claims ?? []))
+      .catch(() => {})
+  }, [refreshBalance])
 
   useEffect(() => {
     const params: any = { page, limit: 20 }
@@ -38,210 +391,432 @@ export default function WalletPage() {
     }).catch(() => {})
   }, [filterType, page])
 
-  const handleDeposit = async () => {
-    const amount = parseFloat(depositAmt.replace('$', ''))
-    if (!amount || amount <= 0) return
-    setLoading(true)
-    try {
-      const res = await walletApi.deposit({ amount: Math.round(amount * 100) })
-      if (res.clientSecret || res.url) {
-        // Stripe redirect or client-side confirmation would go here
-        alert('Deposit initiated. Redirecting to payment...')
-      }
-    } catch (err: any) {
-      alert(err.message || 'Deposit failed')
-    } finally { setLoading(false) }
+  if (!user) return null
+
+  const cashVal = balance
+    ? ((balance.cashBalance ?? 0) / 100).toFixed(2)
+    : (user.cashBalance / 100).toFixed(2)
+  const credits = balance?.credits ?? user.credits ?? 0
+  const parsedAmt = parseFloat(depositAmt.replace('$', ''))
+
+  const TABS = [
+    { key: 'overview', label: 'Transaction History' },
+    { key: 'deposit',  label: 'Deposit' },
+    { key: 'withdraw', label: 'Withdraw' },
+    { key: 'prizes',   label: 'Prize Claims' },
+  ] as const
+
+  // ── Deposit handlers ──────────────────────────────────────────────────────
+  const handleDepositContinue = async () => {
+    if (!parsedAmt || parsedAmt < 1) { setDepositErr('Enter an amount of at least $1'); return }
+    setDepositErr('')
+    if (payMethod === 'stripe') {
+      setDepositLoading(true)
+      try {
+        const res: any = await walletApi.deposit({ amount: parsedAmt })
+        setClientSecret(res.clientSecret)
+        setDepositStep('pay')
+      } catch (err: any) {
+        setDepositErr(err.message ?? 'Failed to initiate payment')
+      } finally { setDepositLoading(false) }
+    } else {
+      setDepositStep('pay')
+    }
   }
+
+  const handlePaySuccess = () => {
+    setSuccessMethod(payMethod === 'stripe' ? 'Stripe' : payMethod === 'paypal' ? 'PayPal' : 'Venmo')
+    setPaySuccess(true)
+    setClientSecret(null)
+    setDepositStep('amount')
+    refreshBalance()
+    setTimeout(() => { setPaySuccess(false); setTab('overview') }, 4000)
+  }
+
+  const handleDepositBack = () => { setDepositStep('amount'); setClientSecret(null); setDepositErr('') }
 
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmt.replace('$', ''))
-    if (!amount || amount < 10) return
-    setLoading(true)
+    if (!amount || amount < 10 || !withdrawDest) return
+    setWithdrawLoading(true)
     try {
-      await walletApi.withdraw({ amount: Math.round(amount * 100) })
+      await walletApi.withdraw({ amount, method: withdrawMethod, destination: withdrawDest })
       alert('Withdrawal request submitted')
-      walletApi.getBalance().then(setBalance).catch(() => {})
+      refreshBalance()
     } catch (err: any) {
-      alert(err.message || 'Withdrawal failed')
-    } finally { setLoading(false) }
+      alert(err.message ?? 'Withdrawal failed')
+    } finally { setWithdrawLoading(false) }
   }
 
   const handleClaimPrize = async (id: string) => {
     try {
       await walletApi.claimPrize(id)
       setPrizes(prev => prev.map(p => (p._id || p.id) === id ? { ...p, status: 'Claimed', claimed: true } : p))
-      walletApi.getBalance().then(setBalance).catch(() => {})
-    } catch (err: any) {
-      alert(err.message || 'Claim failed')
-    }
+      refreshBalance()
+    } catch (err: any) { alert(err.message ?? 'Claim failed') }
   }
 
-  if (!user) return null
+  // PayPal script provider options
+  const paypalOptions = {
+    clientId:         process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? '',
+    currency:         'USD',
+    intent:           'capture',
+    components:       'buttons,funding-eligibility',
+    'enable-funding': 'venmo',
+    'buyer-country':  'US',
+  }
 
-  const cashVal   = balance ? ((balance.cashBalance ?? balance.cash ?? 0) / 100).toFixed(2) : (user.cashBalance / 100).toFixed(2)
-  const credits   = balance?.credits ?? user.credits ?? 0
-
-  const inputStyle: React.CSSProperties = { background:'#0C0C11', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'11px 14px', ...R, fontSize:13, color:'#fff', outline:'none', width:'100%', boxSizing:'border-box' }
-  const btnRed: React.CSSProperties = { background:'#B22D2D', border:'none', borderRadius:8, padding:'12px 32px', ...R, fontWeight:700, fontSize:12, color:'#fff', cursor:'pointer', textTransform:'uppercase', letterSpacing:0.8 }
-  const btnGhost: React.CSSProperties = { background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'12px 22px', ...R, fontWeight:600, fontSize:12, color:'#9CA3AF', cursor:'pointer' }
-
-  const TABS = [
-    { key:'overview', label:'Transaction History' },
-    { key:'deposit',  label:'Deposit'  },
-    { key:'withdraw', label:'Withdraw' },
-    { key:'prizes',   label:'Prize Claims' },
-  ] as const
-
+  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ background:'#0C0C11', minHeight:'100vh', paddingBottom:80 }}>
-      <div className="container" style={{ maxWidth:1440, padding:'0 30px' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'220px 1fr', gap:20, paddingTop:28, alignItems:'start' }}>
+    <div style={{ background: '#0C0C11', minHeight: '100vh', paddingBottom: 80 }}>
+      <div className="container" style={{ maxWidth: 1440, padding: '0 30px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, paddingTop: 28, alignItems: 'start' }}>
           <DashSidebar active="wallet" />
+
           <div>
-            <div style={{ marginBottom:24 }}>
-              <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'#fff', margin:0 }}>Wallet & Payouts</h1>
-              <div style={{ ...R, fontSize:13, color:'#9CA3AF', marginTop:6 }}>Manage your cash, deposits, withdrawals, and prize claims</div>
+            {/* Header */}
+            <div style={{ marginBottom: 24 }}>
+              <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 32, color: '#fff', margin: 0 }}>
+                Wallet & Payouts
+              </h1>
+              <div style={{ ...R, fontSize: 13, color: '#4B5563', marginTop: 4 }}>
+                Manage your cash balance, deposits, withdrawals, and prize claims
+              </div>
             </div>
 
             {/* Balance cards */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 24 }}>
               {[
-                { label:'Available Cash',  value:`$${cashVal}`,    sub:'Ready to use or withdraw',       color:'#4ade80', icon: Solar.bill },
-                { label:'Pending Payouts', value:'—',              sub:'Processing, 1–3 business days',  color:'#F39C12', icon: Solar.hourglass },
-                { label:'CE Tickets',      value:`${credits}`,     sub:'Platform tickets balance',       color:'#E74C3C', icon: Solar.coin },
-              ].map((b,i) => (
-                <div key={i} style={{ background:'#18181C', borderRadius:12, padding:'22px 24px', border:`1px solid ${b.color}20`, position:'relative', overflow:'hidden' }}>
-                  <div style={{ position:'absolute', right:20, top:14, opacity:0.12 }}><Icon icon={b.icon} width={36} height={36} /></div>
-                  <div style={{ ...R, fontSize:12, color:'#9CA3AF', marginBottom:8 }}>{b.label}</div>
-                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, color:b.color, lineHeight:1 }}>{b.value}</div>
-                  <div style={{ ...R, fontSize:11, color:'#4A5568', marginTop:6 }}>{b.sub}</div>
+                { label: 'Available Cash',  value: `$${cashVal}`, sub: 'Ready to use or withdraw',     color: '#4ade80', icon: Solar.bill       },
+                { label: 'Pending Payouts', value: balance ? `$${((balance.pendingPayout ?? 0)/100).toFixed(2)}` : '—',
+                                            sub: 'Processing, 1–3 business days',                       color: '#F39C12', icon: Solar.hourglass  },
+                { label: 'CE Tickets',      value: `${credits}`, sub: 'Platform tickets balance',       color: '#E74C3C', icon: Solar.coin       },
+              ].map((b, i) => (
+                <div key={i} style={{ background: '#111114', borderRadius: 12, padding: '20px 22px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', right: 18, top: 14, opacity: 0.08 }}>
+                    <Icon icon={b.icon} width={40} height={40} />
+                  </div>
+                  <div style={{ ...R, fontSize: 11, color: '#4B5563', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>{b.label}</div>
+                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 34, color: b.color, lineHeight: 1 }}>{b.value}</div>
+                  <div style={{ ...R, fontSize: 11, color: '#374151', marginTop: 6 }}>{b.sub}</div>
                 </div>
               ))}
             </div>
 
             {/* Tab card */}
-            <div style={{ background:'#18181C', borderRadius:12, overflow:'hidden' }}>
-              <div style={{ display:'flex', borderBottom:'1px solid #25252C' }}>
+            <div style={{ background: '#111114', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+              {/* Tabs */}
+              <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 {TABS.map(t => (
-                  <button key={t.key} onClick={() => setTab(t.key)} style={{ padding:'15px 28px', background:'none', border:'none', borderBottom:tab===t.key?'2px solid #B22D2D':'2px solid transparent', marginBottom:-1, ...R, fontWeight:700, fontSize:13, color:tab===t.key?'#fff':'#9CA3AF', cursor:'pointer', whiteSpace:'nowrap' }}>{t.label}</button>
+                  <button key={t.key}
+                    onClick={() => { setTab(t.key); setDepositStep('amount'); setPaySuccess(false) }}
+                    style={{ padding: '14px 26px', background: 'none', border: 'none', borderBottom: tab === t.key ? '2px solid #B22D2D' : '2px solid transparent', marginBottom: -1, ...R, fontWeight: 700, fontSize: 13, color: tab === t.key ? '#fff' : '#4B5563', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'color 0.15s' }}
+                  >
+                    {t.label}
+                  </button>
                 ))}
               </div>
-              <div style={{ padding:'28px 32px' }}>
 
+              <div style={{ padding: '26px 28px' }}>
+
+                {/* ── Transaction History ── */}
                 {tab === 'overview' && (
                   <div>
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-                      <div style={{ ...R, fontWeight:700, fontSize:15, color:'#fff' }}>All Transactions</div>
-                      <div style={{ display:'flex', gap:8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                      <div style={{ ...R, fontWeight: 700, fontSize: 15, color: '#e5e7eb' }}>All Transactions</div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {['All','Deposit','Withdrawal','Match Win','Prize Claim'].map(f => (
-                          <button key={f} onClick={() => { setFilterType(f); setPage(1) }} style={{ padding:'6px 14px', background:filterType===f?'#B22D2D':'#202023', border:`1px solid ${filterType===f?'#B22D2D':'rgba(255,255,255,0.08)'}`, borderRadius:8, ...R, fontWeight:600, fontSize:11, color:filterType===f?'#fff':'#9CA3AF', cursor:'pointer' }}>{f}</button>
+                          <button key={f} onClick={() => { setFilterType(f); setPage(1) }}
+                            style={{ padding: '5px 12px', background: filterType === f ? 'rgba(178,45,45,0.15)' : 'transparent', border: `1px solid ${filterType === f ? 'rgba(178,45,45,0.4)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 6, ...R, fontWeight: 600, fontSize: 11, color: filterType === f ? '#fff' : '#4B5563', cursor: 'pointer', transition: 'all 0.15s' }}>
+                            {f}
+                          </button>
                         ))}
                       </div>
                     </div>
-                    <div style={{ borderRadius:10, overflow:'hidden', border:'1px solid #25252C' }}>
-                      <div style={{ display:'grid', gridTemplateColumns:'1fr 180px 110px 120px 100px', background:'#0C0C11', padding:'12px 20px' }}>
-                        {['Transaction','Method','Amount','Status','Date'].map((h,i) => (
-                          <span key={i} style={{ ...R, fontWeight:700, fontSize:11, color:'#6B7280', letterSpacing:0.8, textTransform:'uppercase' }}>{h}</span>
+
+                    <div style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 170px 100px 110px 95px', background: '#0C0C11', padding: '10px 18px' }}>
+                        {['Transaction','Method','Amount','Status','Date'].map((h, i) => (
+                          <span key={i} style={{ ...R, fontWeight: 700, fontSize: 10, color: '#374151', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{h}</span>
                         ))}
                       </div>
                       {txHistory.length === 0 ? (
-                        <div style={{ padding:'40px 20px', textAlign:'center', ...R, fontSize:13, color:'#4A5568' }}>No transactions found</div>
-                      ) : (
-                        txHistory.map((tx: any, i: number) => {
-                          const isPositive = tx.amount > 0 || ['deposit','match_win','match_refund','prize_claim','coaching_payment','reward','refund'].includes(tx.type)
-                          const amtDisplay = tx.amount != null ? `${isPositive ? '+' : ''}$${(Math.abs(tx.amount) / 100).toFixed(2)}` : '—'
-                          const status = tx.status || 'completed'
-                          const statusCap = status.charAt(0).toUpperCase() + status.slice(1)
-                          return (
-                            <div key={tx._id || i} style={{ display:'grid', gridTemplateColumns:'1fr 180px 110px 120px 100px', padding:'16px 20px', borderTop:'1px solid #25252C', alignItems:'center' }}>
-                              <div style={{ ...R, fontWeight:700, fontSize:14, color:'#fff' }}>{tx.description || tx.type}</div>
-                              <div style={{ ...R, fontSize:13, color:'#9CA3AF' }}>{tx.method || tx.reference || '—'}</div>
-                              <div style={{ ...R, fontWeight:700, fontSize:15, color:isPositive?'#4ade80':'#E74C3C' }}>{amtDisplay}</div>
-                              <div><span style={{ background:(STATUS_COLOR[statusCap]||'#4A5568')+'18', border:`1px solid ${STATUS_COLOR[statusCap]||'#4A5568'}44`, borderRadius:6, padding:'4px 10px', ...R, fontWeight:700, fontSize:11, color:STATUS_COLOR[statusCap]||'#4A5568' }}>{statusCap}</span></div>
-                              <div style={{ ...R, fontSize:12, color:'#6B7280' }}>{tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('en-US') : '—'}</div>
+                        <div style={{ padding: '48px 18px', textAlign: 'center' }}>
+                          <Icon icon={Solar.bill} width={32} height={32} style={{ color: '#1f2937', margin: '0 auto 10px', display: 'block' }} />
+                          <div style={{ ...R, fontSize: 13, color: '#374151' }}>No transactions found</div>
+                        </div>
+                      ) : txHistory.map((tx: any, i: number) => {
+                        const isPositive = tx.amount > 0 || ['deposit','match_win','match_refund','prize_claim','coaching_payment','reward','refund'].includes(tx.type)
+                        const amtDisplay = tx.amount != null ? `${isPositive ? '+' : ''}$${(Math.abs(tx.amount)/100).toFixed(2)}` : '—'
+                        const status    = tx.status ?? 'completed'
+                        const statusCap = status.charAt(0).toUpperCase() + status.slice(1)
+                        return (
+                          <div key={tx._id ?? i} style={{ display: 'grid', gridTemplateColumns: '1fr 170px 100px 110px 95px', padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
+                            <div style={{ ...R, fontWeight: 600, fontSize: 13, color: '#d1d5db' }}>{tx.description ?? tx.type}</div>
+                            <div style={{ ...R, fontSize: 12, color: '#4B5563' }}>{tx.method ?? '—'}</div>
+                            <div style={{ ...R, fontWeight: 700, fontSize: 14, color: isPositive ? '#4ade80' : '#E74C3C' }}>{amtDisplay}</div>
+                            <div>
+                              <span style={{ background: (STATUS_COLOR[statusCap] ?? '#374151') + '18', border: `1px solid ${(STATUS_COLOR[statusCap] ?? '#374151')}33`, borderRadius: 5, padding: '3px 9px', ...R, fontWeight: 700, fontSize: 11, color: STATUS_COLOR[statusCap] ?? '#374151' }}>
+                                {statusCap}
+                              </span>
                             </div>
-                          )
-                        })
-                      )}
+                            <div style={{ ...R, fontSize: 11, color: '#374151' }}>
+                              {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('en-US') : '—'}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
+
                     {totalPages > 1 && (
-                      <div style={{ display:'flex', justifyContent:'center', gap:8, marginTop:16 }}>
-                        <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{ ...btnGhost, opacity: page <= 1 ? 0.4 : 1 }}>← Prev</button>
-                        <span style={{ ...R, fontSize:13, color:'#9CA3AF', alignSelf:'center' }}>Page {page} of {totalPages}</span>
-                        <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{ ...btnGhost, opacity: page >= totalPages ? 0.4 : 1 }}>Next →</button>
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 16 }}>
+                        <button disabled={page <= 1} onClick={() => setPage(p => p-1)} style={{ ...btnGhost, opacity: page <= 1 ? 0.3 : 1, fontSize: 12 }}>← Prev</button>
+                        <span style={{ ...R, fontSize: 12, color: '#4B5563' }}>Page {page} of {totalPages}</span>
+                        <button disabled={page >= totalPages} onClick={() => setPage(p => p+1)} style={{ ...btnGhost, opacity: page >= totalPages ? 0.3 : 1, fontSize: 12 }}>Next →</button>
                       </div>
                     )}
                   </div>
                 )}
 
+                {/* ── Deposit ── */}
                 {tab === 'deposit' && (
-                  <div style={{ maxWidth:520 }}>
-                    <div style={{ ...R, fontWeight:700, fontSize:16, color:'#fff', marginBottom:6 }}>Add Funds to Your Wallet</div>
-                    <div style={{ ...R, fontSize:13, color:'#9CA3AF', marginBottom:28 }}>Deposit cash to enter wager matches and tournaments.</div>
-                    <div style={{ marginBottom:20 }}>
-                      <label style={{ ...R, fontWeight:700, fontSize:11, color:'#9CA3AF', marginBottom:8, display:'block', textTransform:'uppercase', letterSpacing:0.5 }}>Amount (USD)</label>
-                      <input style={inputStyle} placeholder="$0.00" value={depositAmt} onChange={e => setDepositAmt(e.target.value)} />
-                    </div>
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
-                      {['$10','$25','$50','$100'].map(a => (
-                        <button key={a} onClick={() => setDepositAmt(a)} style={{ background:depositAmt===a?'rgba(178,45,45,0.15)':'#202023', border:`1.5px solid ${depositAmt===a?'#B22D2D':'rgba(255,255,255,0.08)'}`, borderRadius:10, padding:'12px 0', ...R, fontWeight:700, fontSize:14, color:depositAmt===a?'#fff':'#9CA3AF', cursor:'pointer' }}>{a}</button>
-                      ))}
-                    </div>
-                    <div style={{ display:'flex', gap:12 }}>
-                      <button style={btnRed} onClick={handleDeposit} disabled={loading}>{loading ? 'Processing...' : 'Deposit Funds'}</button>
-                      <button style={btnGhost} onClick={() => setTab('overview')}>Cancel</button>
-                    </div>
-                  </div>
-                )}
+                  <div style={{ maxWidth: 520 }}>
 
-                {tab === 'withdraw' && (
-                  <div style={{ maxWidth:520 }}>
-                    <div style={{ ...R, fontWeight:700, fontSize:16, color:'#fff', marginBottom:6 }}>Withdraw Your Winnings</div>
-                    <div style={{ ...R, fontSize:13, color:'#9CA3AF', marginBottom:24 }}>Transfer to your bank. Minimum withdrawal: $10.00.</div>
-                    <div style={{ background:'rgba(74,222,128,0.06)', border:'1px solid rgba(74,222,128,0.2)', borderRadius:12, padding:'18px 22px', marginBottom:24, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                    {/* Success */}
+                    {paySuccess && <SuccessPanel method={successMethod} />}
+
+                    {/* Step 1 — Amount + method */}
+                    {!paySuccess && depositStep === 'amount' && (
                       <div>
-                        <div style={{ ...R, fontSize:12, color:'#9CA3AF' }}>Available to withdraw</div>
-                        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:34, color:'#4ade80', lineHeight:1, marginTop:4 }}>${cashVal}</div>
+                        <div style={{ marginBottom: 22 }}>
+                          <div style={{ ...R, fontWeight: 700, fontSize: 15, color: '#e5e7eb', marginBottom: 2 }}>Add Funds</div>
+                          <div style={{ ...R, fontSize: 12, color: '#4B5563' }}>Select an amount and payment method</div>
+                        </div>
+
+                        {/* Amount input */}
+                        <div style={{ marginBottom: 12 }}>
+                          <label style={{ ...R, fontWeight: 700, fontSize: 10, color: '#4B5563', marginBottom: 7, display: 'block', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Amount (USD)</label>
+                          <div style={{ position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', ...R, fontSize: 14, color: '#4B5563' }}>$</span>
+                            <input
+                              style={{ ...inputStyle, paddingLeft: 26 }}
+                              placeholder="0.00"
+                              value={depositAmt.replace('$', '')}
+                              onChange={e => setDepositAmt(e.target.value)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Quick presets */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 24 }}>
+                          {['10','25','50','100'].map(a => {
+                            const isSelected = depositAmt.replace('$','') === a
+                            return (
+                              <button key={a} onClick={() => setDepositAmt(a)}
+                                style={{ background: isSelected ? 'rgba(178,45,45,0.12)' : '#0C0C11', border: `1px solid ${isSelected ? 'rgba(178,45,45,0.45)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 8, padding: '10px 0', ...R, fontWeight: 700, fontSize: 14, color: isSelected ? '#fff' : '#6B7280', cursor: 'pointer', transition: 'all 0.15s' }}>
+                                ${a}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Divider */}
+                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginBottom: 18 }} />
+
+                        {/* Method selector */}
+                        <div style={{ marginBottom: 22 }}>
+                          <label style={{ ...R, fontWeight: 700, fontSize: 10, color: '#4B5563', marginBottom: 10, display: 'block', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Payment Method</label>
+
+                          <MethodRow
+                            selected={payMethod === 'stripe'}
+                            onClick={() => setPayMethod('stripe')}
+                            icon={<Icon icon="solar:card-2-bold-duotone" width={20} height={20} style={{ color: payMethod === 'stripe' ? '#B22D2D' : '#4B5563' }} />}
+                            label="Card"
+                            detail="Visa · Mastercard · Amex · Discover"
+                          />
+                          <MethodRow
+                            selected={payMethod === 'paypal'}
+                            onClick={() => setPayMethod('paypal')}
+                            icon={<PayPalLogo size={20} />}
+                            label="PayPal"
+                            detail="Pay using your PayPal balance or linked account"
+                          />
+                          <MethodRow
+                            selected={payMethod === 'venmo'}
+                            onClick={() => setPayMethod('venmo')}
+                            icon={<VenmoLogo size={20} />}
+                            label="Venmo"
+                            detail="US accounts only · Venmo app required"
+                          />
+                        </div>
+
+                        {depositErr && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(231,76,60,0.08)', border: '1px solid rgba(231,76,60,0.2)', borderRadius: 8, padding: '11px 14px', marginBottom: 16 }}>
+                            <Icon icon={Solar.warning} width={16} height={16} style={{ color: '#E74C3C', flexShrink: 0 }} />
+                            <span style={{ ...R, fontSize: 13, color: '#E74C3C' }}>{depositErr}</span>
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <button style={{ ...btnRed, opacity: depositLoading ? 0.55 : 1 }} onClick={handleDepositContinue} disabled={depositLoading}>
+                            {depositLoading ? 'Loading…' : 'Continue'}
+                          </button>
+                          <button style={btnGhost} onClick={() => setTab('overview')}>Cancel</button>
+                        </div>
                       </div>
-                      <div style={{ opacity:0.4 }}><Icon icon={Solar.moneySend} width={36} height={36} /></div>
+                    )}
+
+                    {/* Step 2 — Payment UI */}
+                    {!paySuccess && depositStep === 'pay' && (
+                      <div>
+                        {/* Amount summary */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0C0C11', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '13px 16px', marginBottom: 22 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {payMethod === 'stripe'  && <Icon icon="solar:card-2-bold-duotone" width={16} height={16} style={{ color: '#4B5563' }} />}
+                            {payMethod === 'paypal'  && <PayPalLogo size={16} />}
+                            {payMethod === 'venmo'   && <VenmoLogo size={16} />}
+                            <span style={{ ...R, fontSize: 12, color: '#4B5563' }}>
+                              {payMethod === 'stripe' ? 'Card' : payMethod === 'paypal' ? 'PayPal' : 'Venmo'} deposit
+                            </span>
+                          </div>
+                          <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 20, color: '#4ade80' }}>
+                            ${parsedAmt.toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Stripe Elements */}
+                        {payMethod === 'stripe' && clientSecret && (
+                          <Elements stripe={stripePromise} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
+                            <StripePayForm onSuccess={handlePaySuccess} onBack={handleDepositBack} />
+                          </Elements>
+                        )}
+
+                        {/* PayPal button only */}
+                        {payMethod === 'paypal' && (
+                          <PayPalScriptProvider options={paypalOptions}>
+                            <SinglePayPalButton
+                              amount={parsedAmt}
+                              fundingSource={FUNDING.PAYPAL}
+                              onSuccess={handlePaySuccess}
+                              onBack={handleDepositBack}
+                            />
+                          </PayPalScriptProvider>
+                        )}
+
+                        {/* Venmo button only */}
+                        {payMethod === 'venmo' && (
+                          <PayPalScriptProvider options={paypalOptions}>
+                            <div style={{ ...R, fontSize: 12, color: '#374151', marginBottom: 14 }}>
+                              Venmo is available on US accounts in supported browsers. The Venmo app must be installed.
+                            </div>
+                            <SinglePayPalButton
+                              amount={parsedAmt}
+                              fundingSource={FUNDING.VENMO}
+                              onSuccess={handlePaySuccess}
+                              onBack={handleDepositBack}
+                            />
+                          </PayPalScriptProvider>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Withdraw ── */}
+                {tab === 'withdraw' && (
+                  <div style={{ maxWidth: 480 }}>
+                    <div style={{ marginBottom: 22 }}>
+                      <div style={{ ...R, fontWeight: 700, fontSize: 15, color: '#e5e7eb', marginBottom: 2 }}>Withdraw Funds</div>
+                      <div style={{ ...R, fontSize: 12, color: '#4B5563' }}>Minimum withdrawal: $10.00</div>
                     </div>
-                    <div style={{ marginBottom:20 }}>
-                      <label style={{ ...R, fontWeight:700, fontSize:11, color:'#9CA3AF', marginBottom:8, display:'block', textTransform:'uppercase', letterSpacing:0.5 }}>Withdraw Amount (USD)</label>
-                      <input style={inputStyle} placeholder="$0.00" value={withdrawAmt} onChange={e => setWithdrawAmt(e.target.value)} />
+
+                    {/* Balance row */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0C0C11', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '14px 18px', marginBottom: 22 }}>
+                      <div>
+                        <div style={{ ...R, fontSize: 11, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginBottom: 4 }}>Available</div>
+                        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 28, color: '#4ade80', lineHeight: 1 }}>${cashVal}</div>
+                      </div>
+                      <Icon icon={Solar.moneySend} width={28} height={28} style={{ color: '#1f2937' }} />
                     </div>
-                    <div style={{ display:'flex', gap:12 }}>
-                      <button style={btnRed} onClick={handleWithdraw} disabled={loading}>{loading ? 'Processing...' : 'Withdraw Funds'}</button>
+
+                    {/* Method select */}
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={{ ...R, fontWeight: 700, fontSize: 10, color: '#4B5563', marginBottom: 8, display: 'block', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Withdrawal Method</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {[{ key: 'paypal' as const, label: 'PayPal' }, { key: 'bank' as const, label: 'Bank Transfer' }].map(m => (
+                          <button key={m.key} onClick={() => setWithdrawMethod(m.key)}
+                            style={{ padding: '11px', background: withdrawMethod === m.key ? 'rgba(178,45,45,0.08)' : 'transparent', border: `1px solid ${withdrawMethod === m.key ? 'rgba(178,45,45,0.4)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 8, ...R, fontWeight: 600, fontSize: 13, color: withdrawMethod === m.key ? '#fff' : '#4B5563', cursor: 'pointer', transition: 'all 0.15s' }}>
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: 14 }}>
+                      <label style={{ ...R, fontWeight: 700, fontSize: 10, color: '#4B5563', marginBottom: 7, display: 'block', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                        {withdrawMethod === 'paypal' ? 'PayPal Email' : 'Account (last 4 digits)'}
+                      </label>
+                      <input style={inputStyle}
+                        placeholder={withdrawMethod === 'paypal' ? 'you@example.com' : '1234'}
+                        value={withdrawDest}
+                        onChange={e => setWithdrawDest(e.target.value)}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: 22 }}>
+                      <label style={{ ...R, fontWeight: 700, fontSize: 10, color: '#4B5563', marginBottom: 7, display: 'block', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Amount (USD)</label>
+                      <div style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', ...R, fontSize: 14, color: '#4B5563' }}>$</span>
+                        <input style={{ ...inputStyle, paddingLeft: 26 }} placeholder="0.00" value={withdrawAmt} onChange={e => setWithdrawAmt(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button style={{ ...btnRed, opacity: withdrawLoading ? 0.55 : 1 }} onClick={handleWithdraw} disabled={withdrawLoading}>
+                        {withdrawLoading ? 'Processing…' : 'Request Withdrawal'}
+                      </button>
                       <button style={btnGhost} onClick={() => setTab('overview')}>Cancel</button>
                     </div>
                   </div>
                 )}
 
+                {/* ── Prize Claims ── */}
                 {tab === 'prizes' && (
                   <div>
-                    <div style={{ ...R, fontWeight:700, fontSize:15, color:'#fff', marginBottom:20 }}>Your Prize Claims</div>
-                    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                    <div style={{ ...R, fontWeight: 700, fontSize: 15, color: '#e5e7eb', marginBottom: 18 }}>Prize Claims</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       {prizes.length === 0 ? (
-                        <div style={{ padding:'40px 0', textAlign:'center', ...R, fontSize:13, color:'#4A5568' }}>No prize claims</div>
-                      ) : (
-                        prizes.map((p: any) => {
-                          const pId = p._id || p.id
-                          const status = p.status || 'Ready'
-                          const statusCap = status.charAt(0).toUpperCase() + status.slice(1)
-                          return (
-                            <div key={pId} style={{ background:'#0C0C11', border:'1px solid #25252C', borderRadius:12, padding:'20px 24px', display:'flex', alignItems:'center', gap:18 }}>
-                              <div style={{ width:50, height:50, background:'rgba(243,156,18,0.1)', border:'1px solid rgba(243,156,18,0.2)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#f39c12"/><path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#f39c12"/><rect x="10" y="14" width="4" height="4" fill="#f39c12"/><rect x="7" y="18" width="10" height="3" rx="1" fill="#f39c12"/></svg></div>
-                              <div style={{ flex:1 }}>
-                                <div style={{ ...R, fontWeight:700, fontSize:15, color:'#fff' }}>{p.tournament || p.description || 'Prize'}</div>
-                                <div style={{ ...R, fontSize:12, color:'#9CA3AF', marginTop:3 }}>Prize: <span style={{ color:'#F39C12', fontWeight:700, fontSize:14 }}>${((p.amount || 0) / 100).toFixed(2)}</span> - Earned: {p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US') : '—'}</div>
-                              </div>
-                              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                                <span style={{ background:(STATUS_COLOR[statusCap]||'#4A5568')+'18', border:`1px solid ${STATUS_COLOR[statusCap]||'#4A5568'}44`, borderRadius:8, padding:'6px 14px', ...R, fontWeight:700, fontSize:12, color:STATUS_COLOR[statusCap]||'#4A5568' }}>{statusCap}</span>
-                                {!p.claimed && statusCap !== 'Claimed' && <button onClick={() => handleClaimPrize(pId)} style={btnRed}>Claim Prize</button>}
+                        <div style={{ padding: '48px 0', textAlign: 'center' }}>
+                          <Icon icon={Solar.trophy} width={32} height={32} style={{ color: '#1f2937', display: 'block', margin: '0 auto 10px' }} />
+                          <div style={{ ...R, fontSize: 13, color: '#374151' }}>No prize claims available</div>
+                        </div>
+                      ) : prizes.map((p: any) => {
+                        const pId     = p._id ?? p.id
+                        const status  = p.status ?? 'Ready'
+                        const statusCp = status.charAt(0).toUpperCase() + status.slice(1)
+                        return (
+                          <div key={pId} style={{ background: '#0C0C11', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <div style={{ width: 44, height: 44, background: 'rgba(243,156,18,0.08)', border: '1px solid rgba(243,156,18,0.15)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <Icon icon={Solar.trophy} width={22} height={22} style={{ color: '#F39C12' }} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ ...R, fontWeight: 600, fontSize: 14, color: '#d1d5db' }}>{p.tournament ?? p.description ?? 'Prize'}</div>
+                              <div style={{ ...R, fontSize: 12, color: '#4B5563', marginTop: 2 }}>
+                                <span style={{ color: '#F39C12', fontWeight: 700 }}>${((p.amount ?? 0)/100).toFixed(2)}</span>
+                                {' '}·{' '}{p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US') : '—'}
                               </div>
                             </div>
-                          )
-                        })
-                      )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span style={{ background: (STATUS_COLOR[statusCp] ?? '#374151') + '18', border: `1px solid ${(STATUS_COLOR[statusCp] ?? '#374151')}33`, borderRadius: 5, padding: '4px 10px', ...R, fontWeight: 700, fontSize: 11, color: STATUS_COLOR[statusCp] ?? '#374151' }}>
+                                {statusCp}
+                              </span>
+                              {!p.claimed && statusCp !== 'Claimed' && (
+                                <button onClick={() => handleClaimPrize(pId)} style={btnRed}>Claim</button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}

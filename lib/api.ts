@@ -200,12 +200,15 @@ export const powApi = {
 
 // WALLET
 export const walletApi = {
-  getBalance:      ()           => api.get('/wallet/balance'),
-  getTransactions: (params?: any) => api.get(`/wallet/transactions${toQuery(params)}`),
-  deposit:         (body: any)  => api.post('/wallet/deposit', body),
-  withdraw:        (body: any)  => api.post('/wallet/withdraw', body),
-  getPrizeClaims:  ()           => api.get('/wallet/prize-claims'),
-  claimPrize:      (id: string) => api.post(`/wallet/prize-claims/${id}/claim`),
+  getBalance:        ()           => api.get('/wallet/balance'),
+  getTransactions:   (params?: any) => api.get(`/wallet/transactions${toQuery(params)}`),
+  deposit:           (body: any)  => api.post('/wallet/deposit', body),
+  withdraw:          (body: any)  => api.post('/wallet/withdraw', body),
+  getPrizeClaims:    ()           => api.get('/wallet/prize-claims'),
+  claimPrize:        (id: string) => api.post(`/wallet/prize-claims/${id}/claim`),
+  // PayPal / Venmo deposit
+  createPayPalOrder: (body: any)  => api.post('/wallet/deposit/paypal/create', body),
+  capturePayPalOrder:(body: any)  => api.post('/wallet/deposit/paypal/capture', body),
 }
 
 // STORE
