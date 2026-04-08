@@ -21,6 +21,7 @@ const GAME_COLORS: Record<string, string> = {
 
 // ─── MANAGE TEAM MODAL ────────────────────────────────────────────────────────
 function ManageTeamModal({ team, user, onClose, onUpdated }: { team: any; user: any; onClose: () => void; onUpdated: () => void }) {
+  const { toast } = useToast()
   const [tab, setTab]               = useState<'overview' | 'members' | 'socials' | 'appearance'>('overview')
   const [bio, setBio]               = useState(team.bio || '')
   const [recruiting, setRecruiting] = useState(team.isRecruiting || false)

@@ -121,6 +121,7 @@ function Modal({ onClose, children }: { onClose: () => void; children: React.Rea
 }
 
 function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; onClose: () => void }) {
+  const { toast } = useToast()
   const { user } = useAuth()
   const router = useRouter()
   const [teamName, setTeamName] = useState('')

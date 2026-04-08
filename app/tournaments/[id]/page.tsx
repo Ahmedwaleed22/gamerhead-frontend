@@ -671,6 +671,7 @@ function AccordionItem({ title, body, defaultOpen = false }: { title: string; bo
 
 // ─── Entry Modal ──────────────────────────────────────────────────────────────
 function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?: boolean) => void; tournament: TournamentData; onRegistered?: () => void }) {
+  const { toast } = useToast()
   const { entryCredits, name, maxTeamSize } = tournament
   const entryType = 'team' as TourneyEntryType
   const firstStep: EntryStep = 'create-team'
