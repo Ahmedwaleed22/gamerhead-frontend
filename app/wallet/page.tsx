@@ -16,7 +16,7 @@ import {
   FUNDING,
 } from '@paypal/react-paypal-js'
 import { useAuth } from '@/lib/auth-context'
-import { walletApi } from '@/lib/api'
+import { walletApi, usersApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
 import { Solar } from '@/lib/solar-duotone'
 import { useToast } from '@/components/Toast'
@@ -376,9 +376,26 @@ export default function WalletPage() {
   const [withdrawMethod, setWithdrawMethod]   = useState<'paypal'|'bank'>('paypal')
   const [withdrawDest, setWithdrawDest]       = useState('')
   const [withdrawLoading, setWithdrawLoading] = useState(false)
+  const [withdrawSuccess, setWithdrawSuccess] = useState(false)
+  const [withdrawError,   setWithdrawError]   = useState('')
+
+  // PayPal link
+  const [paypalEditing, setPaypalEditing]   = useState(false)
+  const [paypalEmailDraft, setPaypalEmailDraft] = useState('')
+  const [paypalSaving, setPaypalSaving]     = useState(false)
+
+  // Bank transfer fields
+  const [bankHolder,   setBankHolder]   = useState('')
+  const [bankName,     setBankName]     = useState('')
+  const [bankRouting,  setBankRouting]  = useState('')
+  const [bankAccount,  setBankAccount]  = useState('')
+  const [bankType,     setBankType]     = useState<'checking'|'savings'>('checking')
 
   const refreshBalance = useCallback(() => {
-    walletApi.getBalance().then(setBalance).catch(() => {})
+    walletApi.getBalance().then((res: any) => {
+      setBalance(res)
+      if (res.paypalEmail) setWithdrawDest(res.paypalEmail)
+    }).catch(() => {})
   }, [])
 
   // Poll balance after payment — the webhook credits the DB asynchronously,
@@ -473,16 +490,53 @@ export default function WalletPage() {
 
   const handleDepositBack = () => { setDepositStep('amount'); setClientSecret(null); setDepositErr('') }
 
+  const handleSavePaypalEmail = async () => {
+    if (!paypalEmailDraft.trim()) return
+    setPaypalSaving(true)
+    try {
+      await usersApi.updateMe({ paypalEmail: paypalEmailDraft.trim() })
+      refreshBalance()
+      setWithdrawDest(paypalEmailDraft.trim())
+      setPaypalEditing(false)
+    } catch (err: any) {
+      setWithdrawError(err.message ?? 'Failed to save PayPal email')
+    } finally { setPaypalSaving(false) }
+  }
+
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmt.replace('$', ''))
-    if (!amount || amount < 10 || !withdrawDest) return
+    if (!amount || amount < 10) return
+
+    // Build destination & extra fields per method
+    let destination = ''
+    const extra: Record<string, string> = {}
+    if (withdrawMethod === 'paypal') {
+      destination = withdrawDest
+      if (!destination) { setWithdrawError('Please link a PayPal account first'); return }
+    } else {
+      if (!bankHolder.trim())  { setWithdrawError('Account holder name is required'); return }
+      if (!bankRouting.trim() || bankRouting.replace(/\D/g,'').length !== 9) { setWithdrawError('Enter a valid 9-digit routing number'); return }
+      if (!bankAccount.trim() || bankAccount.replace(/\D/g,'').length < 4)   { setWithdrawError('Enter a valid account number'); return }
+      destination = bankAccount.replace(/\D/g,'')
+      extra.accountHolder = bankHolder.trim()
+      extra.bankName      = bankName.trim()
+      extra.routingNumber = bankRouting.replace(/\D/g,'')
+      extra.accountType   = bankType
+    }
+
     setWithdrawLoading(true)
+    setWithdrawError('')
     try {
-      await walletApi.withdraw({ amount, method: withdrawMethod, destination: withdrawDest })
-      toast('Withdrawal request submitted', 'success')
+      await walletApi.withdraw({ amount, method: withdrawMethod, destination, ...extra })
+      setWithdrawSuccess(true)
       refreshBalance()
+      setTimeout(() => {
+        setWithdrawSuccess(false)
+        setWithdrawAmt('')
+        setTab('overview')
+      }, 5000)
     } catch (err: any) {
-      toast(err.message ?? 'Withdrawal failed', 'error')
+      setWithdrawError(err.message ?? 'Withdrawal failed')
     } finally { setWithdrawLoading(false) }
   }
 
@@ -506,7 +560,7 @@ export default function WalletPage() {
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ background: '#0C0C11', minHeight: '100vh', paddingBottom: 80 }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 80 }}>
       <div className="container" style={{ maxWidth: 1440, padding: '0 30px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, paddingTop: 28, alignItems: 'start' }}>
           <DashSidebar active="wallet" />
@@ -766,59 +820,186 @@ export default function WalletPage() {
 
                 {/* ── Withdraw ── */}
                 {tab === 'withdraw' && (
-                  <div style={{ maxWidth: 480 }}>
-                    <div style={{ marginBottom: 22 }}>
-                      <div style={{ ...R, fontWeight: 700, fontSize: 15, color: '#e5e7eb', marginBottom: 2 }}>Withdraw Funds</div>
-                      <div style={{ ...R, fontSize: 12, color: '#4B5563' }}>Minimum withdrawal: $10.00</div>
-                    </div>
+                  <div>
 
-                    {/* Balance row */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0C0C11', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '14px 18px', marginBottom: 22 }}>
-                      <div>
-                        <div style={{ ...R, fontSize: 11, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginBottom: 4 }}>Available</div>
-                        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 28, color: '#4ade80', lineHeight: 1 }}>${cashVal}</div>
+                    {/* ── Success state — full-width centered ── */}
+                    {withdrawSuccess ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '64px 24px' }}>
+                        <div style={{ position: 'relative', width: 72, height: 72, marginBottom: 24 }}>
+                          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(74,222,128,0.15)', background: 'rgba(74,222,128,0.06)' }} />
+                          <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: '1px solid rgba(74,222,128,0.2)', background: 'rgba(74,222,128,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Icon icon={Solar.check} width={30} height={30} style={{ color: '#4ade80' }} />
+                          </div>
+                        </div>
+                        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 28, color: '#fff', marginBottom: 8, letterSpacing: '-0.01em' }}>
+                          Withdrawal Requested
+                        </div>
+                        <div style={{ ...R, fontSize: 14, color: '#6B7280', maxWidth: 280, lineHeight: 1.6 }}>
+                          We'll process your request within 1–3 business days.
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 20 }}>
+                          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#374151', animation: 'pulse 1.2s ease-in-out infinite' }} />
+                          <span style={{ ...R, fontSize: 11, color: '#374151' }}>Redirecting to overview…</span>
+                        </div>
                       </div>
-                      <Icon icon={Solar.moneySend} width={28} height={28} style={{ color: '#1f2937' }} />
-                    </div>
+                    ) : (
+                      <div style={{ maxWidth: 520 }}>
+                        {/* ── Available balance ── */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '14px 18px', marginBottom: 24 }}>
+                          <div>
+                            <div style={{ ...R, fontSize: 11, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginBottom: 4 }}>Available</div>
+                            <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 28, color: '#4ade80', lineHeight: 1 }}>${cashVal}</div>
+                          </div>
+                          <Icon icon={Solar.moneySend} width={28} height={28} style={{ color: '#1f2937' }} />
+                        </div>
 
-                    {/* Method select */}
-                    <div style={{ marginBottom: 16 }}>
-                      <label style={{ ...R, fontWeight: 700, fontSize: 10, color: '#4B5563', marginBottom: 8, display: 'block', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Withdrawal Method</label>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                        {[{ key: 'paypal' as const, label: 'PayPal' }, { key: 'bank' as const, label: 'Bank Transfer' }].map(m => (
-                          <button key={m.key} onClick={() => setWithdrawMethod(m.key)}
-                            style={{ padding: '11px', background: withdrawMethod === m.key ? 'rgba(178,45,45,0.08)' : 'transparent', border: `1px solid ${withdrawMethod === m.key ? 'rgba(178,45,45,0.4)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 8, ...R, fontWeight: 600, fontSize: 13, color: withdrawMethod === m.key ? '#fff' : '#4B5563', cursor: 'pointer', transition: 'all 0.15s' }}>
-                            {m.label}
+                        {/* ── Method tabs ── */}
+                        <div style={{ marginBottom: 24 }}>
+                          <div style={{ ...R, fontSize: 12, color: '#6B7280', marginBottom: 8 }}>Withdrawal method</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                            {([
+                              { key: 'paypal' as const, label: 'PayPal' },
+                              { key: 'bank'   as const, label: 'Bank Transfer' },
+                            ] as const).map(m => (
+                              <button key={m.key} onClick={() => { setWithdrawMethod(m.key); setWithdrawError('') }}
+                                style={{ padding: '10px 14px', background: withdrawMethod === m.key ? 'rgba(178,45,45,0.1)' : 'transparent', border: `1px solid ${withdrawMethod === m.key ? 'rgba(178,45,45,0.45)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 8, ...R, fontWeight: 700, fontSize: 13, color: withdrawMethod === m.key ? '#fff' : '#6B7280', cursor: 'pointer', transition: 'all 0.15s' }}>
+                                {m.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── PayPal section ── */}
+                        {withdrawMethod === 'paypal' && (
+                          <div style={{ marginBottom: 22 }}>
+                            <div style={{ ...R, fontSize: 12, color: '#6B7280', marginBottom: 8 }}>PayPal account</div>
+
+                            {withdrawDest && !paypalEditing ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.12)', borderRadius: 8, padding: '12px 14px' }}>
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', flexShrink: 0 }} />
+                                <span style={{ ...R, fontSize: 13, color: '#d1d5db', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{withdrawDest}</span>
+                                <button
+                                  onClick={() => { setPaypalEmailDraft(withdrawDest); setPaypalEditing(true) }}
+                                  style={{ ...R, fontSize: 12, color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
+                                  Change
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <input
+                                  style={{ ...inputStyle, marginBottom: 10 }}
+                                  type="email"
+                                  placeholder="your-paypal@email.com"
+                                  value={paypalEmailDraft}
+                                  onChange={e => setPaypalEmailDraft(e.target.value)}
+                                  onKeyDown={e => e.key === 'Enter' && handleSavePaypalEmail()}
+                                />
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                  <button
+                                    onClick={handleSavePaypalEmail}
+                                    disabled={paypalSaving || !paypalEmailDraft.trim()}
+                                    style={{ ...btnRed, opacity: (paypalSaving || !paypalEmailDraft.trim()) ? 0.5 : 1 }}>
+                                    {paypalSaving ? 'Saving…' : 'Save'}
+                                  </button>
+                                  {paypalEditing && (
+                                    <button onClick={() => setPaypalEditing(false)} style={btnGhost}>Cancel</button>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* ── Bank transfer section ── */}
+                        {withdrawMethod === 'bank' && (
+                          <div style={{ marginBottom: 22, display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+                            <div>
+                              <div style={{ ...R, fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Account holder</div>
+                              <input style={inputStyle} placeholder="Full legal name" value={bankHolder}
+                                onChange={e => { setBankHolder(e.target.value); setWithdrawError('') }} />
+                            </div>
+
+                            <div>
+                              <div style={{ ...R, fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Bank name</div>
+                              <input style={inputStyle} placeholder="Chase, Wells Fargo, Bank of America…" value={bankName}
+                                onChange={e => setBankName(e.target.value)} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                              <div>
+                                <div style={{ ...R, fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Routing number <span style={{ color: '#374151' }}>(9 digits)</span></div>
+                                <input style={inputStyle} placeholder="021000021" maxLength={9} inputMode="numeric"
+                                  value={bankRouting}
+                                  onChange={e => { setBankRouting(e.target.value.replace(/\D/g,'')); setWithdrawError('') }} />
+                              </div>
+                              <div>
+                                <div style={{ ...R, fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Account type</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                                  {(['checking', 'savings'] as const).map(t => (
+                                    <button key={t} onClick={() => setBankType(t)}
+                                      style={{ padding: '9px 4px', background: bankType === t ? 'rgba(178,45,45,0.1)' : 'transparent', border: `1px solid ${bankType === t ? 'rgba(178,45,45,0.4)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 6, ...R, fontSize: 12, fontWeight: 700, color: bankType === t ? '#fff' : '#4B5563', cursor: 'pointer', transition: 'all 0.15s', textTransform: 'capitalize' }}>
+                                      {t}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <div style={{ ...R, fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Account number</div>
+                              <input style={inputStyle} placeholder="Your account number" inputMode="numeric"
+                                value={bankAccount}
+                                onChange={e => { setBankAccount(e.target.value.replace(/\D/g,'')); setWithdrawError('') }} />
+                              {bankAccount.length >= 4 && (
+                                <div style={{ ...R, fontSize: 11, color: '#374151', marginTop: 5 }}>Ending ••••{bankAccount.slice(-4)}</div>
+                              )}
+                            </div>
+
+                            <div style={{ ...R, fontSize: 11, color: '#374151', lineHeight: 1.5 }}>
+                              Bank transfers take 3–5 business days.
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ── Amount ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ ...R, fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Amount</div>
+                          <div style={{ position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', ...R, fontSize: 14, color: '#4B5563' }}>$</span>
+                            <input style={{ ...inputStyle, paddingLeft: 26 }} placeholder="0.00" value={withdrawAmt} onChange={e => { setWithdrawAmt(e.target.value); setWithdrawError('') }} />
+                          </div>
+                          <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                            {['25', '50', '100', '250'].map(v => {
+                              const n = parseFloat(v)
+                              const cashNum = parseFloat(cashVal)
+                              const disabled = !isNaN(cashNum) && n > cashNum
+                              return (
+                                <button key={v} onClick={() => !disabled && setWithdrawAmt(v)} disabled={disabled}
+                                  style={{ ...R, fontSize: 11, fontWeight: 600, color: disabled ? '#2d2d35' : '#6B7280', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 5, padding: '4px 10px', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.35 : 1 }}>
+                                  ${v}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+
+                        {/* ── Inline error ── */}
+                        {withdrawError && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(231,76,60,0.07)', border: '1px solid rgba(231,76,60,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14 }}>
+                            <Icon icon={Solar.close} width={14} height={14} style={{ color: '#E74C3C', flexShrink: 0 }} />
+                            <span style={{ ...R, fontSize: 13, color: '#E74C3C' }}>{withdrawError}</span>
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <button style={{ ...btnRed, opacity: withdrawLoading ? 0.55 : 1 }} onClick={handleWithdraw} disabled={withdrawLoading}>
+                            {withdrawLoading ? 'Processing…' : 'Request Withdrawal'}
                           </button>
-                        ))}
+                          <button style={btnGhost} onClick={() => setTab('overview')}>Cancel</button>
+                        </div>
                       </div>
-                    </div>
-
-                    <div style={{ marginBottom: 14 }}>
-                      <label style={{ ...R, fontWeight: 700, fontSize: 10, color: '#4B5563', marginBottom: 7, display: 'block', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                        {withdrawMethod === 'paypal' ? 'PayPal Email' : 'Account (last 4 digits)'}
-                      </label>
-                      <input style={inputStyle}
-                        placeholder={withdrawMethod === 'paypal' ? 'you@example.com' : '1234'}
-                        value={withdrawDest}
-                        onChange={e => setWithdrawDest(e.target.value)}
-                      />
-                    </div>
-
-                    <div style={{ marginBottom: 22 }}>
-                      <label style={{ ...R, fontWeight: 700, fontSize: 10, color: '#4B5563', marginBottom: 7, display: 'block', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Amount (USD)</label>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', ...R, fontSize: 14, color: '#4B5563' }}>$</span>
-                        <input style={{ ...inputStyle, paddingLeft: 26 }} placeholder="0.00" value={withdrawAmt} onChange={e => setWithdrawAmt(e.target.value)} />
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      <button style={{ ...btnRed, opacity: withdrawLoading ? 0.55 : 1 }} onClick={handleWithdraw} disabled={withdrawLoading}>
-                        {withdrawLoading ? 'Processing…' : 'Request Withdrawal'}
-                      </button>
-                      <button style={btnGhost} onClick={() => setTab('overview')}>Cancel</button>
-                    </div>
+                    )}
                   </div>
                 )}
 
@@ -868,6 +1049,13 @@ export default function WalletPage() {
           </div>
         </div>
       </div>
+
+      {/* Decorative bottom glow — matches other dashboard pages */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        height: 320, pointerEvents: 'none', zIndex: 0,
+        background: 'linear-gradient(to top, rgba(178,45,45,0.07) 0%, transparent 100%)',
+      }} />
     </div>
   )
 }

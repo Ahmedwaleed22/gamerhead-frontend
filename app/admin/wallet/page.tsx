@@ -143,20 +143,20 @@ function TransactionsTab() {
 
 function WithdrawalsTab() {
   const [withdrawals, setWithdrawals] = useState<any[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const [page, setPage]   = useState(1)
   const [pages, setPages] = useState(1)
   const [loading, setLoading] = useState(true)
-  const [status, setStatus] = useState('pending')
-  const [denyModal, setDenyModal] = useState<any>(null)
+  const [status, setStatus]   = useState('pending')
+  const [viewModal,  setViewModal]  = useState<any>(null)
   const [denyReason, setDenyReason] = useState('')
+  const [denyOpen,   setDenyOpen]   = useState(false)
+  const [acting,     setActing]     = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const res = await adminApi.getWithdrawals({ status, page, limit: 25 })
       setWithdrawals(res.withdrawals)
-      setTotal(res.total)
       setPages(res.pages)
     } catch { }
     setLoading(false)
@@ -164,18 +164,21 @@ function WithdrawalsTab() {
 
   useEffect(() => { load() }, [load])
 
-  const handleApprove = async (id: string) => {
-    try { await adminApi.approveWithdrawal(id); load() } catch { }
+  const openView  = (r: any) => { setViewModal(r); setDenyOpen(false); setDenyReason('') }
+  const closeView = () => { setViewModal(null); setDenyOpen(false); setDenyReason('') }
+
+  const handleApprove = async () => {
+    if (!viewModal) return
+    setActing(true)
+    try { await adminApi.approveWithdrawal(viewModal._id); closeView(); load() } catch {}
+    setActing(false)
   }
 
   const handleDeny = async () => {
-    if (!denyModal) return
-    try {
-      await adminApi.denyWithdrawal(denyModal._id, { reason: denyReason })
-      setDenyModal(null)
-      setDenyReason('')
-      load()
-    } catch { }
+    if (!viewModal) return
+    setActing(true)
+    try { await adminApi.denyWithdrawal(viewModal._id, { reason: denyReason }); closeView(); load() } catch {}
+    setActing(false)
   }
 
   const columns: Column[] = [
@@ -185,40 +188,127 @@ function WithdrawalsTab() {
     { key: 'amount', label: 'Amount', width: '90px',
       render: (r: any) => <span style={{ fontWeight: 700, color: '#e8000d' }}>${(Math.abs(r.amount) / 100).toFixed(2)}</span>,
     },
-    { key: 'method', label: 'Method', width: '80px' },
-    { key: 'status', label: 'Status', width: '80px',
-      render: (r: any) => <span style={{ fontSize: 9, fontWeight: 700, color: r.status === 'completed' ? '#22c55e' : r.status === 'pending' ? '#f59e0b' : '#e8000d' }}>{r.status}</span>,
+    { key: 'method', label: 'Method', width: '2fr',
+      render: (r: any) => <span style={{ color: '#8890A4', fontSize: 11 }}>{r.method || '—'}</span>,
     },
-    { key: 'createdAt', label: 'Requested', width: '100px',
+    { key: 'status', label: 'Status', width: '80px',
+      render: (r: any) => (
+        <span style={{ fontSize: 9, fontWeight: 700, color: r.status === 'completed' ? '#22c55e' : r.status === 'pending' ? '#f59e0b' : '#e8000d' }}>
+          {r.status}
+        </span>
+      ),
+    },
+    { key: 'createdAt', label: 'Requested', width: '90px',
       render: (r: any) => new Date(r.createdAt).toLocaleDateString(),
     },
-    { key: 'actions', label: 'Actions', width: '140px',
-      render: (r: any) => r.status === 'pending' ? (
-        <div style={{ display: 'flex', gap: 4 }}>
-          <ActionBtn label="APPROVE" color="#22c55e" onClick={() => handleApprove(r._id)} />
-          <ActionBtn label="DENY" color="#e8000d" onClick={() => setDenyModal(r)} />
-        </div>
-      ) : null,
+    { key: 'actions', label: '', width: '60px',
+      render: (r: any) => <ActionBtn label="View" color="#60A5FA" onClick={() => openView(r)} />,
     },
   ]
 
+  // Shared micro-label style used inside the modal
+  const f = (label: string, value: React.ReactNode, mono = false) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <span style={{ fontSize: 9, color: '#4F5568', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
+      <span style={{ fontSize: 12, color: '#d1d5db', fontWeight: 600, fontFamily: mono ? 'monospace' : undefined, letterSpacing: mono ? '0.04em' : undefined }}>{value}</span>
+    </div>
+  )
+
+  const W = viewModal
+  const b = W?.withdrawalBankDetails
+  const isPending = W?.status === 'pending'
+
   return (
     <div>
-      <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }} style={{ ...inputStyle, width: 'auto', marginBottom: 12 }}>
+      <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }}
+        style={{ ...inputStyle, width: 'auto', marginBottom: 12 }}>
         <option value="pending">Pending</option>
         <option value="completed">Completed</option>
         <option value="cancelled">Denied</option>
       </select>
-      {loading ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div> : (
-        <DataTable columns={columns} rows={withdrawals} emptyText="No withdrawals" page={page} totalPages={pages} onPage={setPage} />
-      )}
-      {denyModal && (
-        <Modal title="Deny Withdrawal" subtitle={`$${(Math.abs(denyModal.amount) / 100).toFixed(2)} → ${denyModal.user?.username}`} onClose={() => setDenyModal(null)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontSize: 10, color: '#f59e0b' }}>Amount will be refunded to user's cash balance.</div>
-            <textarea value={denyReason} onChange={e => setDenyReason(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Reason for denial..." />
-            <ActionBtn label="DENY & REFUND" color="#e8000d" onClick={handleDeny} />
+
+      {loading
+        ? <div style={{ fontSize: 13, color: '#4F5568', padding: 40, textAlign: 'center' }}>Loading...</div>
+        : <DataTable columns={columns} rows={withdrawals} emptyText="No withdrawals" page={page} totalPages={pages} onPage={setPage} />
+      }
+
+      {W && (
+        <Modal
+          title={`$${(Math.abs(W.amount) / 100).toFixed(2)}`}
+          subtitle={`${W.user?.username || '—'} · ${new Date(W.createdAt).toLocaleDateString()}`}
+          onClose={closeView}
+          width={520}
+        >
+          {/* Status + user row */}
+          <div style={{ display: 'flex', gap: 20, marginBottom: 20, flexWrap: 'wrap' }}>
+            {f('Status',
+              <span style={{ color: W.status === 'completed' ? '#22c55e' : W.status === 'pending' ? '#f59e0b' : '#e8000d' }}>
+                {W.status.charAt(0).toUpperCase() + W.status.slice(1)}
+              </span>
+            )}
+            {f('Email', W.user?.email || '—')}
           </div>
+
+          <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 20 }} />
+
+          {/* PayPal */}
+          {W.withdrawalPaypalEmail && (
+            <div style={{ marginBottom: 20 }}>
+              {f('Send to (PayPal)',
+                <span style={{ color: '#93c5fd' }}>{W.withdrawalPaypalEmail}</span>
+              )}
+            </div>
+          )}
+
+          {/* Bank */}
+          {b && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+              {f('Account holder', b.accountHolder || '—')}
+              {f('Bank', b.bankName || '—')}
+              {f('Routing', b.routingNumber || '—', true)}
+              {f('Type', b.accountType ? b.accountType.charAt(0).toUpperCase() + b.accountType.slice(1) : '—')}
+              <div style={{ gridColumn: '1 / -1' }}>
+                {f('Account number', b.accountNumber || '—', true)}
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          {isPending && (
+            <>
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 16 }} />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <button
+                  onClick={handleApprove}
+                  disabled={acting}
+                  style={{ flex: 1, padding: '9px 0', background: acting ? 'rgba(34,197,94,0.06)' : 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 6, color: '#22c55e', fontWeight: 700, fontSize: 12, cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, letterSpacing: 0.3 }}>
+                  {acting && !denyOpen ? 'Approving…' : 'Approve'}
+                </button>
+                <button
+                  onClick={() => setDenyOpen(o => !o)}
+                  style={{ padding: '9px 18px', background: 'transparent', border: '1px solid rgba(231,76,60,0.25)', borderRadius: 6, color: '#e8000d', fontWeight: 700, fontSize: 12, cursor: 'pointer', letterSpacing: 0.3 }}>
+                  Deny
+                </button>
+              </div>
+
+              {denyOpen && (
+                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <textarea
+                    value={denyReason}
+                    onChange={e => setDenyReason(e.target.value)}
+                    style={{ ...inputStyle, minHeight: 56, resize: 'vertical', fontSize: 12 }}
+                    placeholder="Reason (optional — shown to the user)"
+                  />
+                  <button
+                    onClick={handleDeny}
+                    disabled={acting}
+                    style={{ padding: '8px 0', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', borderRadius: 6, color: '#e8000d', fontWeight: 700, fontSize: 12, cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1 }}>
+                    {acting ? 'Denying…' : 'Confirm denial & refund'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </Modal>
       )}
     </div>
