@@ -534,6 +534,7 @@ export default function WalletPage() {
         setWithdrawSuccess(false)
         setWithdrawAmt('')
         setTab('overview')
+        window.location.reload();
       }, 5000)
     } catch (err: any) {
       setWithdrawError(err.message ?? 'Withdrawal failed')
