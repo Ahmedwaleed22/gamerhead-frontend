@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { adminApi } from '@/lib/api'
+import { useToast } from '@/components/Toast'
 import ActionBtn from '../../components/ActionBtn'
 import Modal from '../../components/Modal'
 import { Icon } from '@iconify/react'
@@ -32,6 +33,7 @@ const badgeStyle = (color: string, bg?: string): React.CSSProperties => ({
 })
 
 export default function AdminUserDetail() {
+  const { toast } = useToast()
   const { id } = useParams() as { id: string }
   const router = useRouter()
   const [data, setData] = useState<any>(null)
@@ -138,7 +140,7 @@ export default function AdminUserDetail() {
   }
 
   const handleResetPassword = async () => {
-    try { await adminApi.resetPassword(id); alert('Password reset token generated.') } catch { }
+    try { await adminApi.resetPassword(id); toast('Password reset token generated.', 'success') } catch { }
   }
 
   return (

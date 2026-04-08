@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { coachingApi, gamesApi } from '@/lib/api'
+import { useToast } from '@/components/Toast'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 
@@ -102,6 +103,7 @@ const TYPE_ICONS: Record<PackageType, string> = {
 
 // ─── PACKAGE EDITOR MODAL ─────────────────────────────────────────────────────
 function PackageEditorModal({ pkg, onClose, onSave }: { pkg: Package|null; onClose:()=>void; onSave:()=>void }) {
+  const { toast } = useToast()
   const isNew = !pkg
   const [title, setTitle]             = useState(pkg?.title || '')
   const [price, setPrice]             = useState(pkg?.price ?? '')
@@ -127,7 +129,7 @@ function PackageEditorModal({ pkg, onClose, onSave }: { pkg: Package|null; onClo
       onSave()
       onClose()
     } catch (err: any) {
-      alert(err?.message || 'Failed to save package')
+      toast(err?.message || 'Failed to save package', 'error')
     }
     setSaving(false)
   }
@@ -258,6 +260,7 @@ function CustomOfferModal({ order, onClose }: { order: Order; onClose:()=>void }
 
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 export default function CoachDashboard() {
+  const { toast } = useToast()
   const { user } = useAuth()
   const [tab, setTab]                   = useState<'orders'|'packages'|'reviews'>('orders')
   const [editingPkg, setEditingPkg]     = useState<Package|null|'new'>(null)

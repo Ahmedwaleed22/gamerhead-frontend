@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { adminApi, matchesApi } from '@/lib/api'
+import { useToast } from '@/components/Toast'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
 
@@ -15,6 +16,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function AdminGamesPage() {
+  const { toast } = useToast()
   const [games, setGames] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [createModal, setCreateModal] = useState(false)
@@ -358,7 +360,7 @@ export default function AdminGamesPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Games</h1>
         <div style={{ display: 'flex', gap: 8 }}>
-          <ActionBtn label="RECALC RANKS" color="#f59e0b" onClick={async () => { try { const r = await matchesApi.recalculateRanks(); alert(`Recalculated ${r.processed} entries`) } catch { alert('Failed') } }} />
+          <ActionBtn label="RECALC RANKS" color="#f59e0b" onClick={async () => { try { const r = await matchesApi.recalculateRanks(); toast(`Recalculated ${r.processed} entries`, 'success') } catch { toast('Failed to recalculate ranks', 'error') } }} />
           <ActionBtn label="+ ADD GAME" color="#22c55e" onClick={() => setCreateModal(true)} />
         </div>
       </div>

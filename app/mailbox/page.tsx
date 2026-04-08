@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { mailboxApi, usersApi } from '@/lib/api'
+import { useToast } from '@/components/Toast'
 import { sendActivity } from '@/lib/socket'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
@@ -67,6 +68,7 @@ export default function MailboxPageWrapper() {
 }
 
 function MailboxPage() {
+  const { toast } = useToast()
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -145,7 +147,7 @@ function MailboxPage() {
       }))
       setEditingMsg(null)
     } catch (e: any) {
-      alert(e.message || 'Could not edit message')
+      toast(e.message || 'Could not edit message', 'error')
     }
   }
 
@@ -283,7 +285,7 @@ function MailboxPage() {
       setDraft(null)
       setDraftMsg('')
     }).catch((err: any) => {
-      alert(err.message || 'Could not send message')
+      toast(err.message || 'Could not send message', 'error')
     }).finally(() => setSendingDraft(false))
   }
 

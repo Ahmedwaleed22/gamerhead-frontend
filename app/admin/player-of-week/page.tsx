@@ -2,11 +2,13 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { adminApi } from '@/lib/api'
+import { useToast } from '@/components/Toast'
 import DataTable, { Column } from '../components/DataTable'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
 
 export default function AdminPotwPage() {
+  const { toast } = useToast()
   const [candidates, setCandidates] = useState<any[]>([])
   const [weekKey, setWeekKey] = useState('')
   const [lastWinnerUserId, setLastWinnerUserId] = useState<string | null>(null)
@@ -70,7 +72,7 @@ export default function AdminPotwPage() {
       setSelectUserId(null)
       load()
     } catch (err: any) {
-      alert(err?.response?.data?.message || err?.message || 'Failed to select POTW')
+      toast(err?.response?.data?.message || err?.message || 'Failed to select POTW', 'error')
     }
     setSelecting(false)
   }

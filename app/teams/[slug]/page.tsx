@@ -8,6 +8,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useApi } from '@/lib/use-api'
 import { teamsApi, matchesApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
+import { useToast } from '@/components/Toast'
 import PostMatchModal from '@/app/components/PostMatchModal'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
@@ -79,6 +80,7 @@ function LoadingSkeleton() {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function TeamProfilePage() {
+  const { toast } = useToast()
   const params = useParams()
   const slug   = (params?.slug as string) || ''
   const { user } = useAuth()
@@ -581,7 +583,7 @@ export default function TeamProfilePage() {
                       await teamsApi.leave(team._id)
                       window.location.href = '/teams'
                     } catch (e: any) {
-                      alert(e?.message || 'Failed to leave team')
+                      toast(e?.message || 'Failed to leave team', 'error')
                     }
                   }}
                     style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', borderRadius: 10, padding: '12px 20px', ...BC, fontWeight: 700, fontSize: 14, color: '#E74C3C', cursor: 'pointer', width: '100%', letterSpacing: 0.3 }}>

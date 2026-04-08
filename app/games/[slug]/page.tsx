@@ -8,6 +8,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useApi, useMutation } from '@/lib/use-api'
 import { gamesApi, powApi, teamsApi, matchesApi, supportApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
+import { useToast } from '@/components/Toast'
 import { MatchesTab } from '@/app/components/GameMatchesTab'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
@@ -144,7 +145,7 @@ function CreateTeamModal({ game, ladder, onClose }: { game: any; ladder: any; on
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) return
-    if (file.size > 2 * 1024 * 1024) { alert('File must be under 2MB'); return }
+    if (file.size > 2 * 1024 * 1024) { toast('File must be under 2MB', 'error'); return }
     const reader = new FileReader()
     reader.onload = ev => {
       const dataUrl = ev.target?.result as string
@@ -517,6 +518,7 @@ function TopLadderStandings({ xpLadders, cashLadders }: { xpLadders: any[]; cash
 
 // ─── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function GameProfilePage() {
+  const { toast } = useToast()
   const params  = useParams()
   const slug    = (params?.slug as string) || ''
   const [activeTab, setActiveTab] = useState('overview')

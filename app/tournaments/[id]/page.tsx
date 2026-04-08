@@ -7,6 +7,7 @@ import { Icon } from '@iconify/react'
 import { useAuth } from '@/lib/auth-context'
 import { tournamentsApi } from '@/lib/api'
 import { Solar } from '@/lib/solar-duotone'
+import { useToast } from '@/components/Toast'
 
 type TourneyEntryType = 'solo' | 'team' | 'both'
 type EntryStep = 'method' | 'solo-info' | 'create-team' | 'join-team' | 'processing' | 'success'
@@ -685,7 +686,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>, type: 'logo'|'banner') {
     const file = e.target.files?.[0]; if (!file) return
     if (!file.type.startsWith('image/')) return
-    if (file.size > 2*1024*1024) { alert('File must be under 2MB'); return }
+    if (file.size > 2*1024*1024) { toast('File must be under 2MB', 'error'); return }
     const reader = new FileReader()
     reader.onload = ev => { const url = ev.target?.result as string; type==='logo'?setLogoPreview(url):setBannerPreview(url) }
     reader.readAsDataURL(file); e.target.value = ''
@@ -928,6 +929,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function TournamentOverviewPage() {
+  const { toast } = useToast()
   const params = useParams()
   const searchParams = useSearchParams()
   const id = params?.id as string

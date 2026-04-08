@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useApi, useMutation } from '@/lib/use-api'
 import { teamsApi, invitesApi, usersApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
+import { useToast } from '@/components/Toast'
 import DashSidebar from '@/app/components/DashSidebar'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
@@ -83,7 +84,7 @@ function ManageTeamModal({ team, user, onClose, onUpdated }: { team: any; user: 
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) return
-    if (file.size > 2 * 1024 * 1024) { alert('File must be under 2MB'); return }
+    if (file.size > 2 * 1024 * 1024) { toast('File must be under 2MB', 'error'); return }
     const reader = new FileReader()
     reader.onload = ev => {
       const dataUrl = ev.target?.result as string
@@ -371,6 +372,7 @@ function DisbandConfirmModal({ team, onClose, onDisbanded }: { team: any; onClos
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function MyTeamsPage() {
+  const { toast } = useToast()
   const { user } = useAuth()
   const [expanded,       setExpanded]       = useState<string | null>(null)
   const [managingTeam,   setManagingTeam]   = useState<any>(null)

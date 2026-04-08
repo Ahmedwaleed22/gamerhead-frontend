@@ -10,6 +10,7 @@ import { connectSocket, disconnectSocket, sendHeartbeat } from '@/lib/socket'
 import AuthModal from './components/AuthModal'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { ToastProvider } from '@/components/Toast'
 import Image from 'next/image'
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -355,7 +356,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={cn("font-sans", inter.variable)}>
       <body>
         <AuthProvider>
-          <InnerLayout>{children}</InnerLayout>
+          <ToastProvider>
+            <InnerLayout>{children}</InnerLayout>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

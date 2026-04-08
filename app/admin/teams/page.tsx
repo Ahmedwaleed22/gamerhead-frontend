@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { adminApi } from '@/lib/api'
+import { useToast } from '@/components/Toast'
 import DataTable, { Column } from '../components/DataTable'
 import SearchFilter from '../components/SearchFilter'
 import ActionBtn from '../components/ActionBtn'
@@ -19,6 +20,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function AdminTeamsPage() {
+  const { toast } = useToast()
   const [teams, setTeams] = useState<any[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -129,7 +131,7 @@ export default function AdminTeamsPage() {
       viewDetail(detailModal._id)
       load()
     } catch (err: any) {
-      alert(err?.response?.data?.message || err?.message || 'Transfer failed')
+      toast(err?.response?.data?.message || err?.message || 'Transfer failed', 'error')
     }
     setTransferring(false)
   }

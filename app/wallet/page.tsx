@@ -19,6 +19,7 @@ import { useAuth } from '@/lib/auth-context'
 import { walletApi } from '@/lib/api'
 import DashSidebar from '@/app/components/DashSidebar'
 import { Solar } from '@/lib/solar-duotone'
+import { useToast } from '@/components/Toast'
 
 // ─── Stripe ───────────────────────────────────────────────────────────────────
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
@@ -325,18 +326,23 @@ function MethodRow({
 // ─── Success panel ────────────────────────────────────────────────────────────
 function SuccessPanel({ method }: { method: string }) {
   return (
-    <div style={{ textAlign: 'center', padding: '32px 0' }}>
-      <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-        <Icon icon={Solar.check} width={28} height={28} style={{ color: '#4ade80' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '48px 24px', width: '100%' }}>
+      {/* Animated ring */}
+      <div style={{ position: 'relative', width: 72, height: 72, marginBottom: 22 }}>
+        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(74,222,128,0.15)', background: 'rgba(74,222,128,0.06)' }} />
+        <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: '1px solid rgba(74,222,128,0.2)', background: 'rgba(74,222,128,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon icon={Solar.check} width={30} height={30} style={{ color: '#4ade80' }} />
+        </div>
       </div>
-      <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, color: '#fff', marginBottom: 6 }}>
+      <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: '#fff', marginBottom: 8, letterSpacing: '-0.01em' }}>
         Deposit Confirmed
       </div>
-      <div style={{ ...R, fontSize: 13, color: '#6B7280' }}>
-        Your {method} payment was received. Balance updated.
+      <div style={{ ...R, fontSize: 14, color: '#6B7280', maxWidth: 300 }}>
+        Your {method} payment was received and your balance has been updated.
       </div>
-      <div style={{ ...R, fontSize: 11, color: '#374151', marginTop: 6 }}>
-        Redirecting to overview…
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 16 }}>
+        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#374151', animation: 'pulse 1.2s ease-in-out infinite' }} />
+        <span style={{ ...R, fontSize: 11, color: '#374151' }}>Redirecting to overview</span>
       </div>
     </div>
   )
@@ -345,6 +351,7 @@ function SuccessPanel({ method }: { method: string }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function WalletPage() {
   const { user } = useAuth()
+  const { toast } = useToast()
 
   const [tab, setTab]               = useState<'overview'|'deposit'|'withdraw'|'prizes'>('overview')
   const [balance, setBalance]       = useState<any>(null)
@@ -355,7 +362,7 @@ export default function WalletPage() {
   const [totalPages, setTotalPages] = useState(1)
 
   // Deposit
-  const [depositAmt, setDepositAmt]       = useState('')
+  const [depositAmt, setDepositAmt]       = useState('25')
   const [payMethod, setPayMethod]         = useState<'stripe'|'paypal'|'venmo'>('stripe')
   const [depositStep, setDepositStep]     = useState<'amount'|'pay'>('amount')
   const [clientSecret, setClientSecret]   = useState<string|null>(null)
@@ -372,6 +379,23 @@ export default function WalletPage() {
 
   const refreshBalance = useCallback(() => {
     walletApi.getBalance().then(setBalance).catch(() => {})
+  }, [])
+
+  // Poll balance after payment — the webhook credits the DB asynchronously,
+  // so we retry up to 8 times (every 1.5 s) and stop as soon as the balance rises.
+  const pollBalanceAfterPayment = useCallback((prevCash: number) => {
+    let attempts = 0
+    const MAX = 8
+    const run = () => {
+      attempts++
+      walletApi.getBalance().then((res: any) => {
+        setBalance(res)
+        const newCash = res.cashBalance ?? 0
+        if (newCash > prevCash || attempts >= MAX) return   // done
+        setTimeout(run, 1500)
+      }).catch(() => { if (attempts < MAX) setTimeout(run, 1500) })
+    }
+    setTimeout(run, 1200)   // first check after 1.2 s — webhook usually arrives by then
   }, [])
 
   useEffect(() => {
@@ -425,12 +449,26 @@ export default function WalletPage() {
   }
 
   const handlePaySuccess = () => {
-    setSuccessMethod(payMethod === 'stripe' ? 'Stripe' : payMethod === 'paypal' ? 'PayPal' : 'Venmo')
+    const method = payMethod === 'stripe' ? 'Stripe' : payMethod === 'paypal' ? 'PayPal' : 'Venmo'
+    setSuccessMethod(method)
     setPaySuccess(true)
     setClientSecret(null)
     setDepositStep('amount')
-    refreshBalance()
-    setTimeout(() => { setPaySuccess(false); setTab('overview') }, 4000)
+
+    // Snapshot current cash so polling knows when balance actually rose
+    const prevCash = balance?.cashBalance ?? 0
+    pollBalanceAfterPayment(prevCash)
+
+    // Also refresh transaction history after a short delay
+    setTimeout(() => {
+      walletApi.getTransactions({ page: 1, limit: 20 }).then((res: any) => {
+        const txns = res.items ?? res.transactions ?? res
+        setTxHistory(Array.isArray(txns) ? txns : [])
+        if (res.totalPages) setTotalPages(res.totalPages)
+      }).catch(() => {})
+    }, 2000)
+
+    setTimeout(() => { setPaySuccess(false); setTab('overview') }, 5000)
   }
 
   const handleDepositBack = () => { setDepositStep('amount'); setClientSecret(null); setDepositErr('') }
@@ -441,10 +479,10 @@ export default function WalletPage() {
     setWithdrawLoading(true)
     try {
       await walletApi.withdraw({ amount, method: withdrawMethod, destination: withdrawDest })
-      alert('Withdrawal request submitted')
+      toast('Withdrawal request submitted', 'success')
       refreshBalance()
     } catch (err: any) {
-      alert(err.message ?? 'Withdrawal failed')
+      toast(err.message ?? 'Withdrawal failed', 'error')
     } finally { setWithdrawLoading(false) }
   }
 
@@ -453,7 +491,7 @@ export default function WalletPage() {
       await walletApi.claimPrize(id)
       setPrizes(prev => prev.map(p => (p._id || p.id) === id ? { ...p, status: 'Claimed', claimed: true } : p))
       refreshBalance()
-    } catch (err: any) { alert(err.message ?? 'Claim failed') }
+    } catch (err: any) { toast(err.message ?? 'Claim failed', 'error') }
   }
 
   // PayPal script provider options
@@ -580,14 +618,18 @@ export default function WalletPage() {
 
                 {/* ── Deposit ── */}
                 {tab === 'deposit' && (
-                  <div style={{ maxWidth: 520 }}>
+                  <div>
 
-                    {/* Success */}
-                    {paySuccess && <SuccessPanel method={successMethod} />}
+                    {/* Success — full width, centred */}
+                    {paySuccess && (
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 320 }}>
+                        <SuccessPanel method={successMethod} />
+                      </div>
+                    )}
 
                     {/* Step 1 — Amount + method */}
                     {!paySuccess && depositStep === 'amount' && (
-                      <div>
+                      <div style={{ maxWidth: 520 }}>
                         <div style={{ marginBottom: 22 }}>
                           <div style={{ ...R, fontWeight: 700, fontSize: 15, color: '#e5e7eb', marginBottom: 2 }}>Add Funds</div>
                           <div style={{ ...R, fontSize: 12, color: '#4B5563' }}>Select an amount and payment method</div>
@@ -668,7 +710,7 @@ export default function WalletPage() {
 
                     {/* Step 2 — Payment UI */}
                     {!paySuccess && depositStep === 'pay' && (
-                      <div>
+                      <div style={{ maxWidth: 520 }}>
                         {/* Amount summary */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0C0C11', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '13px 16px', marginBottom: 22 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

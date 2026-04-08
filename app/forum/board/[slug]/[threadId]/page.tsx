@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { getRepColor, getRepGradient, getRepLabel } from '@/lib/reputation'
 import { useAuth } from '@/lib/auth-context'
 import { forumApi } from '@/lib/api'
+import { useToast } from '@/components/Toast'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 import { sendActivity } from '@/lib/socket'
@@ -258,6 +259,7 @@ const SocialIcon = ({ platform }: { platform: string }) => {
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function ThreadPage() {
+  const { toast } = useToast()
   const params = useParams()
   const slug     = params.slug as string
   const threadId = params.threadId as string
@@ -402,7 +404,7 @@ export default function ThreadPage() {
       setReportPostId(null)
       setReportReason('')
     } catch (err: any) {
-      alert(err.message || 'Report failed')
+      toast(err.message || 'Report failed', 'error')
     }
   }
 
@@ -411,7 +413,7 @@ export default function ThreadPage() {
       await forumApi.dismissReport(String(postId))
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, isReported: false, reports: [] } : p))
     } catch (err: any) {
-      alert(err.message || 'Dismiss failed')
+      toast(err.message || 'Dismiss failed', 'error')
     }
   }
 
