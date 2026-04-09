@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { storeApi, walletApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
@@ -255,7 +256,17 @@ function ItemCard({
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function StorePage() {
+  return (
+    <Suspense fallback={null}>
+      <StorePageContent />
+    </Suspense>
+  )
+}
+
+function StorePageContent() {
   const { user, refresh } = useAuth()
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [storeItems, setStoreItems] = useState<StoreItem[]>([])
   const [activeCategory, setActiveCategory] = useState('All')
   const [cart, setCart]           = useState<CartItem[]>([])
@@ -273,6 +284,34 @@ export default function StorePage() {
   const [walletBalance, setWalletBalance] = useState(0) // cents
 
   useEffect(() => { sendActivity('Browsing Store') }, [])
+
+  // ── Handle redirect return from Stripe (Cash App, etc.) ───────────────────
+  useEffect(() => {
+    const paymentIntent = searchParams.get('payment_intent')
+    const redirectStatus = searchParams.get('redirect_status')
+    if (paymentIntent && redirectStatus === 'succeeded') {
+      // Show processing state immediately
+      setShowModal(true)
+      setStep('processing')
+      // Confirm with backend, then show success
+      storeApi.confirmPayment({ paymentIntentId: paymentIntent })
+        .then(() => {
+          setCart([])
+          setStep('success')
+          refresh().catch(() => {})
+          walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
+        })
+        .catch((err) => {
+          console.warn('[Store] Redirect confirm failed:', err?.message)
+          // Payment was still taken — show success, webhook will handle fulfillment
+          setCart([])
+          setStep('success')
+          refresh().catch(() => {})
+        })
+      // Clean up URL params
+      router.replace('/store', { scroll: false })
+    }
+  }, [searchParams, router, refresh])
 
   useEffect(() => {
     if (user) walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
