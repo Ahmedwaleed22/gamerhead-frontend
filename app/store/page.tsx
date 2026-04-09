@@ -753,18 +753,19 @@ export default function StorePage() {
                   </div>
 
                   {payMethod === 'wallet' && (
-                    <div style={{ background: walletBalance >= Math.round(total * 100) ? 'rgba(74,222,128,0.08)' : 'rgba(239,68,68,0.08)', border:`1px solid ${walletBalance >= Math.round(total * 100) ? 'rgba(74,222,128,0.25)' : 'rgba(239,68,68,0.25)'}`, borderRadius:9, padding:'16px' }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                        <span style={{ fontSize:12, color:'var(--text-muted)' }}>Wallet Balance</span>
-                        <span style={{ fontSize:18, fontWeight:900, fontFamily:'Barlow Condensed, sans-serif', color: walletBalance >= Math.round(total * 100) ? '#4ade80' : '#ef4444' }}>${(walletBalance / 100).toFixed(2)}</span>
+                    <div style={{ background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:9, padding:'16px', display:'flex', flexDirection:'column', gap:10 }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                        <span style={{ fontSize:12, color:'var(--text-muted)', fontWeight:600 }}>Available Balance</span>
+                        <span style={{ fontSize:18, fontWeight:900, fontFamily:'Barlow Condensed, sans-serif', color:'#fff' }}>${(walletBalance / 100).toFixed(2)}</span>
                       </div>
                       {walletBalance >= Math.round(total * 100) ? (
-                        <div style={{ fontSize:12, color:'var(--text-dim)' }}>
-                          Balance after purchase: <span style={{ color:'#fff', fontWeight:700 }}>${((walletBalance - Math.round(total * 100)) / 100).toFixed(2)}</span>
+                        <div style={{ fontSize:11, color:'var(--text-dim)', borderTop:'1px solid rgba(255,255,255,0.055)', paddingTop:10 }}>
+                          Remaining after purchase: <span style={{ color:'var(--text-muted)', fontWeight:600 }}>${((walletBalance - Math.round(total * 100)) / 100).toFixed(2)}</span>
                         </div>
                       ) : (
-                        <div style={{ fontSize:12, color:'#ef4444' }}>
-                          Insufficient balance. <Link href="/wallet" style={{ color:'#F0AA1A', textDecoration:'underline' }}>Add funds</Link>
+                        <div style={{ fontSize:11, color:'#ef4444', borderTop:'1px solid rgba(255,255,255,0.055)', paddingTop:10, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                          <span>Insufficient balance</span>
+                          <Link href="/wallet" style={{ color:'var(--red)', fontSize:11, fontWeight:700, textDecoration:'none' }}>Deposit funds →</Link>
                         </div>
                       )}
                     </div>
@@ -778,10 +779,31 @@ export default function StorePage() {
                       'buyer-country':   'US',
                       components:        'buttons,funding-eligibility',
                     }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <PayPalButtons
                           style={{ layout: 'vertical', color: 'blue', shape: 'rect', height: 45 }}
                           fundingSource={FUNDING.PAYPAL}
+                          createOrder={async () => {
+                            const res: any = await storeApi.createPayPalOrder({
+                              items: cartItems(), paymentMethod: 'paypal',
+                              couponCode: couponApplied ? coupon : undefined,
+                            })
+                            return res.paypalOrderId
+                          }}
+                          onApprove={async (data) => {
+                            setStep('processing')
+                            try {
+                              await storeApi.capturePayPalOrder({ paypalOrderId: data.orderID })
+                              handlePaySuccess()
+                            } catch {
+                              setStep('fail')
+                            }
+                          }}
+                          onError={() => setStep('fail')}
+                        />
+                        <PayPalButtons
+                          style={{ layout: 'vertical', color: 'blue', shape: 'rect', height: 45 }}
+                          fundingSource={FUNDING.VENMO}
                           createOrder={async () => {
                             const res: any = await storeApi.createPayPalOrder({
                               items: cartItems(), paymentMethod: 'paypal',
@@ -805,14 +827,18 @@ export default function StorePage() {
                   )}
 
                   {payMethod === 'card' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 9, padding: '14px 16px' }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                        <rect x="3" y="11" width="18" height="11" rx="2" stroke="#9CA3AF" strokeWidth="2"/>
-                        <path d="M7 11V7a5 5 0 0110 0v4" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
-                      </svg>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>Secure Card Payment via Stripe</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-dim)', lineHeight: 1.5 }}>Enter your card details on the next screen — powered by Stripe, 256-bit SSL.</div>
+                    <div style={{ background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:9, padding:'14px 16px' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0, opacity:0.45 }}>
+                          <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/>
+                          <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        <span style={{ fontSize:11, color:'var(--text-dim)' }}>You'll enter card details on the next step</span>
+                      </div>
+                      <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                        {['Visa','Mastercard','Amex','Discover'].map(c => (
+                          <span key={c} style={{ fontSize:9, fontWeight:700, color:'var(--text-dim)', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:3, padding:'2px 6px', letterSpacing:'.3px', textTransform:'uppercase' }}>{c}</span>
+                        ))}
                       </div>
                     </div>
                   )}
