@@ -390,7 +390,7 @@ export default function MyTeamsPage() {
   const refresh     = () => setRefreshKey(k => k + 1)
 
   return (
-    <div style={{ background: '#0C0C11', minHeight: '100vh', paddingBottom: 80 }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 80 }}>
       <div className="container" style={{ maxWidth: 1440, padding: '0 30px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, paddingTop: 28, alignItems: 'start' }}>
           <DashSidebar active="teams" inviteCount={inviteCount} />

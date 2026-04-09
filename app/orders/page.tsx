@@ -53,7 +53,7 @@ export default function OrdersPage() {
   const totalSpent = stats?.totalSpentDisplay || (stats?.totalSpent != null ? `$${stats.totalSpent.toFixed(2)}` : `$${orders.filter(o => o.status !== 'refunded').reduce((acc: number, o: any) => acc + (o.total || 0), 0).toFixed(2)}`)
 
   return (
-    <div style={{ background:'#0C0C11', minHeight:'100vh', paddingBottom:80 }}>
+    <div style={{ background:'var(--bg)', minHeight:'100vh', paddingBottom:80 }}>
       <div className="container" style={{ maxWidth:1440, padding:'0 30px' }}>
         <div style={{ display:'grid', gridTemplateColumns:'220px 1fr', gap:20, paddingTop:28, alignItems:'start' }}>
           <DashSidebar active="orders" />
@@ -105,7 +105,7 @@ export default function OrdersPage() {
                 <div style={{ padding:'20px 24px', borderBottom:'1px solid #25252C', display:'flex', alignItems:'center', gap:14, flexWrap:'wrap' }}>
                   <div style={{ ...R, fontWeight:700, fontSize:15, color:'#fff', marginRight:8 }}>Order History</div>
                   <input
-                    style={{ background:'#0C0C11', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'8px 14px', ...R, fontSize:12, color:'#fff', outline:'none', width:220 }}
+                    style={{ background:'#18181C', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'8px 14px', ...R, fontSize:12, color:'#fff', outline:'none', width:220 }}
                     placeholder="Search orders or order ID..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
@@ -118,7 +118,7 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Table header */}
-                <div style={{ display:'grid', gridTemplateColumns:'50px 1fr 100px 90px 110px 130px 80px', background:'#0C0C11', padding:'12px 24px', gap:12 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'50px 1fr 100px 90px 110px 130px 80px', background:'transparent', padding:'12px 24px', gap:12 }}>
                   {['','Item','Type','Qty','Price','Status','Date'].map((h,i) => (
                     <span key={i} style={{ ...R, fontWeight:700, fontSize:11, color:'#6B7280', letterSpacing:0.8, textTransform:'uppercase' }}>{h}</span>
                   ))}

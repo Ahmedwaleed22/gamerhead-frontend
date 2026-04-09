@@ -213,12 +213,14 @@ export const walletApi = {
 
 // STORE
 export const storeApi = {
-  getItems:     ()             => api.get('/store/items'),
-  getItem:      (slug: string) => api.get(`/store/items/${slug}`),
-  checkCoupon:  (code: string) => api.get(`/store/coupon/${code}`),
-  checkout:     (body: any)    => api.post('/store/checkout', body),
-  getOrders:    ()             => api.get('/store/orders'),
-  getOrderStats:()             => api.get('/store/orders/stats'),
+  getItems:        ()             => api.get('/store/items'),
+  getItem:         (slug: string) => api.get(`/store/items/${slug}`),
+  checkCoupon:     (code: string) => api.get(`/store/coupon/${code}`),
+  checkout:        (body: any)    => api.post('/store/checkout', body),
+  getOrders:       ()             => api.get('/store/orders'),
+  getOrderStats:   ()             => api.get('/store/orders/stats'),
+  createPayPalOrder:  (body: any) => api.post('/store/checkout/paypal/create', body),
+  capturePayPalOrder: (body: any) => api.post('/store/checkout/paypal/capture', body),
 }
 
 // FORUM

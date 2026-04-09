@@ -7,6 +7,9 @@ import { useAuth } from '@/lib/auth-context'
 import { sendActivity } from '@/lib/socket'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { PayPalScriptProvider, PayPalButtons, FUNDING } from '@paypal/react-paypal-js'
 
 // ─── UPDATED CATEGORIES (no Profile Badges, no Cash, no Accessories, no Gift Cards) ──
 const categories = ['Tickets', 'Premium Membership']
@@ -15,7 +18,71 @@ interface StoreItem { id: string; name: string; price: number; image: string; ca
 interface CartItem  extends StoreItem { qty: number }
 
 type PayMethod    = 'wallet' | 'paypal' | 'card'
-type CheckoutStep = 'cart' | 'payment' | 'processing' | 'success' | 'fail'
+type CheckoutStep = 'cart' | 'payment' | 'processing' | 'success' | 'fail' | 'stripe-pay'
+
+// ─── Stripe setup ─────────────────────────────────────────────────────────────
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
+
+const STRIPE_APPEARANCE = {
+  theme: 'night' as const,
+  variables: {
+    colorPrimary:          '#B22D2D',
+    colorBackground:       '#0C0C11',
+    colorText:             '#ffffff',
+    colorTextSecondary:    'rgba(255,255,255,0.55)',
+    borderRadius:          '8px',
+    fontFamily:            "'Inter', 'Barlow', sans-serif",
+  },
+  rules: {
+    '.Input':         { backgroundColor: '#18181C', border: '1px solid rgba(255,255,255,0.1)',  color: '#fff' },
+    '.Input:focus':   { border: '1px solid rgba(178,45,45,0.7)', boxShadow: '0 0 0 2px rgba(178,45,45,0.2)' },
+    '.Label':         { color: 'rgba(255,255,255,0.55)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em' },
+    '.Block':         { backgroundColor: '#0C0C11', border: '1px solid rgba(255,255,255,0.07)' },
+    '.CheckboxInput': { backgroundColor: '#18181C', border: '1px solid rgba(255,255,255,0.15)' },
+    '.Tab':           { backgroundColor: '#18181C', border: '1px solid rgba(255,255,255,0.1)',  color: 'rgba(255,255,255,0.55)' },
+    '.Tab--selected': { backgroundColor: '#1e1e25', border: '1px solid rgba(178,45,45,0.6)',    color: '#fff' },
+  },
+}
+
+// ─── Stripe Payment Form ──────────────────────────────────────────────────────
+function StripePayForm({
+  total, onSuccess, onError,
+}: { total: number; onSuccess: () => void; onError: (msg: string) => void }) {
+  const stripe   = useStripe()
+  const elements = useElements()
+  const [paying, setPaying] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!stripe || !elements) return
+    setPaying(true)
+    const result = await stripe.confirmPayment({
+      elements,
+      confirmParams: {},
+      redirect: 'if_required',
+    })
+    setPaying(false)
+    if (result.error) {
+      onError(result.error.message || 'Payment failed')
+    } else if (result.paymentIntent?.status === 'succeeded') {
+      onSuccess()
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <PaymentElement />
+      <button
+        type="submit"
+        disabled={!stripe || paying}
+        className="btn-primary"
+        style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: 14, opacity: paying ? 0.6 : 1 }}
+      >
+        {paying ? 'Processing…' : `Pay $${total.toFixed(2)}`}
+      </button>
+    </form>
+  )
+}
 
 // storeItems are now fetched from the API inside StorePage
 
@@ -184,10 +251,8 @@ export default function StorePage() {
   const [coupon, setCoupon]       = useState('')
   const [couponApplied, setCouponApplied] = useState(false)
   const [couponError, setCouponError]     = useState('')
-  const [cardName, setCardName] = useState('')
-  const [cardNum,  setCardNum]  = useState('')
-  const [cardExp,  setCardExp]  = useState('')
-  const [cardCVV,  setCardCVV]  = useState('')
+  const [clientSecret, setClientSecret]   = useState<string | null>(null)
+  const [stripeError,  setStripeError]    = useState<string>('')
   const [flashId,  setFlashId]  = useState<string | null>(null)
   const [walletBalance, setWalletBalance] = useState(0) // cents
 
@@ -250,21 +315,47 @@ export default function StorePage() {
     }
   }
 
+  const cartItems = () => cart.map(c => ({
+    id: c.id, name: c.name, price: c.price, category: c.category, image: c.image, qty: c.qty,
+  }))
+
+  const handlePaySuccess = () => {
+    setCart([])
+    setClientSecret(null)
+    setStripeError('')
+    setStep('success')
+    refresh().catch(() => {})
+    walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
+  }
+
+  // Wallet checkout — balance deducted server-side, fulfillment immediate
   const handleCheckout = async () => {
     setStep('processing')
     try {
       await storeApi.checkout({
-        items: cart.map(c => ({ id: c.id, name: c.name, price: c.price, category: c.category, image: c.image, qty: c.qty })),
-        paymentMethod: payMethod,
+        items: cartItems(), paymentMethod: 'wallet',
         couponCode: couponApplied ? coupon : undefined,
       })
-      setStep('success')
-      setCart([])
-      // Refresh user data (premium status, credits) and wallet balance
-      refresh().catch(() => {})
-      walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
+      handlePaySuccess()
     } catch (err: any) {
       console.error('Checkout failed:', err)
+      setStep('fail')
+    }
+  }
+
+  // Card checkout — backend creates PaymentIntent, we show Stripe Elements
+  const handleCardCheckout = async () => {
+    setStep('processing')
+    try {
+      const res: any = await storeApi.checkout({
+        items: cartItems(), paymentMethod: 'card',
+        couponCode: couponApplied ? coupon : undefined,
+      })
+      setClientSecret(res.clientSecret)
+      setStripeError('')
+      setStep('stripe-pay')
+    } catch (err: any) {
+      console.error('Card checkout failed:', err)
       setStep('fail')
     }
   }
@@ -272,7 +363,10 @@ export default function StorePage() {
   const openModal = (goTo: CheckoutStep = 'cart') => { setShowModal(true); setStep(goTo) }
   const closeModal = () => {
     setShowModal(false)
-    setTimeout(() => { setStep('cart'); setCoupon(''); setCouponApplied(false); setCouponError('') }, 280)
+    setTimeout(() => {
+      setStep('cart'); setCoupon(''); setCouponApplied(false); setCouponError('')
+      setClientSecret(null); setStripeError('')
+    }, 280)
   }
 
   return (
@@ -438,6 +532,40 @@ export default function StorePage() {
             boxShadow:'0 40px 100px rgba(0,0,0,0.85)',
             animation:'gh-modalin .25s cubic-bezier(.22,1,.36,1)',
           }}>
+
+            {/* ── STRIPE PAY ── */}
+            {step === 'stripe-pay' && clientSecret && (
+              <>
+                <ModalTop title="Card Payment" onBack={() => setStep('payment')} onClose={closeModal} />
+                <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {/* Order total summary */}
+                  <div style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 9, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Total due</span>
+                    <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 22, fontWeight: 900, color: '#f0c040' }}>${total.toFixed(2)}</span>
+                  </div>
+
+                  {/* Stripe error */}
+                  {stripeError && (
+                    <div style={{ background: 'rgba(184,44,44,0.12)', border: '1px solid rgba(184,44,44,0.35)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#ef4444' }}>
+                      {stripeError}
+                    </div>
+                  )}
+
+                  {/* Stripe Elements form */}
+                  <Elements stripe={stripePromise} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
+                    <StripePayForm
+                      total={total}
+                      onSuccess={() => { setStripeError(''); handlePaySuccess() }}
+                      onError={(msg) => setStripeError(msg)}
+                    />
+                  </Elements>
+
+                  <p style={{ fontSize: 10, color: 'var(--text-dim)', textAlign: 'center', lineHeight: 1.6 }}>
+                    Powered by Stripe · 256-bit SSL · Your card is never stored on our servers
+                  </p>
+                </div>
+              </>
+            )}
 
             {/* ── SUCCESS ── */}
             {step === 'success' && (
@@ -643,27 +771,48 @@ export default function StorePage() {
                   )}
 
                   {payMethod === 'paypal' && (
-                    <div style={{ background:'rgba(0,68,153,0.09)', border:'1px solid rgba(0,68,153,0.28)', borderRadius:9, padding:'16px', textAlign:'center' }}>
-                      <div style={{ marginBottom:8 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#5b9bd5" strokeWidth="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#5b9bd5" strokeWidth="2" strokeLinecap="round"/></svg></div>
-                      <div style={{ fontSize:13, color:'#5b9bd5', lineHeight:1.6 }}>
-                        You'll be securely redirected to PayPal to complete your purchase.
+                    <PayPalScriptProvider options={{
+                      clientId:          process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
+                      currency:          'USD',
+                      'enable-funding':  'venmo',
+                      'buyer-country':   'US',
+                      components:        'buttons,funding-eligibility',
+                    }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <PayPalButtons
+                          style={{ layout: 'vertical', color: 'blue', shape: 'rect', height: 45 }}
+                          fundingSource={FUNDING.PAYPAL}
+                          createOrder={async () => {
+                            const res: any = await storeApi.createPayPalOrder({
+                              items: cartItems(), paymentMethod: 'paypal',
+                              couponCode: couponApplied ? coupon : undefined,
+                            })
+                            return res.paypalOrderId
+                          }}
+                          onApprove={async (data) => {
+                            setStep('processing')
+                            try {
+                              await storeApi.capturePayPalOrder({ paypalOrderId: data.orderID })
+                              handlePaySuccess()
+                            } catch {
+                              setStep('fail')
+                            }
+                          }}
+                          onError={() => setStep('fail')}
+                        />
                       </div>
-                    </div>
+                    </PayPalScriptProvider>
                   )}
 
                   {payMethod === 'card' && (
-                    <div style={{ display:'flex', flexDirection:'column', gap:11 }}>
-                      <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.7, color:'var(--text-dim)' }}>Card Details</div>
-                      <input className="site-input" placeholder="Cardholder Name" value={cardName} onChange={e=>setCardName(e.target.value)} style={{ fontSize:13 }} />
-                      <input className="site-input" placeholder="Card Number" value={cardNum}
-                        onChange={e=>setCardNum(e.target.value.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim())}
-                        style={{ fontSize:13, letterSpacing:.5 }} />
-                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-                        <input className="site-input" placeholder="MM / YY" value={cardExp} onChange={e=>setCardExp(e.target.value)} style={{ fontSize:13 }} />
-                        <input className="site-input" placeholder="CVV" value={cardCVV} onChange={e=>setCardCVV(e.target.value.replace(/\D/g,'').slice(0,4))} style={{ fontSize:13 }} />
-                      </div>
-                      <div style={{ display:'flex', alignItems:'center', gap:7, fontSize:11, color:'var(--text-dim)' }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{flexShrink:0}}><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> <span>256-bit SSL. Your card details are never stored.</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 9, padding: '14px 16px' }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                        <rect x="3" y="11" width="18" height="11" rx="2" stroke="#9CA3AF" strokeWidth="2"/>
+                        <path d="M7 11V7a5 5 0 0110 0v4" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>Secure Card Payment via Stripe</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-dim)', lineHeight: 1.5 }}>Enter your card details on the next screen — powered by Stripe, 256-bit SSL.</div>
                       </div>
                     </div>
                   )}
@@ -690,14 +839,16 @@ export default function StorePage() {
                     <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:28, fontWeight:900, color:'#f0c040' }}>${total.toFixed(2)}</span>
                   </div>
 
-                  <button
-                    className="btn-primary"
-                    style={{ width:'100%', justifyContent:'center', padding:'14px', fontSize:14, opacity: payMethod === 'wallet' && walletBalance < Math.round(total * 100) ? 0.4 : 1 }}
-                    onClick={handleCheckout}
-                    disabled={payMethod === 'wallet' && walletBalance < Math.round(total * 100)}
-                  >
-                    {payMethod === 'wallet' ? 'Pay with Wallet' : payMethod === 'paypal' ? 'Continue to PayPal' : 'Complete Purchase'}
-                  </button>
+                  {payMethod !== 'paypal' && (
+                    <button
+                      className="btn-primary"
+                      style={{ width:'100%', justifyContent:'center', padding:'14px', fontSize:14, opacity: payMethod === 'wallet' && walletBalance < Math.round(total * 100) ? 0.4 : 1 }}
+                      onClick={payMethod === 'card' ? handleCardCheckout : handleCheckout}
+                      disabled={payMethod === 'wallet' && walletBalance < Math.round(total * 100)}
+                    >
+                      {payMethod === 'wallet' ? 'Pay with Wallet' : 'Continue to Card Payment →'}
+                    </button>
+                  )}
 
                   <p style={{ fontSize:10, color:'var(--text-dim)', textAlign:'center', lineHeight:1.6 }}>
                     By completing your purchase you agree to our Terms of Service. All sales are final.

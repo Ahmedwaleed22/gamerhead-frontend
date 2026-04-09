@@ -61,7 +61,7 @@ function InviteDetailModal({ invite, onClose, onRespond }: { invite: any; onClos
             { label: 'Leader',   value: invite.leader                 },
             { label: 'Received', value: invite.received               },
           ].map((s, i) => (
-            <div key={i} style={{ background: '#0C0C11', borderRadius: 8, padding: '12px 16px' }}>
+            <div key={i} style={{ background: 'var(--bg)', borderRadius: 8, padding: '12px 16px' }}>
               <div style={{ ...R, fontSize: 11, color: '#4A5568', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.label}</div>
               {s.label === 'Type'
                 ? <TypeBadge type={s.value} />
@@ -106,7 +106,7 @@ export default function InvitesPage() {
   }
 
   return (
-    <div style={{ background: '#0C0C11', minHeight: '100vh', paddingBottom: 80 }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 80 }}>
       <div className="container" style={{ maxWidth: 1440, padding: '0 30px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, paddingTop: 28, alignItems: 'start' }}>
           <DashSidebar active="invites" inviteCount={inviteCount} />
