@@ -58,14 +58,30 @@ function StripePayForm({
     setPaying(true)
     const result = await stripe.confirmPayment({
       elements,
-      confirmParams: {},
+      confirmParams: {
+        return_url: `${window.location.origin}/store?payment=success`,
+      },
       redirect: 'if_required',
     })
-    setPaying(false)
     if (result.error) {
+      setPaying(false)
       onError(result.error.message || 'Payment failed')
-    } else if (result.paymentIntent?.status === 'succeeded') {
+      return
+    }
+    if (result.paymentIntent?.status === 'succeeded') {
+      // Verify payment server-side and trigger fulfillment
+      try {
+        await storeApi.confirmPayment({ paymentIntentId: result.paymentIntent.id })
+      } catch (err: any) {
+        // Even if confirm call fails, payment was taken — show success
+        // The webhook will handle fulfillment as a safety net
+        console.warn('[Store] Server confirm failed, webhook will handle:', err?.message)
+      }
+      setPaying(false)
       onSuccess()
+    } else {
+      setPaying(false)
+      onError('Payment was not completed. Please try again.')
     }
   }
 
@@ -78,7 +94,7 @@ function StripePayForm({
         className="btn-primary"
         style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: 14, opacity: paying ? 0.6 : 1 }}
       >
-        {paying ? 'Processing…' : `Pay $${total.toFixed(2)}`}
+        {paying ? 'Verifying payment…' : `Pay $${total.toFixed(2)}`}
       </button>
     </form>
   )
