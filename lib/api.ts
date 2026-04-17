@@ -97,6 +97,8 @@ export const authApi = {
                    api.post('/auth/reset-password', body, { noAuth: true }),
   changePassword:(body: { currentPassword: string; newPassword: string }) =>
                    api.post('/auth/change-password', body),
+  addEmail:      (email: string) =>
+                   api.post('/auth/add-email', { email }),
 }
 
 // USERS / PROFILE

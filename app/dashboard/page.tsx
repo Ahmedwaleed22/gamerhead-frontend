@@ -196,7 +196,7 @@ export default function DashboardPage() {
                 <div style={{ padding: '0 20px 18px' }}>
                   <div style={{ position: 'relative', width: 80, height: 80, marginTop: -40, background: accentColor, border: '3px solid #18181C', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 24px ${accentColor}73`, overflow: 'hidden' }}>
                     {user.avatarUrl && (user.avatarUrl.startsWith('http') || user.avatarUrl.startsWith('/') || user.avatarUrl.startsWith('data:image'))
-                      ? <img src={user.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = 'none'; el.nextElementSibling && ((el.nextElementSibling as HTMLElement).style.display = '') }} />
+                      ? <img src={user.avatarUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = 'none'; el.nextElementSibling && ((el.nextElementSibling as HTMLElement).style.display = '') }} />
                       : null}
                     <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 30, color: '#fff', display: user.avatarUrl ? 'none' : '' }}>{initials}</span>
                     <div style={{ position: 'absolute', top: 6, right: 6, width: 10, height: 10, background: '#27AE60', border: '2px solid #18181C', borderRadius: '50%' }} />

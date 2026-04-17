@@ -131,6 +131,12 @@ function SettingsPage() {
   const [pwSaved, setPwSaved] = useState(false)
   const [pwError, setPwError] = useState('')
 
+  // ── Add Email (for OAuth-only users without an email) ──
+  const [addEmailValue, setAddEmailValue] = useState('')
+  const [addEmailMsg, setAddEmailMsg] = useState('')
+  const [addEmailError, setAddEmailError] = useState('')
+  const [addEmailLoading, setAddEmailLoading] = useState(false)
+
   useEffect(() => {
     if (tabParam && SIDEBAR.find(s => s.id === tabParam)) setActiveTab(tabParam)
   }, [tabParam])
@@ -436,7 +442,59 @@ function SettingsPage() {
                   </div>
                   <div>
                     <label style={LABEL}>Email</label>
-                    <input style={{...INPUT, opacity: 0.5, cursor: 'not-allowed'}} value={user.email} readOnly />
+                    {user.email ? (
+                      <input style={{...INPUT, opacity: 0.5, cursor: 'not-allowed'}} value={user.email} readOnly />
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <input
+                            style={INPUT}
+                            type="email"
+                            placeholder="Enter your email address"
+                            value={addEmailValue}
+                            onChange={e => { setAddEmailValue(e.target.value); setAddEmailMsg(''); setAddEmailError('') }}
+                          />
+                          <button
+                            type="button"
+                            disabled={addEmailLoading || !addEmailValue}
+                            onClick={async () => {
+                              setAddEmailLoading(true)
+                              setAddEmailMsg('')
+                              setAddEmailError('')
+                              try {
+                                await authApi.addEmail(addEmailValue)
+                                setAddEmailMsg('Verification email sent! Check your inbox.')
+                                setAddEmailValue('')
+                                refresh()
+                              } catch (err: any) {
+                                setAddEmailError(err?.message || 'Failed to add email')
+                              } finally {
+                                setAddEmailLoading(false)
+                              }
+                            }}
+                            style={{
+                              padding:       '7px 12px',
+                              background:    '#E74C3C',
+                              color:         '#fff',
+                              border:        'none',
+                              borderRadius:  5,
+                              fontSize:      12,
+                              fontWeight:    600,
+                              cursor:        addEmailLoading || !addEmailValue ? 'not-allowed' : 'pointer',
+                              whiteSpace:    'nowrap',
+                              opacity:       addEmailLoading || !addEmailValue ? 0.6 : 1,
+                            }}
+                          >
+                            {addEmailLoading ? 'Sending…' : 'Verify'}
+                          </button>
+                        </div>
+                        {addEmailMsg   && <p style={{ ...R, fontSize: 11, color: '#34D399', margin: 0 }}>{addEmailMsg}</p>}
+                        {addEmailError && <p style={{ ...R, fontSize: 11, color: '#F87171', margin: 0 }}>{addEmailError}</p>}
+                        <p style={{ ...R, fontSize: 11, color: '#6B7280', margin: 0 }}>
+                          Your account was created via social login. Add an email to enable password login and notifications.
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label style={LABEL}>Date of Birth</label>

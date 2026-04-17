@@ -70,14 +70,14 @@ export default function DashSidebar({ active, inviteCount = 0 }: DashSidebarProp
       {/* User row */}
       <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid #25252C', display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
-          width: 40, height: 40, flexShrink: 0, borderRadius: 8,
+          position: 'relative', width: 40, height: 40, flexShrink: 0, borderRadius: 8,
           background: accentColor + '22', border: `1.5px solid ${accentColor}66`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 16, color: accentColor,
           overflow: 'hidden',
         }}>
           {user?.avatarUrl
-            ? <img src={user.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <img src={user.avatarUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             : initials}
         </div>
         <div style={{ minWidth: 0 }}>

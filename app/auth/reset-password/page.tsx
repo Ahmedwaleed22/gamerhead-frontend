@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams()
@@ -47,7 +48,9 @@ function ResetPasswordContent() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <span style={{ fontSize: 40 }}>🏆</span>
+          <div style={{ display: 'flex', justifyContent: 'center', color: '#f0c040', lineHeight: 0 }}>
+            <SimpleTrophyIcon size={40} />
+          </div>
           <div style={{ fontWeight: 800, fontSize: 20, color: 'var(--text)', marginTop: 8 }}>GamerHead</div>
         </div>
 

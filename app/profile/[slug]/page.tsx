@@ -790,9 +790,9 @@ export default function ProfilePage() {
 
           {/* Avatar */}
           <div style={{ position:'relative', width:120, height:120, flexShrink:0 }}>
-            <div style={{ width:120, height:120, background:'linear-gradient(135deg,#1A1A2E 0%,#2D1B2E 100%)', border:`3px solid ${usernameColor}`, borderRadius:12, boxShadow:`0 0 30px ${usernameColor}4D,0 8px 32px rgba(0,0,0,0.6)`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+            <div style={{ position:'relative', width:120, height:120, background:'linear-gradient(135deg,#1A1A2E 0%,#2D1B2E 100%)', border:`3px solid ${usernameColor}`, borderRadius:12, boxShadow:`0 0 30px ${usernameColor}4D,0 8px 32px rgba(0,0,0,0.6)`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
               {avatarUrl
-                ? <img src={avatarUrl} alt="avatar" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                ? <img src={avatarUrl} alt="avatar" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
                 : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:48, color:usernameColor }}>{initials}</span>
               }
             </div>

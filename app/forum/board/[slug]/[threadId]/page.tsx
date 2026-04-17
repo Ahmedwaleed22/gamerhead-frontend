@@ -9,6 +9,7 @@ import { forumApi } from '@/lib/api'
 import { useToast } from '@/components/Toast'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
+import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
 import { sendActivity } from '@/lib/socket'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
@@ -143,7 +144,7 @@ function RotatingBadges({ badges }: { badges: { name: string; img?: string; rari
       {b.img ? (
         <img src={b.img} alt={b.name} style={{ width: 14, height: 14, objectFit: 'contain' }} />
       ) : (
-        <span style={{ fontSize: 10 }}>🏆</span>
+        <SimpleTrophyIcon size={10} color={clr} />
       )}
       <span style={{ fontSize: 9, fontWeight: 700, color: clr, whiteSpace: 'nowrap', letterSpacing: 0.3 }}>
         {b.name}

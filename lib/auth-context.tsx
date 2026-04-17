@@ -12,7 +12,9 @@ export interface AuthUser {
   id:             string
   slug:           string
   username:       string
-  email:          string
+  email:          string | null
+  googleId:       string | null
+  steamAccountId: string | null
   usernameColor:  string
   avatarUrl:      string | null
   bannerUrl:      string | null

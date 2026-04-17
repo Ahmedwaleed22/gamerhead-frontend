@@ -3,6 +3,7 @@
 import { Icon } from '@iconify/react'
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
+import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
 
 /** Solar Bold Duotone — matches existing landing page / leaderboard usage */
 export const Solar = {
@@ -91,7 +92,6 @@ export const Solar = {
 const EMOJI_TO_SOLAR: Record<string, string> = {
   '🎮': Solar.gamepad,
   '🎯': Solar.target,
-  '🏆': Solar.trophy,
   '💰': Solar.tickets,
   '👤': Solar.user,
   '⚡': Solar.bolt,
@@ -233,6 +233,25 @@ export function EmojiSolar({
   /** vertical-align for inline rows */
   inline?: boolean
 }) {
+  const trimmedEmoji = emoji.trim()
+  const trophyNorm = trimmedEmoji.replace(/\uFE0F/g, '')
+  if (trimmedEmoji === '🏆' || trophyNorm === '🏆') {
+    return (
+      <span
+        style={{
+          display: inline ? 'inline-flex' : 'flex',
+          alignItems: 'center',
+          verticalAlign: inline ? 'middle' : undefined,
+          lineHeight: 0,
+          ...style,
+        }}
+        className={className}
+      >
+        <SimpleTrophyIcon size={size} />
+      </span>
+    )
+  }
+
   const resolvedIcon = resolveSolarForEmoji(emoji)
   if (!resolvedIcon) {
     return (

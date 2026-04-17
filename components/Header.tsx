@@ -289,7 +289,7 @@ export default function Header({
                   >
                     <div className="nav-user-avatar">
                       {user.avatarUrl ? (
-                        <img src={user.avatarUrl} alt={user.username} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                        <img src={user.avatarUrl} alt={user.username} />
                       ) : (
                         <span className="nav-user-initials">{initials}</span>
                       )}
@@ -309,7 +309,7 @@ export default function Header({
                       <div className="nav-user-dd-header">
                         <div className="nav-user-dd-avatar">
                           {user.avatarUrl ? (
-                            <img src={user.avatarUrl} alt={user.username} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            <img src={user.avatarUrl} alt={user.username} />
                           ) : initials}
                         </div>
                         <div>

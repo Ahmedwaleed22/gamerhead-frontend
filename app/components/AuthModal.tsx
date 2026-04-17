@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 interface AuthModalProps {
   isOpen:      boolean
@@ -91,7 +94,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
         <button className="modal-close" onClick={onClose}>✕</button>
 
         <div className="modal-logo">
-          <span style={{ fontSize: 32 }}>🏆</span>
+          <span style={{ display: 'flex', justifyContent: 'center', color: '#f0c040', lineHeight: 0 }}>
+            <SimpleTrophyIcon size={32} />
+          </span>
           <div className="navbar-logo-text" style={{ textAlign: 'center' }}>
             <span className="navbar-logo-text-main">GamerHead</span>
             <span className="navbar-logo-text-sub">Life's A Game</span>
@@ -142,6 +147,58 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
             <button type="submit" className="modal-submit-btn" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 4px' }}>
+              <div style={{ flex: 1, height: 1, background: '#2a2a2e' }} />
+              <span style={{ color: '#6B7280', fontSize: 12 }}>or continue with</span>
+              <div style={{ flex: 1, height: 1, background: '#2a2a2e' }} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <a
+                href={`${API_URL}/auth/oauth/google`}
+                style={{
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  gap:            10,
+                  padding:        '10px 16px',
+                  background:     '#fff',
+                  color:          '#111',
+                  borderRadius:   8,
+                  fontWeight:     600,
+                  fontSize:       14,
+                  textDecoration: 'none',
+                  border:         '1px solid #e0e0e0',
+                  transition:     'box-shadow 0.15s',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                Continue with Google
+              </a>
+
+              <a
+                href={`${API_URL}/auth/oauth/steam`}
+                style={{
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  gap:            10,
+                  padding:        '10px 16px',
+                  background:     '#1b2838',
+                  color:          '#c6d4df',
+                  borderRadius:   8,
+                  fontWeight:     600,
+                  fontSize:       14,
+                  textDecoration: 'none',
+                  border:         '1px solid #2a475e',
+                  transition:     'background 0.15s',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none"><path d="M24 0C10.745 0 0 10.745 0 24c0 11.166 7.63 20.57 18.015 23.196l6.491-13.505A7.5 7.5 0 0 1 24 18a7.5 7.5 0 0 1 7.5 7.5 7.5 7.5 0 0 1-7.5 7.5 7.5 7.5 0 0 1-2.016-.277l-7.338 5.694C17.222 39.87 18 41 18 42a6 6 0 0 0 6 6c3.314 0 6-2.686 6-6a6 6 0 0 0-.235-1.655L42 33.77C45.63 30.71 48 26.12 48 21c0-11.598-9.402-21-24-21z" fill="#00adee"/></svg>
+                Continue with Steam
+              </a>
+            </div>
 
             <p className="modal-switch-text">
               Don't have an account?{' '}
@@ -233,6 +290,56 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
             <button type="submit" className="modal-submit-btn" disabled={loading}>
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 4px' }}>
+              <div style={{ flex: 1, height: 1, background: '#2a2a2e' }} />
+              <span style={{ color: '#6B7280', fontSize: 12 }}>or sign up with</span>
+              <div style={{ flex: 1, height: 1, background: '#2a2a2e' }} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <a
+                href={`${API_URL}/auth/oauth/google`}
+                style={{
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  gap:            10,
+                  padding:        '10px 16px',
+                  background:     '#fff',
+                  color:          '#111',
+                  borderRadius:   8,
+                  fontWeight:     600,
+                  fontSize:       14,
+                  textDecoration: 'none',
+                  border:         '1px solid #e0e0e0',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                Continue with Google
+              </a>
+
+              <a
+                href={`${API_URL}/auth/oauth/steam`}
+                style={{
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  gap:            10,
+                  padding:        '10px 16px',
+                  background:     '#1b2838',
+                  color:          '#c6d4df',
+                  borderRadius:   8,
+                  fontWeight:     600,
+                  fontSize:       14,
+                  textDecoration: 'none',
+                  border:         '1px solid #2a475e',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none"><path d="M24 0C10.745 0 0 10.745 0 24c0 11.166 7.63 20.57 18.015 23.196l6.491-13.505A7.5 7.5 0 0 1 24 18a7.5 7.5 0 0 1 7.5 7.5 7.5 7.5 0 0 1-7.5 7.5 7.5 7.5 0 0 1-2.016-.277l-7.338 5.694C17.222 39.87 18 41 18 42a6 6 0 0 0 6 6c3.314 0 6-2.686 6-6a6 6 0 0 0-.235-1.655L42 33.77C45.63 30.71 48 26.12 48 21c0-11.598-9.402-21-24-21z" fill="#00adee"/></svg>
+                Continue with Steam
+              </a>
+            </div>
 
             <p className="modal-switch-text">
               Already have an account?{' '}

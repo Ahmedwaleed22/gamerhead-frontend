@@ -12,6 +12,7 @@ import { useToast } from '@/components/Toast'
 import { MatchesTab } from '@/app/components/GameMatchesTab'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
+import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
 
 const NAV_ITEMS = [
   { label: 'Overview',     tab: 'overview' },
@@ -690,12 +691,7 @@ export default function GameProfilePage() {
           <div className="game-profile-sidebar">
             <div className="gp-sidebar-card">
               <div className="gp-sidebar-card-header">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                  <path d="M7 2h10v2h3l-2 5h-1.5L18 4H6L7.5 9H6L4 4h3V2z" fill="#f0c040"/>
-                  <path d="M8 4h8v6a4 4 0 01-8 0V4z" fill="#f0c040"/>
-                  <rect x="10" y="14" width="4" height="4" fill="#f0c040"/>
-                  <rect x="7" y="18" width="10" height="3" rx="1" fill="#f0c040"/>
-                </svg>
+                <SimpleTrophyIcon size={22} color="#f0c040" />
                 <div>
                   <div className="gp-sidebar-update">Updates weekly</div>
                   <div className="gp-sidebar-title">Player of the Week</div>
