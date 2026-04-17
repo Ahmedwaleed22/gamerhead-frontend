@@ -2,9 +2,56 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
+import Logo from '@/components/Logo'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
+/** Inline flex styles (same pattern as Google above) — class-based CSS was not applying in the modal, so the link stayed inline and stacked icon over text. */
+const steamOAuthLinkStyle: React.CSSProperties = {
+  display:        'flex',
+  alignItems:     'center',
+  justifyContent: 'center',
+  gap:            10,
+  width:          '100%',
+  boxSizing:      'border-box',
+  minHeight:      44,
+  padding:        '10px 16px',
+  background:     '#1b2838',
+  color:          '#fff',
+  borderRadius:   8,
+  fontWeight:     600,
+  fontSize:       14,
+  textDecoration: 'none',
+  border:         '1px solid rgba(255, 255, 255, 0.1)',
+  boxShadow:      '0 1px 2px rgba(0, 0, 0, 0.2)',
+  transition:     'background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
+}
+
+function SteamOAuthLink({ href }: { href: string }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <a
+      href={href}
+      style={{
+        ...steamOAuthLinkStyle,
+        background: hover ? '#2a475e' : '#1b2838',
+        border:       hover ? '1px solid rgba(102, 192, 244, 0.35)' : '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow:    hover ? '0 2px 10px rgba(0, 0, 0, 0.28)' : '0 1px 2px rgba(0, 0, 0, 0.2)',
+      }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      <img
+        src="/images/logos/steam.svg"
+        alt=""
+        width={20}
+        height={20}
+        style={{ flexShrink: 0, display: 'block', objectFit: 'contain' }}
+      />
+      Continue with Steam
+    </a>
+  )
+}
 
 interface AuthModalProps {
   isOpen:      boolean
@@ -94,13 +141,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
         <button className="modal-close" onClick={onClose}>✕</button>
 
         <div className="modal-logo">
-          <span style={{ display: 'flex', justifyContent: 'center', color: '#f0c040', lineHeight: 0 }}>
-            <SimpleTrophyIcon size={32} />
-          </span>
-          <div className="navbar-logo-text" style={{ textAlign: 'center' }}>
-            <span className="navbar-logo-text-main">GamerHead</span>
-            <span className="navbar-logo-text-sub">Life's A Game</span>
-          </div>
+          <Logo className="justify-center" />
         </div>
 
         <div className="modal-tabs">
@@ -177,27 +218,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                 Continue with Google
               </a>
 
-              <a
-                href={`${API_URL}/auth/oauth/steam`}
-                style={{
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  gap:            10,
-                  padding:        '10px 16px',
-                  background:     '#1b2838',
-                  color:          '#c6d4df',
-                  borderRadius:   8,
-                  fontWeight:     600,
-                  fontSize:       14,
-                  textDecoration: 'none',
-                  border:         '1px solid #2a475e',
-                  transition:     'background 0.15s',
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 48 48" fill="none"><path d="M24 0C10.745 0 0 10.745 0 24c0 11.166 7.63 20.57 18.015 23.196l6.491-13.505A7.5 7.5 0 0 1 24 18a7.5 7.5 0 0 1 7.5 7.5 7.5 7.5 0 0 1-7.5 7.5 7.5 7.5 0 0 1-2.016-.277l-7.338 5.694C17.222 39.87 18 41 18 42a6 6 0 0 0 6 6c3.314 0 6-2.686 6-6a6 6 0 0 0-.235-1.655L42 33.77C45.63 30.71 48 26.12 48 21c0-11.598-9.402-21-24-21z" fill="#00adee"/></svg>
-                Continue with Steam
-              </a>
+              <SteamOAuthLink href={`${API_URL}/auth/oauth/steam`} />
             </div>
 
             <p className="modal-switch-text">
@@ -319,26 +340,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                 Continue with Google
               </a>
 
-              <a
-                href={`${API_URL}/auth/oauth/steam`}
-                style={{
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  gap:            10,
-                  padding:        '10px 16px',
-                  background:     '#1b2838',
-                  color:          '#c6d4df',
-                  borderRadius:   8,
-                  fontWeight:     600,
-                  fontSize:       14,
-                  textDecoration: 'none',
-                  border:         '1px solid #2a475e',
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 48 48" fill="none"><path d="M24 0C10.745 0 0 10.745 0 24c0 11.166 7.63 20.57 18.015 23.196l6.491-13.505A7.5 7.5 0 0 1 24 18a7.5 7.5 0 0 1 7.5 7.5 7.5 7.5 0 0 1-7.5 7.5 7.5 7.5 0 0 1-2.016-.277l-7.338 5.694C17.222 39.87 18 41 18 42a6 6 0 0 0 6 6c3.314 0 6-2.686 6-6a6 6 0 0 0-.235-1.655L42 33.77C45.63 30.71 48 26.12 48 21c0-11.598-9.402-21-24-21z" fill="#00adee"/></svg>
-                Continue with Steam
-              </a>
+              <SteamOAuthLink href={`${API_URL}/auth/oauth/steam`} />
             </div>
 
             <p className="modal-switch-text">
