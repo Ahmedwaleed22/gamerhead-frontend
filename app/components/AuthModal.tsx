@@ -1,10 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Icon } from '@iconify/react'
 import { useAuth } from '@/lib/auth-context'
 import Logo from '@/components/Logo'
+import { Solar } from '@/lib/solar-duotone'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
+function maxDob(): string {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() - 16)
+  return d.toISOString().split('T')[0]
+}
 
 /** Inline flex styles (same pattern as Google above) — class-based CSS was not applying in the modal, so the link stayed inline and stacked icon over text. */
 const steamOAuthLinkStyle: React.CSSProperties = {
@@ -75,6 +83,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
     emailConfirm:    '',
     password:        '',
     passwordConfirm: '',
+    dob:             '',
     acceptTerms:     false,
   })
 
@@ -108,10 +117,11 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
       return clearError() // handled below with local validation
     if (registerData.password !== registerData.passwordConfirm)
       return clearError()
+    if (!registerData.dob) return
     if (!registerData.acceptTerms) return
 
     try {
-      await register(registerData.username, registerData.email, registerData.password)
+      await register(registerData.username, registerData.email, registerData.password, registerData.dob)
       setSuccess('Account created! Check your email to verify your account.')
     } catch {
       // error is already set in context
@@ -125,6 +135,12 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
         return 'Emails do not match'
       if (registerData.password && registerData.passwordConfirm && registerData.password !== registerData.passwordConfirm)
         return 'Passwords do not match'
+      if (registerData.dob) {
+        const dob    = new Date(registerData.dob)
+        const cutoff = new Date()
+        cutoff.setFullYear(cutoff.getFullYear() - 16)
+        if (dob > cutoff) return 'You must be at least 16 years old to sign up'
+      }
       if (!registerData.acceptTerms && registerData.username)
         return 'You must accept the terms of service'
     }
@@ -295,6 +311,20 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
               />
             </div>
 
+            <div className="modal-field-group">
+              <label style={{ display: 'block', fontSize: 11, color: '#6B7280', marginBottom: 4 }}>
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                className="modal-input"
+                value={registerData.dob}
+                onChange={e => setRegisterData({ ...registerData, dob: e.target.value })}
+                max={maxDob()}
+                required
+              />
+            </div>
+
             <div className="modal-checkbox-row">
               <input
                 type="checkbox"
@@ -304,7 +334,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                 onChange={e => setRegisterData({ ...registerData, acceptTerms: e.target.checked })}
               />
               <label htmlFor="acceptTerms" className="modal-checkbox-label">
-                I accept Empire's <a href="/terms">terms of service</a> and <a href="/privacy">privacy policy</a>
+                I accept GamerHead's <a href="/terms">terms of service</a> and <a href="/privacy">privacy policy</a>
               </label>
             </div>
 
@@ -355,7 +385,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
         {/* Success state */}
         {success && (
           <div className="modal-success-state">
-            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+            <div style={{ marginBottom: 16, lineHeight: 0 }}>
+              <Icon icon={Solar.check} width={56} height={56} style={{ display: 'block', color: '#4ade80' }} />
+            </div>
             <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', lineHeight: 1.6 }}>
               Check your inbox and click the verification link to activate your account, then sign in.
             </p>

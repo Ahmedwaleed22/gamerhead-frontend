@@ -84,7 +84,7 @@ export const api = {
 
 // AUTH
 export const authApi = {
-  register:      (body: { username: string; email: string; password: string }) =>
+  register:      (body: { username: string; email: string; password: string; dob: string }) =>
                    api.post('/auth/register', body, { noAuth: true }),
   login:         (body: { identifier: string; password: string }) =>
                    api.post('/auth/login', body, { noAuth: true }),
@@ -99,6 +99,8 @@ export const authApi = {
                    api.post('/auth/change-password', body),
   addEmail:      (email: string) =>
                    api.post('/auth/add-email', { email }),
+  onboarding:    (body: { username: string; dob: string }) =>
+                   api.post('/auth/onboarding', body),
 }
 
 // USERS / PROFILE

@@ -30,11 +30,15 @@ function OAuthCompleteContent() {
     const complete = async () => {
       try {
         localStorage.setItem('ce_token', token)
-        // Validate token — if this throws the token is bad
-        await authApi.me()
+        // Validate token and get user data
+        const { user } = await authApi.me()
         setStatus('done')
-        // Full page navigation so AuthProvider re-mounts and picks up the new token
-        window.location.href = '/'
+        // New OAuth users who haven't set a username/dob go to onboarding
+        if (!user.onboardingDone) {
+          window.location.href = '/auth/onboarding'
+        } else {
+          window.location.href = '/'
+        }
       } catch {
         localStorage.removeItem('ce_token')
         setStatus('error')

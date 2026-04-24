@@ -15,6 +15,7 @@ export interface AuthUser {
   email:          string | null
   googleId:       string | null
   steamAccountId: string | null
+  onboardingDone: boolean
   usernameColor:  string
   avatarUrl:      string | null
   bannerUrl:      string | null
@@ -44,7 +45,7 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login:    (identifier: string, password: string) => Promise<void>
-  register: (username: string, email: string, password: string) => Promise<void>
+  register: (username: string, email: string, password: string, dob: string) => Promise<void>
   logout:   () => void
   refresh:  () => Promise<void>   // re-fetch /auth/me and update user
   clearError: () => void
@@ -96,10 +97,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // ── Register ──────────────────────────────────────────────────────────────
-  const register = useCallback(async (username: string, email: string, password: string) => {
+  const register = useCallback(async (username: string, email: string, password: string, dob: string) => {
     setState(s => ({ ...s, loading: true, error: null }))
     try {
-      await authApi.register({ username, email, password })
+      await authApi.register({ username, email, password, dob })
       // Don't auto-login — user needs to verify email first
       setState(s => ({ ...s, loading: false }))
     } catch (err) {

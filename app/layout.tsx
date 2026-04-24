@@ -32,9 +32,19 @@ function timeAgo(dateStr: string) {
 }
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth()
+  const { user, loading, logout } = useAuth()
   const pathname = usePathname()
   const router   = useRouter()
+
+  // ── Onboarding guard ──────────────────────────────────────────────────────
+  // If a logged-in OAuth user hasn't completed onboarding, keep them on that page.
+  useEffect(() => {
+    if (loading) return
+    const isAuthRoute = pathname.startsWith('/auth/')
+    if (user && !user.onboardingDone && !isAuthRoute) {
+      router.replace('/auth/onboarding')
+    }
+  }, [user, loading, pathname, router])
 
   const [chatOpen,  setChatOpen]  = useState(false)
   const [authOpen,  setAuthOpen]  = useState(false)
