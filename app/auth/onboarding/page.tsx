@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter }  from 'next/navigation'
 import { authApi }    from '@/lib/api'
 import { useAuth }    from '@/lib/auth-context'
+import Logo           from '@/components/Logo'
 
 // Maximum date allowed (must be at least 16 years old)
 function maxDob(): string {
@@ -87,14 +88,8 @@ function OnboardingContent() {
         gap:          20,
       }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 4 }}>
-          <div style={{ fontSize: 36, lineHeight: 1 }}>🏆</div>
-          <h1 style={{ margin: '8px 0 2px', fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'sans-serif' }}>
-            GamerHead
-          </h1>
-          <p style={{ margin: 0, fontSize: 13, color: '#6B7280', fontFamily: 'sans-serif' }}>
-            Life's A Game
-          </p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
+          <Logo className="justify-center" />
         </div>
 
         {/* Heading */}
@@ -156,9 +151,9 @@ function OnboardingContent() {
               max={maxDob()}
               required
             />
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#4B5563', fontFamily: 'sans-serif' }}>
+            {/* <p style={{ margin: '4px 0 0', fontSize: 11, color: '#4B5563', fontFamily: 'sans-serif' }}>
               You must be at least 16 years old.
-            </p>
+            </p> */}
           </div>
 
           <button
