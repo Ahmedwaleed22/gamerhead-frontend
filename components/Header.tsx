@@ -30,6 +30,7 @@ export default function Header({
   const [moreOpen, setMoreOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [avatarFailed, setAvatarFailed] = useState(false)
 
   const moreRef  = useRef<HTMLLIElement>(null)
   const userRef  = useRef<HTMLDivElement>(null)
@@ -44,6 +45,10 @@ export default function Header({
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  useEffect(() => {
+    setAvatarFailed(false)
+  }, [user?.avatarUrl])
 
   const initials    = user ? user.username.slice(0, 2).toUpperCase() : ''
   const cashDisplay = user ? `$${(user.cashBalance / 100).toFixed(2)}` : '$0.00'
@@ -288,8 +293,8 @@ export default function Header({
                     onClick={() => setUserOpen(!userOpen)}
                   >
                     <div className="nav-user-avatar">
-                      {user.avatarUrl ? (
-                        <img src={user.avatarUrl} alt={user.username} />
+                      {user.avatarUrl && !avatarFailed ? (
+                        <img src={user.avatarUrl} alt={user.username} onError={() => setAvatarFailed(true)} />
                       ) : (
                         <span className="nav-user-initials">{initials}</span>
                       )}
@@ -308,8 +313,8 @@ export default function Header({
                     <div className="nav-user-dropdown glass-dropdown">
                       <div className="nav-user-dd-header">
                         <div className="nav-user-dd-avatar">
-                          {user.avatarUrl ? (
-                            <img src={user.avatarUrl} alt={user.username} />
+                          {user.avatarUrl && !avatarFailed ? (
+                            <img src={user.avatarUrl} alt={user.username} onError={() => setAvatarFailed(true)} />
                           ) : initials}
                         </div>
                         <div>
