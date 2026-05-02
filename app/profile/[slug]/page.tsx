@@ -702,9 +702,9 @@ export default function ProfilePage() {
   const repColor      = profile.repColor   || '#ef4444'
   const repGradient   = profile.repGradient|| `linear-gradient(90deg,${repColor},${repColor})`
   const repLabel      = profile.repLabel   || 'Red'
-  // Rep bar fills 0-50 within the current tier (every 50 rep = new tier)
-  const repInTier     = rep % 50
-  const repPct        = Math.round((repInTier / 50) * 100)
+  // Rep bar fills 0-100 within the current tier
+  const repInTier     = rep % 100
+  const repPct        = rep > 0 && repInTier === 0 ? 100 : repInTier
 
   const ALL_MATCHES   = profile.matchHistory    || []
   const ALL_BADGES    = profile.badges          || []
@@ -842,28 +842,41 @@ export default function ProfilePage() {
             <div style={{ display:'flex', alignItems:'center', gap:16, marginTop:12, flexWrap:'wrap' }}>
 
               {/* Reputation */}
-              <div style={{ width:160 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                  <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1, textTransform:'uppercase', color:'#6B7280' }}>Reputation</span>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:14, color:repColor }}>{rep.toLocaleString()}</span>
+              <div style={{ width:200 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'flex-end', marginBottom:8 }}>
+                  <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:12, letterSpacing:2, textTransform:'uppercase', color:'#8890A4' }}>Reputation</span>
+                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:repColor, lineHeight:0.9 }}>
+                    {rep.toLocaleString()} <span style={{ fontSize:12, color:'#4A5568', letterSpacing: 0, fontFamily:"'Barlow',sans-serif", fontWeight:700 }}>/ 100</span>
+                  </div>
                 </div>
-                <div style={{ height:6, background:'rgba(255,255,255,0.07)', borderRadius:10, overflow:'hidden' }}>
-                  <div style={{ height:6, width:`${repPct}%`, background:repGradient, borderRadius:10, transition:'width 0.3s' }} />
+                <div style={{ display: 'flex', gap: 0, height: 12, background: '#0D121B', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 0, padding: 1 }}>
+                  {Array.from({length: 10}).map((_, i) => {
+                    const filled = i < Math.floor(repPct / 10);
+                    return (
+                      <div key={i} style={{ flex: 1, borderRight: i < 9 ? '1px solid rgba(255,255,255,0.06)' : 'none', background: filled ? repGradient : 'transparent', borderRadius: 0 }} />
+                    );
+                  })}
                 </div>
               </div>
 
               <div style={{ width:1, height:40, background:'rgba(255,255,255,0.06)', flexShrink:0 }} />
 
               {/* XP */}
-              <div style={{ width:140 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                  <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:11, letterSpacing:1, textTransform:'uppercase', color:'#6B7280' }}>Level</span>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'#E74C3C' }}>{level}</span>
+              <div style={{ width:240 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'flex-end', marginBottom:8 }}>
+                  <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:12, letterSpacing:2, textTransform:'uppercase', color:'#8890A4' }}>Level</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'#E74C3C', lineHeight:0.9 }}>{level}</span>
                 </div>
-                <div style={{ height:6, background:'rgba(255,255,255,0.07)', borderRadius:10, overflow:'hidden' }}>
-                  <div style={{ height:6, width:`${xpPct}%`, background:'linear-gradient(90deg,#C0392B,#FF6B5B)', borderRadius:10 }} />
+                <div style={{ height: 12, background: '#0D121B', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4, padding: 1, display: 'flex' }}>
+                  <div style={{ width: `${Math.max(xpPct, 3)}%`, background: 'linear-gradient(90deg, rgba(231,76,60,0.1), rgba(231,76,60,0.3))', borderRadius: 2, position: 'relative' }}>
+                    <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 8, background: '#FF6B5B', borderRadius: 2, boxShadow: '0 0 10px rgba(255,107,91,0.5)' }} />
+                  </div>
                 </div>
-                <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#4A5568', marginTop:3 }}>{xp.toLocaleString()} / {xpNext.toLocaleString()} XP</div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                  <span style={{ fontFamily:"'Barlow',sans-serif", fontWeight: 700, fontSize:11, color:'#8890A4', letterSpacing: 0.5 }}>
+                    {xp.toLocaleString()} / {xpNext.toLocaleString()} <span style={{ color: '#E74C3C' }}>XP</span>
+                  </span>
+                </div>
               </div>
 
               {/* Trophies */}
