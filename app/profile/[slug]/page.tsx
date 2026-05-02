@@ -702,9 +702,9 @@ export default function ProfilePage() {
   const repColor      = profile.repColor   || '#ef4444'
   const repGradient   = profile.repGradient|| `linear-gradient(90deg,${repColor},${repColor})`
   const repLabel      = profile.repLabel   || 'Red'
-  // Rep bar fills 0-100 within the current tier
-  const repInTier     = rep % 100
-  const repPct        = rep > 0 && repInTier === 0 ? 100 : repInTier
+  // Rep bar fills out of 100 and scales to the next 100-point milestone
+  const nextRepMilestone = (Math.floor(rep / 100) + 1) * 100
+  const repPct           = rep % 100
 
   const ALL_MATCHES   = profile.matchHistory    || []
   const ALL_BADGES    = profile.badges          || []
@@ -846,7 +846,7 @@ export default function ProfilePage() {
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'flex-end', marginBottom:8 }}>
                   <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:12, letterSpacing:2, textTransform:'uppercase', color:'#8890A4' }}>Reputation</span>
                   <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:repColor, lineHeight:0.9 }}>
-                    {rep.toLocaleString()} <span style={{ fontSize:12, color:'#4A5568', letterSpacing: 0, fontFamily:"'Barlow',sans-serif", fontWeight:700 }}>/ 100</span>
+                    {rep.toLocaleString()} <span style={{ fontSize:12, color:'#4A5568', letterSpacing: 0, fontFamily:"'Barlow',sans-serif", fontWeight:700 }}>/ {nextRepMilestone.toLocaleString()}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 0, height: 12, background: '#0D121B', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 0, padding: 1 }}>
