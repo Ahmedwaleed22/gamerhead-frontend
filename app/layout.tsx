@@ -220,8 +220,11 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   const isAdult = Date.parse(user?.dob || '') < Date.now() - 18 * 365 * 24 * 60 * 60 * 1000
   const isEligibleForGA = !loading && (!user || isAdult)
 
+  const gaReadyRef = useRef(false)
+
   useEffect(() => {
     if (!isEligibleForGA || typeof window === 'undefined') return
+    if (!gaReadyRef.current) return
     if (typeof (window as any).gtag !== 'function') return
     ;(window as any).gtag('event', 'page_view', { page_path: pathname })
   }, [pathname, isEligibleForGA])
@@ -242,11 +245,15 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
             src="https://www.googletagmanager.com/gtag/js?id=G-P8832265BN"
             strategy="afterInteractive"
           />
-          <Script id="google-analytics" strategy="afterInteractive">{`
+          <Script
+            id="google-analytics"
+            strategy="afterInteractive"
+            onReady={() => { gaReadyRef.current = true }}
+          >{`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-P8832265BN', { send_page_view: false });
+            gtag('config', 'G-P8832265BN');
           `}</Script>
         </>
       )}
