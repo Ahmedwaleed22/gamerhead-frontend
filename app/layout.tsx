@@ -2,6 +2,7 @@
 
 import './globals.css'
 import Link from 'next/link'
+import Script from 'next/script'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
@@ -216,6 +217,15 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     setSupportStep('form')
   }
 
+  const isAdult = Date.parse(user?.dob || '') < Date.now() - 18 * 365 * 24 * 60 * 60 * 1000
+  const isEligibleForGA = !loading && (!user || isAdult)
+
+  useEffect(() => {
+    if (!isEligibleForGA || typeof window === 'undefined') return
+    if (typeof (window as any).gtag !== 'function') return
+    ;(window as any).gtag('event', 'page_view', { page_path: pathname })
+  }, [pathname, isEligibleForGA])
+
   const openLogin    = () => { setAuthTab('login');    setAuthOpen(true) }
   const openRegister = () => { setAuthTab('register'); setAuthOpen(true) }
 
@@ -226,6 +236,21 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      {isEligibleForGA && (
+        <>
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-P8832265BN"
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">{`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-P8832265BN', { send_page_view: false });
+          `}</Script>
+        </>
+      )}
+    
       {/* ── NAVBAR (hidden on admin pages) ── */}
       {!isAdminPage && (
         <Header 

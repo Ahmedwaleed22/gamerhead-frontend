@@ -11,6 +11,7 @@ import LandingPageStreamersSection from '@/components/LandingPageStreamersSectio
 import { HoverCard } from '@/components/HoverCard'
 import { useApi } from '@/lib/use-api'
 import { leaderboardsApi } from '@/lib/api'
+import FriendsBadge from '@/components/FriendsBadge';
 
 type LeaderPlayer = {
   slug: string

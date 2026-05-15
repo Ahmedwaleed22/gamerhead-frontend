@@ -34,6 +34,7 @@ export interface AuthUser {
   friendRequests: string[]
   notifications:  Record<string, boolean>
   privacy:        Record<string, boolean>
+  dob:            string | null
 }
 
 interface AuthState {
