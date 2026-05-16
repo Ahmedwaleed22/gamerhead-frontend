@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '@iconify/react'
 import { useAuth } from '@/lib/auth-context'
+import { trackEvent } from '@/lib/gtag'
 import Logo from '@/components/Logo'
 import { Solar } from '@/lib/solar-duotone'
 
@@ -35,11 +36,12 @@ const steamOAuthLinkStyle: React.CSSProperties = {
   transition:     'background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
 }
 
-function SteamOAuthLink({ href }: { href: string }) {
+function SteamOAuthLink({ href, onClick }: { href: string; onClick?: () => void }) {
   const [hover, setHover] = useState(false)
   return (
     <a
       href={href}
+      onClick={onClick}
       style={{
         ...steamOAuthLinkStyle,
         background: hover ? '#2a475e' : '#1b2838',
@@ -214,6 +216,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <a
                 href={`${API_URL}/auth/oauth/google`}
+                onClick={() => trackEvent('login', { method: 'google' })}
                 style={{
                   display:        'flex',
                   alignItems:     'center',
@@ -234,7 +237,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                 Continue with Google
               </a>
 
-              <SteamOAuthLink href={`${API_URL}/auth/oauth/steam`} />
+              <SteamOAuthLink href={`${API_URL}/auth/oauth/steam`} onClick={() => trackEvent('login', { method: 'steam' })} />
             </div>
 
             <p className="modal-switch-text">
@@ -351,6 +354,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <a
                 href={`${API_URL}/auth/oauth/google`}
+                onClick={() => trackEvent('sign_up', { method: 'google' })}
                 style={{
                   display:        'flex',
                   alignItems:     'center',
@@ -370,7 +374,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                 Continue with Google
               </a>
 
-              <SteamOAuthLink href={`${API_URL}/auth/oauth/steam`} />
+              <SteamOAuthLink href={`${API_URL}/auth/oauth/steam`} onClick={() => trackEvent('sign_up', { method: 'steam' })} />
             </div>
 
             <p className="modal-switch-text">

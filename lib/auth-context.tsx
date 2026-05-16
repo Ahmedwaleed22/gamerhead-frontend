@@ -5,6 +5,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { authApi, ApiError } from './api'
+import { trackEvent } from './gtag'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { accessToken, user } = await authApi.login({ identifier, password })
       localStorage.setItem('ce_token', accessToken)
       setState({ user, token: accessToken, loading: false, error: null })
+      trackEvent('login', { method: 'email' })
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Login failed'
       setState(s => ({ ...s, loading: false, error: message }))
@@ -102,8 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState(s => ({ ...s, loading: true, error: null }))
     try {
       await authApi.register({ username, email, password, dob })
-      // Don't auto-login — user needs to verify email first
       setState(s => ({ ...s, loading: false }))
+      trackEvent('sign_up', { method: 'email' })
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Registration failed'
       setState(s => ({ ...s, loading: false, error: message }))
@@ -115,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem('ce_token')
     setState({ user: null, token: null, loading: false, error: null })
+    trackEvent('logout')
   }, [])
 
   // ── Refresh user data ─────────────────────────────────────────────────────

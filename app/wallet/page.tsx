@@ -17,6 +17,7 @@ import {
 } from '@paypal/react-paypal-js'
 import { useAuth } from '@/lib/auth-context'
 import { walletApi, usersApi } from '@/lib/api'
+import { trackEvent } from '@/lib/gtag'
 import DashSidebar from '@/app/components/DashSidebar'
 import { Solar } from '@/lib/solar-duotone'
 import { useToast } from '@/components/Toast'
@@ -467,6 +468,7 @@ export default function WalletPage() {
 
   const handlePaySuccess = () => {
     const method = payMethod === 'stripe' ? 'Stripe' : payMethod === 'paypal' ? 'PayPal' : 'Venmo'
+    trackEvent('deposit', { method, amount: depositAmt })
     setSuccessMethod(method)
     setPaySuccess(true)
     setClientSecret(null)
@@ -528,6 +530,7 @@ export default function WalletPage() {
     setWithdrawError('')
     try {
       await walletApi.withdraw({ amount, method: withdrawMethod, destination, ...extra })
+      trackEvent('withdrawal_requested', { amount, method: withdrawMethod })
       setWithdrawSuccess(true)
       refreshBalance()
       setTimeout(() => {

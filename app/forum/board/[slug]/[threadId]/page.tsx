@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { getRepColor, getRepGradient, getRepLabel } from '@/lib/reputation'
 import { useAuth } from '@/lib/auth-context'
 import { forumApi } from '@/lib/api'
+import { trackEvent } from '@/lib/gtag'
 import { useToast } from '@/components/Toast'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
@@ -925,6 +926,7 @@ export default function ThreadPage() {
                             reactions: [],
                           }
                           setPosts(prev => [...prev, newPost])
+                          trackEvent('forum_post_replied', { thread_id: threadId })
                           setReplyText('')
                           setQuoting(null)
                         } catch (err) {

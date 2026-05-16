@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { supportApi } from '@/lib/api'
+import { trackEvent } from '@/lib/gtag'
 import DashSidebar from '@/app/components/DashSidebar'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
@@ -96,6 +97,7 @@ function CreateModal({ isPremium, onClose, onCreated }: { isPremium: boolean; on
         description: buildDescription(),
         urgent: isPremium ? urgent : false,
       })
+      trackEvent('support_ticket_created', { department, urgent: isPremium ? urgent : false })
       onCreated()
       onClose()
     } catch (e: any) {
@@ -306,6 +308,7 @@ function LiveSupportModal({ onClose, onStarted }: { onClose: () => void; onStart
     setError('')
     try {
       const res = await supportApi.requestStaff({ category, message: message.trim() })
+      trackEvent('live_chat_started', { department: category })
       onStarted(res)
     } catch (e: any) {
       setError(e?.message || 'Failed to start live chat')

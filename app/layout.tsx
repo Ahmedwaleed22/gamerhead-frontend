@@ -4,6 +4,7 @@ import './globals.css'
 import Link from 'next/link'
 import Script from 'next/script'
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { trackEvent } from '@/lib/gtag'
 import { usePathname, useRouter } from 'next/navigation'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { notificationsApi, supportApi } from '@/lib/api'
@@ -190,6 +191,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         setActiveSession(session)
         setSupportMsgs(session.messages || [])
         setSupportStep('chat')
+        trackEvent('live_chat_started', { department: supportDept })
       }
     } catch { /* error */ }
     setSupportLoading(false)
@@ -202,6 +204,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     try {
       const updated = await supportApi.sendLiveChatMessage(activeSession.sessionId, { text })
       setSupportMsgs(updated.messages || [])
+      trackEvent('live_chat_message_sent')
     } catch { /* error */ }
   }
 

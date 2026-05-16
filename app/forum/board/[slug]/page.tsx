@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { forumApi } from '@/lib/api'
+import { trackEvent } from '@/lib/gtag'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 
@@ -230,6 +231,7 @@ export default function ForumBoardPage() {
         preview: newContent.trim().slice(0, 200),
       }, ...prev])
       setBoard((prev: any) => ({ ...prev, totalThreads: prev.totalThreads + 1 }))
+      trackEvent('forum_thread_created', { board_slug: slug })
       setShowNewThread(false)
       setNewTitle('')
       setNewContent('')

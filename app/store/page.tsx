@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { storeApi, walletApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
+import { trackEvent } from '@/lib/gtag'
 import { sendActivity } from '@/lib/socket'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
@@ -351,6 +352,7 @@ function StorePageContent() {
       const ex = prev.find(c => c.id === item.id)
       return ex ? prev.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c) : [...prev, { ...item, qty: 1 }]
     })
+    trackEvent('add_to_cart', { item_id: item.id, item_name: item.name, price: item.price / 100, item_category: item.category })
     setFlashId(item.id)
     setTimeout(() => setFlashId(null), 1100)
   }
@@ -375,6 +377,7 @@ function StorePageContent() {
   }))
 
   const handlePaySuccess = () => {
+    trackEvent('purchase', { currency: 'USD', value: total / 100, items: cart.map(c => ({ item_id: c.id, item_name: c.name, price: c.price / 100, quantity: c.qty })) })
     setCart([])
     setClientSecret(null)
     setStripeError('')

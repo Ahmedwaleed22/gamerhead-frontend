@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { coachingApi, walletApi } from '@/lib/api'
+import { trackEvent } from '@/lib/gtag'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 
@@ -159,7 +160,7 @@ function HireModal({ pkg, coach, onClose }: { pkg: Package; coach: any; onClose:
               setSending(true)
               setHireError('')
               coachingApi.hire({ packageId: pkg.id, message, coachSlug: coach.slug ?? coach.name })
-                .then(()=>setStep(2))
+                .then(()=>{ setStep(2); trackEvent('coaching_hire_requested', { coach_slug: coach.slug, package_id: pkg.id, package_price: pkg.price }) })
                 .catch((err: any)=>{ setHireError(err?.message || 'Failed to send request'); })
                 .finally(()=>setSending(false))
             }} style={{ width:'100%', background: hasFunds ? '#B22D2D' : '#444', border:'none', borderRadius:8, padding:'12px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:14, letterSpacing:.8, color:'#fff', cursor: hasFunds ? 'pointer' : 'not-allowed', opacity: sending ? 0.6 : 1 }}>
@@ -274,7 +275,7 @@ function CustomRequestModal({ coach, onClose }: { coach: any; onClose:()=>void }
               setSending(true)
               setError('')
               coachingApi.hire({ packageId: '__custom__', message: `[CUSTOM REQUEST]\n\nBudget: $${budget}\nTimeline: ${timeline || 'Flexible'} days\n\n${desc}`, coachSlug: coach.slug })
-                .then(()=>setStep(2))
+                .then(()=>{ setStep(2); trackEvent('coaching_hire_requested', { coach_slug: coach.slug, package_id: '__custom__', budget }) })
                 .catch((err: any)=>{ setError(err?.message || 'Failed to send request') })
                 .finally(()=>setSending(false))
             }} style={{ width:'100%', background: hasFunds && desc.trim() && budgetNum ? '#F0AA1A' : '#444', border:'none', borderRadius:8, padding:'12px', fontFamily:'Barlow Condensed, sans-serif', fontWeight:800, fontSize:14, letterSpacing:.8, color:'#000', cursor: hasFunds && desc.trim() && budgetNum ? 'pointer' : 'not-allowed', opacity: sending ? 0.6 : 1 }}>

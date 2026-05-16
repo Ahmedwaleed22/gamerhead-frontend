@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { Icon } from '@iconify/react'
 import { useAuth } from '@/lib/auth-context'
 import { tournamentsApi } from '@/lib/api'
+import { trackEvent } from '@/lib/gtag'
 import { Solar } from '@/lib/solar-duotone'
 import { SimpleTrophyIcon, TrophyIcon } from '@/components/simple-trophy-icon'
 import { useToast } from '@/components/Toast'
@@ -678,7 +679,7 @@ function EntryModal({ onClose, tournament, onRegistered }: { onClose: (refresh?:
     setStep('processing')
     setError('')
     tournamentsApi.register(tournament.id, { teamName, invites, gamertag, platform, payForTeam, logoUrl: logoPreview || undefined, bannerUrl: bannerPreview || undefined })
-      .then(() => { setRegistered(true); setStep('success'); onRegistered?.() })
+      .then(() => { setRegistered(true); setStep('success'); onRegistered?.(); trackEvent('tournament_register', { tournament_id: tournament.id, tournament_name: tournament.name, game: tournament.game, entry_credits: entryCredits }) })
       .catch((err: any) => { setError(err?.message || 'Registration failed. Please try again.'); setStep(firstStep) })
   }
 

@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter }  from 'next/navigation'
 import { authApi }    from '@/lib/api'
 import { useAuth }    from '@/lib/auth-context'
+import { trackEvent } from '@/lib/gtag'
 import Logo           from '@/components/Logo'
 
 // Maximum date allowed (must be at least 16 years old)
@@ -59,6 +60,7 @@ function OnboardingContent() {
     try {
       await authApi.onboarding({ username, dob })
       await refresh()
+      trackEvent('onboarding_complete')
       window.location.href = '/'
     } catch (err: any) {
       setError(err?.message || 'Something went wrong. Please try again.')
