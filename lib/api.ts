@@ -132,6 +132,8 @@ export const usersApi = {
   // Player search — no auth needed
   search:            (q: string, limit = 10) =>
                        api.get(`/users/search?q=${encodeURIComponent(q)}&limit=${limit}`, { noAuth: true }),
+
+  deleteAccount:     () => api.delete('/users/me/delete'),
 }
 
 // GAMES

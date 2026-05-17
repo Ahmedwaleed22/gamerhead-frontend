@@ -84,7 +84,7 @@ export default function SettingsPageWrapper() {
 function SettingsPage() {
   const searchParams = useSearchParams()
   const tabParam = searchParams?.get('tab')
-  const { user, refresh } = useAuth()
+  const { user, refresh, logout } = useAuth()
   const [activeTab, setActiveTab] = useState(tabParam || 'settings')
 
   // ── Account Settings form ──
@@ -130,6 +130,12 @@ function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [pwSaved, setPwSaved] = useState(false)
   const [pwError, setPwError] = useState('')
+
+  // ── Delete Account ──
+  const [deleteModalOpen, setDeleteModalOpen]   = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleteLoading, setDeleteLoading]       = useState(false)
+  const [deleteError, setDeleteError]           = useState('')
 
   // ── Add Email (for OAuth-only users without an email) ──
   const [addEmailValue, setAddEmailValue] = useState('')
@@ -314,6 +320,20 @@ function SettingsPage() {
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } catch {}
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return
+    setDeleteLoading(true)
+    setDeleteError('')
+    try {
+      await usersApi.deleteAccount()
+      logout()
+      window.location.href = '/'
+    } catch (err: any) {
+      setDeleteError(err?.message || 'Failed to delete account')
+      setDeleteLoading(false)
+    }
   }
 
   const handleSaveNotifications = async () => {
@@ -549,6 +569,25 @@ function SettingsPage() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16, marginTop: 28 }}>
                   {saved && <span style={{ ...R, fontSize: 12, color: '#4ade80', display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.checkRead} width={14} height={14} /> Settings saved</span>}
                   <button onClick={handleSave} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '9px 28px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: 'pointer' }}>Save Changes</button>
+                </div>
+
+                {/* ── Danger Zone ── */}
+                <div style={{ marginTop: 40, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 32 }}>
+                  <div style={{ ...R, fontWeight: 500, fontSize: 15, color: '#E74C3C', marginBottom: 8 }}>Danger Zone</div>
+                  <div style={{ border: '1px solid rgba(231,76,60,0.25)', borderRadius: 8, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                    <div>
+                      <div style={{ ...R, fontWeight: 600, fontSize: 13, color: '#fff', marginBottom: 4 }}>Delete Account</div>
+                      <div style={{ ...R, fontSize: 11, color: '#9CA3AF', lineHeight: 1.6 }}>
+                        Your account will be deactivated immediately. You have <span style={{ color: '#F39C12', fontWeight: 600 }}>30 days</span> to log back in and reactivate it — after that it is permanently closed.
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { setDeleteModalOpen(true); setDeleteConfirmText(''); setDeleteError('') }}
+                      style={{ background: 'rgba(231,76,60,0.12)', border: '1px solid rgba(231,76,60,0.4)', borderRadius: 6, padding: '8px 18px', ...R, fontWeight: 600, fontSize: 12, color: '#E74C3C', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+                    >
+                      Delete Account
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -878,12 +917,60 @@ function SettingsPage() {
                   {pwSaved && <div style={{ ...R, fontSize: 12, color: '#4ade80', display: 'flex', alignItems: 'center', gap: 6 }}><Icon icon={Solar.checkRead} width={14} height={14} /> Password changed successfully</div>}
                   <button onClick={handleChangePassword} style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '9px 28px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: 'pointer', width: 'fit-content' }}>Change Password</button>
                 </div>
+
               </>
             )}
 
           </div>
         </div>
       </div>
+
+      {/* ══ Delete Account Modal ══ */}
+      {deleteModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => !deleteLoading && setDeleteModalOpen(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#19191D', borderRadius: 12, padding: '28px 32px', width: 440, border: '1px solid rgba(231,76,60,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(231,76,60,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon icon="solar:trash-bin-trash-bold-duotone" width={18} height={18} style={{ color: '#E74C3C' }} />
+              </div>
+              <div style={{ ...R, fontWeight: 600, fontSize: 16, color: '#fff' }}>Delete Account</div>
+            </div>
+            <div style={{ ...R, fontSize: 12, color: '#9CA3AF', marginBottom: 20, lineHeight: 1.7 }}>
+              This will <span style={{ color: '#fff', fontWeight: 600 }}>immediately deactivate your account</span> and sign you out. Your profile, stats, and data will be hidden from everyone.
+              <br />
+              You can reactivate within <span style={{ color: '#F39C12', fontWeight: 600 }}>30 days</span> by simply logging back in. After 30 days, this action is permanent.
+            </div>
+            <div style={{ ...R, fontSize: 12, color: '#9CA3AF', marginBottom: 8 }}>
+              Type <span style={{ color: '#E74C3C', fontWeight: 700, fontFamily: 'monospace' }}>DELETE</span> to confirm:
+            </div>
+            <input
+              style={{ ...INPUT, marginBottom: 16, letterSpacing: 2 }}
+              value={deleteConfirmText}
+              onChange={e => { setDeleteConfirmText(e.target.value.toUpperCase()); setDeleteError('') }}
+              placeholder="DELETE"
+              autoFocus
+              disabled={deleteLoading}
+            />
+            {deleteError && <div style={{ ...R, fontSize: 12, color: '#E74C3C', marginBottom: 12 }}>{deleteError}</div>}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={deleteLoading}
+                style={{ background: '#303034', border: 'none', borderRadius: 6, padding: '8px 20px', ...R, fontWeight: 600, fontSize: 12, color: '#9CA3AF', cursor: deleteLoading ? 'not-allowed' : 'pointer', opacity: deleteLoading ? 0.5 : 1 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmText !== 'DELETE' || deleteLoading}
+                style={{ background: '#C0392B', border: 'none', borderRadius: 6, padding: '8px 20px', ...R, fontWeight: 600, fontSize: 12, color: '#fff', cursor: deleteConfirmText !== 'DELETE' || deleteLoading ? 'not-allowed' : 'pointer', opacity: deleteConfirmText !== 'DELETE' || deleteLoading ? 0.5 : 1 }}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete My Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══ Name Change Modal ══ */}
       {nameModalOpen && (
