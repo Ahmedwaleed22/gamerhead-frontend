@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-context'
 import { forumApi } from '@/lib/api'
 import { sendActivity } from '@/lib/socket'
 import { Solar } from '@/lib/solar-duotone'
+import Username from '@/components/Username'
 
 interface Board {
   name: string; slug: string; emoji: string; description: string
@@ -210,7 +211,7 @@ export default function ForumPage() {
                 {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{ width:44, height:44, borderRadius:10, objectFit:'cover' }} /> : <Icon icon={Solar.user} width={24} height={24} style={{ opacity: 0.7, color: 'var(--red)' }} />}
               </div>
               <div>
-                <div style={{ fontSize:15, fontWeight:700, color:user?.usernameColor || '#e74c3c', marginBottom: 2 }}>Welcome back, {user?.username || 'Guest'}</div>
+                <div style={{ fontSize:15, fontWeight:700, color:user?.usernameColor || '#e74c3c', marginBottom: 2 }}>Welcome back, {user?.username ? <Username user={user} /> : 'Guest'}</div>
                 <div style={{ fontSize:12, color:'var(--text-muted)' }}>Join the conversation and connect with the community</div>
               </div>
             </div>

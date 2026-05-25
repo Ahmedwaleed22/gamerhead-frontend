@@ -6,6 +6,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { authApi, ApiError } from './api'
 import { trackEvent } from './gtag'
+import { AchievementBadge } from '@/types/Badges.type'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ export interface AuthUser {
   notifications:  Record<string, boolean>
   privacy:        Record<string, boolean>
   dob:            string | null
+  badges:         AchievementBadge[]
 }
 
 interface AuthState {

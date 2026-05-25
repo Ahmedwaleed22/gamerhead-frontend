@@ -9,6 +9,7 @@ import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 import AchievementBadge from '@/components/AchievementBadge'
 import type { AchievementBadge as AchievementBadgeType } from '@/types/Badges.type'
+import Username from '@/components/Username'
 
 // Adjust this import to match your auth context
 let useAuth: () => { user: { slug: string } | null }
@@ -807,7 +808,7 @@ export default function ProfilePage() {
           {/* Info */}
           <div style={{ flex:1 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:4 }}>
-              <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, color:usernameColor, letterSpacing:1, margin:0, lineHeight:1 }}>{username}</h1>
+              <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, color:usernameColor, letterSpacing:1, margin:0, lineHeight:1 }}><Username user={profile} /></h1>
               {/* Presence status */}
               {!isOwnProfile && (
                 <div style={{ display:'flex', alignItems:'center', gap:5, marginLeft:4 }}>

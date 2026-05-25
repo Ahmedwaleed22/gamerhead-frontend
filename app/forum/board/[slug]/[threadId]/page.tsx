@@ -12,11 +12,13 @@ import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
 import { sendActivity } from '@/lib/socket'
+import Username from '@/components/Username'
+import type { AchievementBadge } from '@/types/Badges.type'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type Role = 'admin' | 'premium' | 'coach' | 'member' | 'mod' | 'pro' | 'veteran'
 
-interface PostUser {
+export interface PostUser {
   name: string
   slug: string
   pfp: string
@@ -27,7 +29,7 @@ interface PostUser {
   joined: string
   rep: number
   kd?: string
-  badges?: { name: string; img?: string; rarity?: string; category?: string }[]
+  badges?: AchievementBadge[]
   tags?: string[]
   socials?: Record<string, string>
   usernameColor?: string
@@ -614,7 +616,9 @@ export default function ThreadPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                     {post.user.slug ? (
                       <Link href={`/profile/${post.user.slug}`} style={{ fontSize: 16, fontWeight: 800, color: nameColor(post.user), lineHeight: 1, textDecoration: 'none' }}
-                        onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')} onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>{post.user.name}</Link>
+                        onMouseEnter={e=>(e.currentTarget.style.textDecoration='underline')} onMouseLeave={e=>(e.currentTarget.style.textDecoration='none')}>
+                        <Username user={post.user} />
+                      </Link>
                     ) : (
                       <span style={{ fontSize: 16, fontWeight: 800, color: nameColor(post.user), lineHeight: 1 }}>{post.user.name}</span>
                     )}
