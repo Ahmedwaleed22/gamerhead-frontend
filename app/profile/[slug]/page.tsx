@@ -1025,11 +1025,51 @@ export default function ProfilePage() {
         )}
 
         {/* BADGES */}
-        {activeTab==='Badges' && (
-          ALL_BADGES.length===0
+        {activeTab==='Badges' && (() => {
+          const SUBCATEGORY_LABELS: Record<string, string> = {
+            link_accounts: 'Link Accounts', friends: 'Friends', wins: 'Wins',
+            matches: 'Matches', cash_earned: 'Cash Earned', tournaments_played: 'Tournaments Played', misc: 'Misc',
+            role: 'Forum Role', posting_milestones: 'Posting Milestones', thread_creation: 'Thread Creation',
+            reaction_milestones: 'Reaction Milestones', high_engagement: 'High Engagement',
+          }
+          const PLATFORM_SUBS = ['link_accounts','friends','wins','matches','cash_earned','tournaments_played','misc']
+          const FORUM_SUBS    = ['role','posting_milestones','thread_creation','reaction_milestones','high_engagement']
+
+          const bySubcat: Record<string, any[]> = {}
+          for (const b of ALL_BADGES) {
+            const key = b.subcategory || (b.category === 'forum' ? 'role' : 'misc')
+            if (!bySubcat[key]) bySubcat[key] = []
+            bySubcat[key].push(b)
+          }
+
+          const renderSection = (title: string, subs: string[]) => {
+            const subsWithBadges = subs.filter(s => bySubcat[s]?.length)
+            if (!subsWithBadges.length) return null
+            return (
+              <div key={title} style={{ marginBottom: 32 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+                  <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:800, fontSize:15, letterSpacing:2, textTransform:'uppercase', color:'#C0392B' }}>{title}</span>
+                  <div style={{ flex:1, height:1, background:'rgba(192,57,43,0.25)' }} />
+                </div>
+                {subsWithBadges.map(sub => (
+                  <div key={sub} style={{ marginBottom:20 }}>
+                    <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:12, letterSpacing:1.2, textTransform:'uppercase', color:'#6B7280', marginBottom:10 }}>
+                      {SUBCATEGORY_LABELS[sub] || sub}
+                      <span style={{ marginLeft:6, color:'#4A5568', fontWeight:400 }}>({bySubcat[sub].length})</span>
+                    </div>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+                      {bySubcat[sub].map((b:any,i:number) => <AchievementBadge key={i} badge={b} />)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          }
+
+          return ALL_BADGES.length === 0
             ? <div style={{ textAlign:'center', padding:'48px 0', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:13 }}>No badges earned yet.</div>
             : <>
-                <div style={{ display:'flex', gap:6, marginBottom:20 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:24 }}>
                   {Object.entries(RARITY).map(([r,c])=>(
                     <div key={r} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.03)', border:`1px solid ${c}33`, borderRadius:6, padding:'3px 8px' }}>
                       <div style={{ width:6, height:6, borderRadius:'50%', background:c }} />
@@ -1038,11 +1078,10 @@ export default function ProfilePage() {
                   ))}
                   <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:13, letterSpacing:1.5, textTransform:'uppercase', color:'#6B7280', marginLeft:8 }}>{ALL_BADGES.length} earned</span>
                 </div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:12 }}>
-                  {ALL_BADGES.map((b:any,i:number)=><AchievementBadge key={i} badge={b} />)}
-                </div>
+                {renderSection('User Profile Badges', PLATFORM_SUBS)}
+                {renderSection('Forum Badges', FORUM_SUBS)}
               </>
-        )}
+        })()}
 
         {/* VOD / CLIPS */}
         {activeTab==='VOD / Clips' && (

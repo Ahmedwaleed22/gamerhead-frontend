@@ -343,6 +343,7 @@ export const supportApi = {
 // BADGES
 export const badgesApi = {
   getAll:       ()                => api.get('/badges'),
+  getGrouped:   ()                => api.get('/badges/grouped'),
   getMy:        ()                => api.get('/badges/my'),
   getMyRecent:  (limit = 5)       => api.get(`/badges/my/recent?limit=${limit}`),
 }
@@ -499,8 +500,11 @@ export const adminApi = {
   createBadge:          (body: any)                     => api.post(`/admin/badges`, body),
   updateBadge:          (id: string, body: any)         => api.patch(`/admin/badges/${id}`, body),
   disableBadge:         (id: string)                    => api.post(`/admin/badges/${id}/disable`),
+  enableBadge:          (id: string)                    => api.post(`/admin/badges/${id}/enable`),
   deleteBadge:          (id: string)                    => api.delete(`/admin/badges/${id}`),
   awardBadgeToUser:     (body: any)                     => api.post(`/admin/badges/award`, body),
+  revokeBadgeFromUser:  (userId: string, badgeId: string) => api.delete(`/admin/users/${userId}/badges/${badgeId}`),
+  refreshBadgeCache:    ()                              => api.post(`/admin/badges/refresh-cache`, {}),
   uploadFile:           (file: File): Promise<{ url: string }> => {
     const jwt = typeof window !== 'undefined' ? localStorage.getItem('ce_token') : null
     const fd = new FormData()
