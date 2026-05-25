@@ -378,7 +378,11 @@ function EditModal({ profile, onClose, onSave }: {
   const [bannerFile, setBannerFile] = useState<string|null>(null)
   const [avatarFile, setAvatarFile] = useState<string|null>(null)
 
-  const MAX = { badges:12, friends:5, teams:3 }
+  const allBadges  = profile.badges      || []
+  const allFriends = profile.friendsList  || []
+  const allTeams   = profile.teamsList    || []
+
+  const MAX = { badges: allBadges.length, friends:5, teams:3 }
 
   function toggle(id:string, list:string[], set:(v:string[])=>void, max:number) {
     if (list.includes(id)) { set(list.filter(x=>x!==id)); return }
@@ -409,10 +413,6 @@ function EditModal({ profile, onClose, onSave }: {
       </button>
     )
   }
-
-  const allBadges  = profile.badges      || []
-  const allFriends = profile.friendsList  || []
-  const allTeams   = profile.teamsList    || []
 
   return (
     <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
@@ -503,17 +503,44 @@ function EditModal({ profile, onClose, onSave }: {
           {section === 'badges' && (
             <div style={{ animation: 'fadeIn 0.3s ease' }}>
               <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:14, color:'#8890A4', marginBottom:20 }}>
-                Select up to <strong style={{ color:'#fff' }}>{MAX.badges} badges</strong> to show on your Overview. ({selBadges.length}/{MAX.badges})
+                Select badges to show on your Overview. <strong style={{ color:'#fff' }}>({selBadges.length}/{MAX.badges} selected)</strong>
               </div>
               {allBadges.length === 0
                 ? <div style={{ textAlign:'center', padding:'40px 0', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 12, color:'#4F5568', fontFamily:"'Barlow',sans-serif", fontSize:14 }}>No badges earned yet.</div>
-                : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(90px,1fr))', gap:12 }}>
+                : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(100px,1fr))', gap:12 }}>
                     {allBadges.map((b:any)=>{
                       const id = String(b._id||b.id)
                       const sel = selBadges.includes(id)
                       return (
-                        <div key={id} style={{ opacity:!sel&&selBadges.length>=MAX.badges?0.4:1, transition:'opacity 0.2s', filter: !sel && selBadges.length>=MAX.badges ? 'grayscale(0.8)' : 'none' }}>
-                          <AchievementBadge badge={b} />
+                        <div key={id}
+                          onClick={()=>toggle(id, selBadges, setSelBadges, MAX.badges)}
+                          style={{
+                            position: 'relative',
+                            padding: 10,
+                            background: sel ? 'rgba(232,0,13,0.08)' : 'rgba(255,255,255,0.02)',
+                            border: `1px solid ${sel ? 'rgba(232,0,13,0.5)' : 'rgba(255,255,255,0.07)'}`,
+                            borderRadius: 12,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: sel ? '0 0 0 2px rgba(232,0,13,0.2), inset 0 0 20px rgba(232,0,13,0.05)' : 'none',
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = sel ? 'rgba(232,0,13,0.12)' : 'rgba(255,255,255,0.05)'
+                            e.currentTarget.style.borderColor = sel ? 'rgba(232,0,13,0.7)' : 'rgba(255,255,255,0.15)'
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = sel ? 'rgba(232,0,13,0.08)' : 'rgba(255,255,255,0.02)'
+                            e.currentTarget.style.borderColor = sel ? 'rgba(232,0,13,0.5)' : 'rgba(255,255,255,0.07)'
+                          }}
+                        >
+                          <AchievementBadge badge={b} className={{ image: 'mx-auto block w-16 h-16 object-cover' }} />
+                          {sel && (
+                            <div style={{ position:'absolute', top:6, right:6, width:18, height:18, background:'#e8000d', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 6px rgba(232,0,13,0.5)' }}>
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                <path d="M1.5 5l2.5 2.5 4.5-5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </div>
+                          )}
                         </div>
                       )
                     })}
