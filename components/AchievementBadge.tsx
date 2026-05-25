@@ -22,7 +22,7 @@ function AchievementBadge({ badge, className }: { badge: AchievementBadge, class
       onMouseLeave={() => setVisible(false)}
     >
       <img
-        className={cn('mx-auto block w-52 h-52 object-cover', RARITY_SHADOW_CLASSES[badge.rarity as BadgeRarity], className?.image)}
+        className={cn('mx-auto block w-52 h-52 object-contain', RARITY_SHADOW_CLASSES[badge.rarity as BadgeRarity], className?.image)}
         src={badge.img}
         alt={badge.name}
       />

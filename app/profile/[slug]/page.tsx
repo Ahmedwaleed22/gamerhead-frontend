@@ -533,7 +533,7 @@ function EditModal({ profile, onClose, onSave }: {
                             e.currentTarget.style.borderColor = sel ? 'rgba(232,0,13,0.5)' : 'rgba(255,255,255,0.07)'
                           }}
                         >
-                          <AchievementBadge badge={b} className={{ image: 'mx-auto block w-16 h-16 object-cover' }} />
+                          <AchievementBadge badge={b} className={{ image: 'mx-auto block w-16 h-16 object-contain' }} />
                           {sel && (
                             <div style={{ position:'absolute', top:6, right:6, width:18, height:18, background:'#e8000d', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 6px rgba(232,0,13,0.5)' }}>
                               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
