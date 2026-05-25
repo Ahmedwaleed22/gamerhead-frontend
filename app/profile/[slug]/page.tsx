@@ -7,6 +7,8 @@ import { usersApi } from '@/lib/api'
 import { sendActivity } from '@/lib/socket'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
+import AchievementBadge from '@/components/AchievementBadge'
+import type { AchievementBadge as AchievementBadgeType } from '@/types/Badges.type'
 
 // Adjust this import to match your auth context
 let useAuth: () => { user: { slug: string } | null }
@@ -76,45 +78,45 @@ const S = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function BadgeTile({ b, selectable, selected, onToggle }: {
-  b: any; selectable?: boolean; selected?: boolean; onToggle?: () => void
-}) {
-  const [hover, setHover] = useState(false)
-  const [imgErr, setImgErr] = useState(false)
-  const rc = RARITY[b.rarity] || '#9CA3AF'
-  return (
-    <div
-      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-      onClick={selectable ? onToggle : undefined}
-      style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'14px 8px',
-        background: selected ? `${rc}18` : hover ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
-        border:`1px solid ${selected ? rc : hover ? rc+'44' : 'rgba(255,255,255,0.05)'}`,
-        borderRadius:10, cursor:selectable ? 'pointer' : 'default', transition:'all 0.15s' }}>
-      {selectable && selected && (
-        <div style={{ position:'absolute', top:6, right:6, width:16, height:16, background:rc, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <Icon icon={Solar.checkRead} width={10} height={10} style={{ color: '#fff' }} />
-        </div>
-      )}
-      <div style={{ width:64, height:64, borderRadius:10, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' }}>
-        {!imgErr && b.img
-          ? <img src={b.img} alt={b.name} onError={() => setImgErr(true)} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-          : <div style={{ width:64, height:64, borderRadius:10, background:`linear-gradient(135deg,${rc}33,${rc}11)`, border:`1px solid ${rc}44`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>{b.name?.slice(0,1)}</div>
-        }
-      </div>
-      <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#9CA3AF', textAlign:'center', lineHeight:1.3 }}>{b.name}</div>
-      <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:9, letterSpacing:1, color:rc, textTransform:'uppercase' }}>{b.rarity}</div>
-      {hover && !selectable && (
-        <div style={{ position:'absolute', bottom:'calc(100% + 10px)', left:'50%', transform:'translateX(-50%)', width:200, background:'#1A1A2E', border:`1px solid ${rc}55`, borderRadius:10, padding:'12px 14px', zIndex:9999, pointerEvents:'none', boxShadow:'0 12px 32px rgba(0,0,0,0.8)' }}>
-          <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:700, fontSize:13, color:'#F0F0F8', marginBottom:4 }}>{b.name}</div>
-          <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:700, fontSize:9, letterSpacing:1.2, textTransform:'uppercase', color:rc, marginBottom:6 }}>{b.rarity}</div>
-          {b.desc && <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#9CA3AF', lineHeight:1.5, marginBottom:6 }}>{b.desc}</div>}
-          {b.date && <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#4A5568' }}>Earned {b.date}</div>}
-          <div style={{ position:'absolute', bottom:-5, left:'50%', transform:'translateX(-50%) rotate(45deg)', width:8, height:8, background:'#1A1A2E', borderRight:`1px solid ${rc}44`, borderBottom:`1px solid ${rc}44` }} />
-        </div>
-      )}
-    </div>
-  )
-}
+// function BadgeTile({ b, selectable, selected, onToggle }: {
+//   b: any; selectable?: boolean; selected?: boolean; onToggle?: () => void
+// }) {
+//   const [hover, setHover] = useState(false)
+//   const [imgErr, setImgErr] = useState(false)
+//   const rc = RARITY[b.rarity] || '#9CA3AF'
+//   return (
+//     <div
+//       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+//       onClick={selectable ? onToggle : undefined}
+//       style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'14px 8px',
+//         background: selected ? `${rc}18` : hover ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
+//         border:`1px solid ${selected ? rc : hover ? rc+'44' : 'rgba(255,255,255,0.05)'}`,
+//         borderRadius:10, cursor:selectable ? 'pointer' : 'default', transition:'all 0.15s' }}>
+//       {selectable && selected && (
+//         <div style={{ position:'absolute', top:6, right:6, width:16, height:16, background:rc, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center' }}>
+//           <Icon icon={Solar.checkRead} width={10} height={10} style={{ color: '#fff' }} />
+//         </div>
+//       )}
+//       <div style={{ width:64, height:64, borderRadius:10, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' }}>
+//         {!imgErr && b.img
+//           ? <img src={b.img} alt={b.name} onError={() => setImgErr(true)} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+//           : <div style={{ width:64, height:64, borderRadius:10, background:`linear-gradient(135deg,${rc}33,${rc}11)`, border:`1px solid ${rc}44`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>{b.name?.slice(0,1)}</div>
+//         }
+//       </div>
+//       <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#9CA3AF', textAlign:'center', lineHeight:1.3 }}>{b.name}</div>
+//       <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:9, letterSpacing:1, color:rc, textTransform:'uppercase' }}>{b.rarity}</div>
+//       {hover && !selectable && (
+//         <div style={{ position:'absolute', bottom:'calc(100% + 10px)', left:'50%', transform:'translateX(-50%)', width:200, background:'#1A1A2E', border:`1px solid ${rc}55`, borderRadius:10, padding:'12px 14px', zIndex:9999, pointerEvents:'none', boxShadow:'0 12px 32px rgba(0,0,0,0.8)' }}>
+//           <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:700, fontSize:13, color:'#F0F0F8', marginBottom:4 }}>{b.name}</div>
+//           <div style={{ fontFamily:"'Barlow',sans-serif", fontWeight:700, fontSize:9, letterSpacing:1.2, textTransform:'uppercase', color:rc, marginBottom:6 }}>{b.rarity}</div>
+//           {b.desc && <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:11, color:'#9CA3AF', lineHeight:1.5, marginBottom:6 }}>{b.desc}</div>}
+//           {b.date && <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:10, color:'#4A5568' }}>Earned {b.date}</div>}
+//           <div style={{ position:'absolute', bottom:-5, left:'50%', transform:'translateX(-50%) rotate(45deg)', width:8, height:8, background:'#1A1A2E', borderRight:`1px solid ${rc}44`, borderBottom:`1px solid ${rc}44` }} />
+//         </div>
+//       )}
+//     </div>
+//   )
+// }
 
 function MatchRow({ m, cols }: { m: any; cols: string }) {
   const tc = m.type==='Wager' ? '#F39C12' : m.type==='Tournament' ? '#9B59B6' : '#3498DB'
@@ -265,7 +267,7 @@ function OverviewTab({ U, setActiveTab }: { U: any; setActiveTab: (t:string)=>vo
           {FAVE_BADGES.length === 0
             ? <div style={{ padding:'24px 20px', color:'#4A5568', fontFamily:"'Barlow',sans-serif", fontSize:12, textAlign:'center' }}>No favorite badges set yet</div>
             : <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', padding:16, gap:10 }}>
-                {FAVE_BADGES.map((b:any,i:number)=><BadgeTile key={i} b={b} />)}
+                {FAVE_BADGES.map((b:AchievementBadgeType,i:number)=><AchievementBadge key={i} badge={b} />)}
               </div>
           }
         </div>
@@ -510,7 +512,7 @@ function EditModal({ profile, onClose, onSave }: {
                       const sel = selBadges.includes(id)
                       return (
                         <div key={id} style={{ opacity:!sel&&selBadges.length>=MAX.badges?0.4:1, transition:'opacity 0.2s', filter: !sel && selBadges.length>=MAX.badges ? 'grayscale(0.8)' : 'none' }}>
-                          <BadgeTile b={b} selectable selected={sel} onToggle={()=>toggle(id,selBadges,setSelBadges,MAX.badges)} />
+                          <AchievementBadge badge={b} />
                         </div>
                       )
                     })}
@@ -1036,7 +1038,7 @@ export default function ProfilePage() {
                   <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:13, letterSpacing:1.5, textTransform:'uppercase', color:'#6B7280', marginLeft:8 }}>{ALL_BADGES.length} earned</span>
                 </div>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:12 }}>
-                  {ALL_BADGES.map((b:any,i:number)=><BadgeTile key={i} b={b} />)}
+                  {ALL_BADGES.map((b:any,i:number)=><AchievementBadge key={i} badge={b} />)}
                 </div>
               </>
         )}

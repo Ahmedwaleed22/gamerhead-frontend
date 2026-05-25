@@ -501,6 +501,16 @@ export const adminApi = {
   disableBadge:         (id: string)                    => api.post(`/admin/badges/${id}/disable`),
   deleteBadge:          (id: string)                    => api.delete(`/admin/badges/${id}`),
   awardBadgeToUser:     (body: any)                     => api.post(`/admin/badges/award`, body),
+  uploadFile:           (file: File): Promise<{ url: string }> => {
+    const jwt = typeof window !== 'undefined' ? localStorage.getItem('ce_token') : null
+    const fd = new FormData()
+    fd.append('file', file)
+    return fetch(`${BASE_URL}/admin/upload`, {
+      method: 'POST',
+      headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
+      body: fd,
+    }).then(r => r.json())
+  },
 
   // Forum (board management)
   getForumBoards:       ()                              => api.get(`/admin/forum/boards`),

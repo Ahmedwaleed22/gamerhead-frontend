@@ -1,9 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { adminApi } from '@/lib/api'
 import ActionBtn from '../components/ActionBtn'
 import Modal from '../components/Modal'
+
+const slugify = (str: string) =>
+  str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 const RARITY_COLORS: Record<string, string> = { Common: '#6b7280', Rare: '#3b82f6', Epic: '#a855f7', Legendary: '#f59e0b' }
 const inputStyle: React.CSSProperties = {
@@ -38,6 +41,9 @@ export default function AdminBadgesPage() {
   const [awardModal, setAwardModal] = useState(false)
   const [form, setForm] = useState({ name: '', slug: '', desc: '', img: '', rarity: 'Common', category: 'platform', trigger: '', threshold: '1', isActive: true })
   const [awardForm, setAwardForm] = useState({ userId: '', badgeSlug: '' })
+  const imgInputRef = useRef<HTMLInputElement>(null)
+
+  const emptyForm = { name: '', slug: '', desc: '', img: '', rarity: 'Common', category: 'platform', trigger: '', threshold: '1', isActive: true }
 
   const load = async () => {
     setLoading(true)
@@ -47,11 +53,26 @@ export default function AdminBadgesPage() {
 
   useEffect(() => { load() }, [])
 
+  const [imgUploading, setImgUploading] = useState(false)
+
+  const handleImgSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) return
+    e.target.value = ''
+    setImgUploading(true)
+    try {
+      const res = await adminApi.uploadFile(file)
+      setForm(p => ({ ...p, img: res.url }))
+    } catch { }
+    setImgUploading(false)
+  }
+
   const handleCreate = async () => {
     try {
       await adminApi.createBadge({ ...form, threshold: Number(form.threshold) })
       setCreateModal(false)
-      setForm({ name: '', slug: '', desc: '', img: '', rarity: 'Common', category: 'platform', trigger: '', threshold: '1', isActive: true })
+      setForm(emptyForm)
       load()
     } catch { }
   }
@@ -76,7 +97,7 @@ export default function AdminBadgesPage() {
     try {
       await adminApi.updateBadge(editModal._id, { ...form, threshold: Number(form.threshold) })
       setEditModal(null)
-      setForm({ name: '', slug: '', desc: '', img: '', rarity: 'Common', category: 'platform', trigger: '', threshold: '1', isActive: true })
+      setForm(emptyForm)
       load()
     } catch { }
   }
@@ -104,7 +125,7 @@ export default function AdminBadgesPage() {
         <h1 style={{ fontWeight: 900, fontSize: 28, color: '#fff', margin: 0, textTransform: 'uppercase' }}>Badges</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           <ActionBtn label="AWARD TO USER" color="#3b82f6" onClick={() => setAwardModal(true)} />
-          <ActionBtn label="+ CREATE BADGE" color="#22c55e" onClick={() => setCreateModal(true)} />
+          <ActionBtn label="+ CREATE BADGE" color="#22c55e" onClick={() => { setForm(emptyForm); setCreateModal(true) }} />
         </div>
       </div>
 
@@ -121,7 +142,7 @@ export default function AdminBadgesPage() {
                   background: '#13131E', border: `1px solid ${RARITY_COLORS[b.rarity] || '#4F5568'}44`,
                   borderRadius: 10, padding: 14, textAlign: 'center', opacity: b.isActive ? 1 : 0.5,
                 }}>
-                  {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 6 }} />}
+                  {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 6, objectFit: 'cover' }} />}
                   <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA' }}>{b.name}</div>
                   <div style={{ fontSize: 9, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700 }}>{b.rarity}</div>
                   <div style={{ fontSize: 9, color: '#4F5568', marginTop: 4 }}>{b.slug}</div>
@@ -146,7 +167,7 @@ export default function AdminBadgesPage() {
                   background: '#13131E', border: `1px solid ${RARITY_COLORS[b.rarity] || '#4F5568'}44`,
                   borderRadius: 10, padding: 14, textAlign: 'center', opacity: b.isActive ? 1 : 0.5,
                 }}>
-                  {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 6 }} />}
+                  {b.img && <img src={b.img} alt={b.name} style={{ width: 48, height: 48, marginBottom: 6, objectFit: 'cover' }} />}
                   <div style={{ fontWeight: 700, fontSize: 12, color: '#DDE0EA' }}>{b.name}</div>
                   <div style={{ fontSize: 9, color: RARITY_COLORS[b.rarity] || '#4F5568', fontWeight: 700 }}>{b.rarity}</div>
                   <div style={{ fontSize: 9, color: '#4F5568', marginTop: 4 }}>{b.slug}</div>
@@ -165,9 +186,25 @@ export default function AdminBadgesPage() {
       {createModal && (
         <Modal title="Create Badge" onClose={() => setCreateModal(false)} width={420}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {[['Name', 'name'], ['Slug', 'slug'], ['Description', 'desc'], ['Image URL', 'img']].map(([l, k]) => (
-              <div key={k as string}><div style={labelStyle}>{l}</div><input value={(form as any)[k as string]} onChange={e => setForm(p => ({ ...p, [k as string]: e.target.value }))} style={inputStyle} /></div>
-            ))}
+            <div>
+              <div style={labelStyle}>Name</div>
+              <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value, slug: slugify(e.target.value) }))} style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Description</div>
+              <input value={form.desc} onChange={e => setForm(p => ({ ...p, desc: e.target.value }))} style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Badge Image</div>
+              <input ref={imgInputRef} type="file" accept="image/*" onChange={handleImgSelect} style={{ display: 'none' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {form.img && <img src={form.img} alt="preview" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 6, background: '#0d0d14' }} />}
+                <button type="button" onClick={() => imgInputRef.current?.click()} disabled={imgUploading} style={{ ...inputStyle, cursor: imgUploading ? 'default' : 'pointer', width: 'auto', padding: '7px 14px', color: '#9CA3AF', textAlign: 'left' }}>
+                  {imgUploading ? 'Uploading...' : form.img ? 'Change Image' : 'Choose Image...'}
+                </button>
+                {form.img && <button type="button" onClick={() => setForm(p => ({ ...p, img: '' }))} style={{ background: 'none', border: 'none', color: '#e8000d', cursor: 'pointer', fontSize: 12 }}>Remove</button>}
+              </div>
+            </div>
             <div><div style={labelStyle}>Rarity</div>
               <select value={form.rarity} onChange={e => setForm(p => ({ ...p, rarity: e.target.value }))} style={inputStyle}>
                 <option value="Common">Common</option><option value="Rare">Rare</option><option value="Epic">Epic</option><option value="Legendary">Legendary</option>
@@ -191,11 +228,27 @@ export default function AdminBadgesPage() {
       )}
 
       {editModal && (
-        <Modal title="Edit Badge" subtitle={editModal.name} onClose={() => setEditModal(null)} width={420}>
+        <Modal title="Edit Badge" subtitle={editModal.name} onClose={() => { setEditModal(null); setForm(emptyForm) }} width={420}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {[['Name', 'name'], ['Slug', 'slug'], ['Description', 'desc'], ['Image URL', 'img']].map(([l, k]) => (
-              <div key={k as string}><div style={labelStyle}>{l}</div><input value={(form as any)[k as string]} onChange={e => setForm(p => ({ ...p, [k as string]: e.target.value }))} style={inputStyle} /></div>
-            ))}
+            <div>
+              <div style={labelStyle}>Name</div>
+              <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Description</div>
+              <input value={form.desc} onChange={e => setForm(p => ({ ...p, desc: e.target.value }))} style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Badge Image</div>
+              <input ref={imgInputRef} type="file" accept="image/*" onChange={handleImgSelect} style={{ display: 'none' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {form.img && <img src={form.img} alt="preview" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 6, background: '#0d0d14' }} />}
+                <button type="button" onClick={() => imgInputRef.current?.click()} disabled={imgUploading} style={{ ...inputStyle, cursor: imgUploading ? 'default' : 'pointer', width: 'auto', padding: '7px 14px', color: '#9CA3AF', textAlign: 'left' }}>
+                  {imgUploading ? 'Uploading...' : form.img ? 'Change Image' : 'Choose Image...'}
+                </button>
+                {form.img && <button type="button" onClick={() => setForm(p => ({ ...p, img: '' }))} style={{ background: 'none', border: 'none', color: '#e8000d', cursor: 'pointer', fontSize: 12 }}>Remove</button>}
+              </div>
+            </div>
             <div><div style={labelStyle}>Rarity</div>
               <select value={form.rarity} onChange={e => setForm(p => ({ ...p, rarity: e.target.value }))} style={inputStyle}>
                 <option value="Common">Common</option><option value="Rare">Rare</option><option value="Epic">Epic</option><option value="Legendary">Legendary</option>
