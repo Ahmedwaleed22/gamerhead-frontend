@@ -118,7 +118,7 @@ export default function HomePage() {
         <div className="hero-bg-pattern" />
         <div className="hero-glow" />
         <div className="container" style={{ width: '100%' }}>
-          <motion.div 
+          <motion.div
             className="hero-content"
             initial="hidden"
             animate="visible"
@@ -127,13 +127,13 @@ export default function HomePage() {
               visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
             }}
           >
-            <motion.div 
+            <motion.div
               className="hero-badge"
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
             >
               <Icon icon="fluent:live-24-filled" width="20" height="20" /> Live Tournaments Running Now
             </motion.div>
-            <motion.div 
+            <motion.div
               className="hero-text-area"
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
             >
@@ -151,14 +151,14 @@ export default function HomePage() {
                 Call of Duty, Fortnite, FIFA and more.
               </p>
             </motion.div>
-            <motion.div 
+            <motion.div
               className="hero-buttons"
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
             >
               <Link href="/register" className="btn-primary">Register for Free</Link>
               <Link href="/tournaments" className="btn-secondary">Our Championships</Link>
             </motion.div>
-            <motion.div 
+            <motion.div
               className="carousel-dots"
               variants={{ hidden: { opacity: 0, scale: 0.8 }, visible: { opacity: 1, scale: 1 } }}
             >

@@ -87,7 +87,7 @@ function LandingPageStats() {
   const { data: stats } = useApi<StatsData>(() => platformApi.getStats());
 
   return (
-    <div className="bg-black/30">
+    <div className="bg-black/30 rounded-lg">
       <motion.section
         className="relative grid md:grid-cols-4 gap-0 z-10! bg-bg-5/70 backdrop-blur-sm rounded-lg p-0!"
         initial={{ marginTop: 0 }}

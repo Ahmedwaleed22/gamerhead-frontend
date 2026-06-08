@@ -419,6 +419,7 @@ img { max-width: 100%; display: block; }
   display: flex;
   flex-direction: column;
 }
+
 .tournament-card:hover {
   border-color: rgba(232,0,13,0.4);
   transform: translateY(-4px);
