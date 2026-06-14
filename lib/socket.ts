@@ -1,37 +1,42 @@
-import { io, Socket } from 'socket.io-client'
+// ── Legacy socket.io shim ──────────────────────────────────────────────────
+//
+// The old NestJS backend exposed a socket.io gateway (presence heartbeats,
+// activity pings, and a `notification` push). The Laravel backend does not — it
+// uses Reverb for the two chat channels (see lib/echo.ts) and REST for the rest.
+//
+// These functions are kept as no-ops so existing imports keep compiling while we
+// no longer dial a dead socket.io server. Real-time chat lives in lib/echo.ts.
 
-const WS_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-
-let socket: Socket | null = null
-
-export function getSocket(): Socket | null {
-  return socket
+type SocketStub = {
+  on: (event: string, handler: (...args: unknown[]) => void) => void
+  off: (event: string, handler?: (...args: unknown[]) => void) => void
+  disconnect: () => void
+  connected: boolean
 }
 
-export function connectSocket(token: string): Socket {
-  if (socket?.connected) return socket
-
-  socket = io(WS_URL, {
-    auth: { token },
-    transports: ['websocket', 'polling'],
-  })
-
-  return socket
+const stub: SocketStub = {
+  on: () => {},
+  off: () => {},
+  disconnect: () => {},
+  connected: false,
 }
 
-export function disconnectSocket() {
-  if (socket) {
-    socket.disconnect()
-    socket = null
-  }
+export function getSocket(): SocketStub | null {
+  return null
 }
 
-export function sendHeartbeat(status: 'online' | 'idle', activity?: string) {
-  if (!socket?.connected) return
-  socket.emit('heartbeat', { status, activity })
+export function connectSocket(_token: string): SocketStub {
+  return stub
 }
 
-export function sendActivity(text: string) {
-  if (!socket?.connected) return
-  socket.emit('activity', { text })
+export function disconnectSocket(): void {
+  /* no-op — no socket.io server on the Laravel backend */
+}
+
+export function sendHeartbeat(_status: 'online' | 'idle', _activity?: string): void {
+  /* no-op — presence isn't part of the Laravel backend */
+}
+
+export function sendActivity(_text: string): void {
+  /* no-op — activity tracking isn't part of the Laravel backend */
 }
