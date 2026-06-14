@@ -8,6 +8,7 @@ import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { matchesApi, supportApi } from '@/lib/api'
 import { sendActivity } from '@/lib/socket'
+import { listenPrivate } from '@/lib/echo'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 
@@ -516,32 +517,40 @@ export default function MatchDetail({ matchType }: { matchType?: "universal" | "
     return () => clearInterval(t)
   }, [])
 
-  // Poll for new chat messages every 3 seconds
+  // Map raw chat rows → the UI message shape.
+  const mapChat = useCallback((chatArr: any[]) => {
+    const myUsername = user?.username
+    return chatArr.map((c: any) => {
+      const isSystem = c.type === 'system'
+      const isMine   = !isSystem && myUsername && c.username === myUsername
+      return {
+        from:     c.username || 'System',
+        initials: c.initials || (c.username || 'SY').slice(0, 2).toUpperCase(),
+        color:    isSystem ? ACCENT : isMine ? '#fff' : '#8890A4',
+        bg:       isSystem ? ACCENT_DIM : isMine ? '#B82C2C' : '#13131E',
+        text:     c.text,
+        type:     isSystem ? 'system' : isMine ? 'sent' : 'recv',
+      }
+    })
+  }, [user?.username])
+
+  const loadChat = useCallback(() => {
+    if (!REAL_MATCH_ID) return
+    matchesApi.getChat(REAL_MATCH_ID).then((data: any) => {
+      const chatArr: any[] = Array.isArray(data) ? data : (data?.chat || [])
+      if (chatArr.length) setMsgs(mapChat(chatArr))
+    }).catch(() => {})
+  }, [REAL_MATCH_ID, mapChat])
+
+  // Real-time chat via Reverb (private `match.{matchId}` channel), with a slow
+  // poll as a fallback when the socket isn't connected.
   useEffect(() => {
     if (!REAL_MATCH_ID) return
-    const myUsername = user?.username
-    const poll = () => {
-      matchesApi.getChat(REAL_MATCH_ID).then((data: any) => {
-        const chatArr: any[] = Array.isArray(data) ? data : (data?.chat || [])
-        if (!chatArr.length) return
-        setMsgs(chatArr.map((c: any) => {
-          const isSystem = c.type === 'system'
-          const isMine   = !isSystem && myUsername && c.username === myUsername
-          return {
-            from:     c.username || 'System',
-            initials: c.initials || (c.username || 'SY').slice(0, 2).toUpperCase(),
-            color:    isSystem ? ACCENT : isMine ? '#fff' : '#8890A4',
-            bg:       isSystem ? ACCENT_DIM : isMine ? '#B82C2C' : '#13131E',
-            text:     c.text,
-            type:     isSystem ? 'system' : isMine ? 'sent' : 'recv',
-          }
-        }))
-      }).catch(() => {})
-    }
-    poll()
-    const t = setInterval(poll, 3000)
-    return () => clearInterval(t)
-  }, [REAL_MATCH_ID, user?.username])
+    loadChat()
+    const unsub = listenPrivate(`match.${REAL_MATCH_ID}`, '.chat.message', () => loadChat())
+    const t = setInterval(loadChat, 10000)
+    return () => { unsub(); clearInterval(t) }
+  }, [REAL_MATCH_ID, loadChat])
 
   // Auto-scroll or show unread badge, like WhatsApp
   const prevMsgCountRef = useRef(0)

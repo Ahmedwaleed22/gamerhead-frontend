@@ -8,7 +8,8 @@ import { trackEvent } from '@/lib/gtag'
 import { usePathname, useRouter } from 'next/navigation'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { notificationsApi, supportApi } from '@/lib/api'
-import { connectSocket, disconnectSocket, sendHeartbeat } from '@/lib/socket'
+import { sendHeartbeat } from '@/lib/socket'
+import { listenPrivate } from '@/lib/echo'
 import AuthModal from './components/AuthModal'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -82,26 +83,12 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { fetchNotifs() }, [fetchNotifs])
 
-  // ── WebSocket: real-time notification push ──
+  // ── Notifications: the old socket.io push is gone — poll every 30s instead. ──
   useEffect(() => {
     if (!user) return
-    const token = typeof window !== 'undefined' ? localStorage.getItem('ce_token') : null
-    if (!token) return
-
-    const sock = connectSocket(token)
-
-    const handleNotification = (notif: any) => {
-      setNotifs(prev => [notif, ...prev])
-      setUnreadCount(prev => prev + 1)
-    }
-
-    sock.on('notification', handleNotification)
-
-    return () => {
-      sock.off('notification', handleNotification)
-      disconnectSocket()
-    }
-  }, [user])
+    const iv = setInterval(() => { fetchNotifs() }, 30000)
+    return () => clearInterval(iv)
+  }, [user, fetchNotifs])
 
   // ── Heartbeat interval + idle detection ──
   useEffect(() => {
@@ -145,19 +132,26 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     }).catch(() => {})
   }, [user])
 
-  // ── Poll live chat session every 5s when chat is open ──
+  // ── Live chat refresh: instant via Reverb, with a slow poll as fallback ──
   useEffect(() => {
-    if (supportStep !== 'chat' || !activeSession?.sessionId || !chatOpen) return
-    const iv = setInterval(() => {
+    if (supportStep !== 'chat' || !activeSession?.sessionId) return
+
+    const refresh = () => {
       supportApi.getMyLiveChat().then((s: any) => {
         if (!s) { setSupportStep('closed'); return }
         setActiveSession(s)
         setSupportMsgs(s.messages || [])
         if (s.status === 'closed') setSupportStep('closed')
       }).catch(() => {})
-    }, 5000)
-    return () => clearInterval(iv)
-  }, [supportStep, activeSession?.sessionId, chatOpen])
+    }
+
+    // Reverb push on new staff/user messages.
+    const unsub = listenPrivate(`support.chat.${activeSession.sessionId}`, '.chat.message', refresh)
+    // Fallback poll (also catches status → closed when no message event fires).
+    const iv = setInterval(refresh, 15000)
+
+    return () => { unsub(); clearInterval(iv) }
+  }, [supportStep, activeSession?.sessionId])
 
   // ── Auto-scroll chat ──
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [supportMsgs])

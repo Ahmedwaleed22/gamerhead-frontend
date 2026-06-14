@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { mailboxApi, usersApi } from '@/lib/api'
+import { listenPrivate } from '@/lib/echo'
 import { useToast } from '@/components/Toast'
 import { sendActivity } from '@/lib/socket'
 import { Icon } from '@iconify/react'
@@ -67,6 +68,8 @@ export default function MailboxPageWrapper() {
   )
 }
 
+const COLORS = ['#E74C3C','#3498DB','#F39C12','#27AE60','#9B59B6','#E67E22','#1ABC9C']
+
 function MailboxPage() {
   const { toast } = useToast()
   const { user } = useAuth()
@@ -112,8 +115,6 @@ function MailboxPage() {
   }, [messages, selected, scrollToBottom])
 
   useEffect(() => { sendActivity('Messaging') }, [])
-
-  const COLORS = ['#E74C3C','#3498DB','#F39C12','#27AE60','#9B59B6','#E67E22','#1ABC9C']
 
   // Insert formatting wrapper around selected text in textarea
   const applyFormat = (prefix: string, suffix: string) => {
@@ -167,11 +168,7 @@ function MailboxPage() {
     })
   }, [searchParams])
 
-  useEffect(() => {
-    usersApi.getFriends().then((res: any) => {
-      setFriends(Array.isArray(res?.friends) ? res.friends : [])
-    }).catch(() => {})
-
+  const loadThreads = useCallback(() => {
     mailboxApi.getThreads().then((res: any) => {
       const list = (Array.isArray(res) ? res : res.threads || []).map((t: any, i: number) => ({
         id:       t._id || t.id || String(i),
@@ -190,6 +187,45 @@ function MailboxPage() {
     }).catch(() => {})
   }, [])
 
+  const loadThreadMessages = useCallback((threadId: string, fallbackColor?: string) => {
+    return mailboxApi.getMessages(threadId).then((res: any) => {
+      const msgs = (Array.isArray(res) ? res : res.messages || []).map((m: any) => ({
+        id:       m.id || m._id || '',
+        side:     m.side || 'theirs',
+        initials: m.initials || '??',
+        pfp:      m.pfp || m.avatarUrl || '',
+        color:    m.color || fallbackColor || COLORS[0],
+        date:     m.date || '',
+        time:     m.time || '',
+        body:     m.body || m.text || '',
+        editedAt: m.editedAt || null,
+      }))
+      setMessages(prev => ({ ...prev, [threadId]: msgs }))
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    usersApi.getFriends().then((res: any) => {
+      setFriends(Array.isArray(res?.friends) ? res.friends : [])
+    }).catch(() => {})
+
+    loadThreads()
+  }, [loadThreads])
+
+  // Real-time inbox via Reverb (private `mailbox.{userId}` channel): refresh the
+  // thread list on any new message, and the open thread's messages if it matches.
+  useEffect(() => {
+    if (!user?.id) return
+    const unsub = listenPrivate(`mailbox.${user.id}`, '.mail.message', (payload: any) => {
+      loadThreads()
+      if (payload?.conversationId && payload.conversationId === selected?.id) {
+        loadThreadMessages(selected.id, selected.color)
+        setTimeout(() => scrollToBottom(), 0)
+      }
+    })
+    return unsub
+  }, [user?.id, selected?.id, selected?.color, loadThreads, loadThreadMessages, scrollToBottom])
+
   const unreadCount = threads.filter(t => t.unread).length
 
   const selectThread = (thread: Thread) => {
@@ -199,20 +235,7 @@ function MailboxPage() {
     setUnreadCountChat(0)
     if (!messages[thread.id]) {
       setLoadingMsgs(true)
-      mailboxApi.getMessages(thread.id).then((res: any) => {
-        const msgs = (Array.isArray(res) ? res : res.messages || []).map((m: any) => ({
-          id:       m.id || m._id || '',
-          side:     m.side || 'theirs',
-          initials: m.initials || '??',
-          pfp:      m.pfp || m.avatarUrl || '',
-          color:    m.color || thread.color,
-          date:     m.date || '',
-          time:     m.time || '',
-          body:     m.body || m.text || '',
-          editedAt: m.editedAt || null,
-        }))
-        setMessages(prev => ({ ...prev, [thread.id]: msgs }))
-      }).catch(() => {}).finally(() => setLoadingMsgs(false))
+      loadThreadMessages(thread.id, thread.color).finally(() => setLoadingMsgs(false))
     }
   }
 
