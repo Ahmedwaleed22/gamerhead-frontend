@@ -330,6 +330,9 @@ export default function Header({
                       <Link href={`/profile/${user.slug}`} className="nav-user-dd-item" onClick={() => setUserOpen(false)}>
                         My Profile
                       </Link>
+                      <Link href="/health" className="nav-user-dd-item" onClick={() => setUserOpen(false)}>
+                        Account Health
+                      </Link>
                       <Link href="/mailbox" className="nav-user-dd-item" onClick={() => setUserOpen(false)}>
                         Mailbox
                         {unreadCount > 0 && <span className="nav-user-dd-badge">{unreadCount}</span>}

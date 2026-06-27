@@ -1,0 +1,42 @@
+{
+  "pkg": "frontend",
+  "globalName": "GamerHead",
+  "shape": "package",
+  "projectId": "dcbc4e26-43e0-4aa5-a705-39ad0f3c72b1",
+  "tsconfig": ".design-sync/tsconfig.build.json",
+  "srcDir": "components",
+  "cssEntry": ".design-sync/compiled.css",
+  "readmeHeader": ".design-sync/conventions.md",
+  "provider": {
+    "component": "AuthProvider",
+    "inner": { "component": "ToastProvider" }
+  },
+  "overrides": {
+    "GameCard": { "cardMode": "column" }
+  },
+  "componentSrcMap": {
+    "Button": "components/ui/button.tsx",
+    "Carousel": "components/ui/carousel.tsx",
+    "Table": "components/ui/table.tsx",
+    "AchievementBadge": "components/AchievementBadge.tsx",
+    "Footer": "components/Footer.tsx",
+    "FriendsBadge": "components/FriendsBadge.tsx",
+    "GameCard": "components/GameCard.tsx",
+    "Header": "components/Header.tsx",
+    "HoverCard": "components/HoverCard.tsx",
+    "Logo": "components/Logo.tsx",
+    "SimpleTrophyIcon": "components/simple-trophy-icon.tsx",
+    "ToastProvider": "components/Toast.tsx",
+    "Username": "components/Username.tsx",
+    "LandingPageGamesSection": "components/LandingPageGamesSection.tsx",
+    "LandingPageStats": "components/LandingPageStats.tsx",
+    "LandingPageStreamersSection": "components/LandingPageStreamersSection.tsx",
+    "LandingPageTournamentsSection": "components/LandingPageTournamentsSection.tsx",
+    "AcceptMatchModal": "app/components/AcceptMatchModal.tsx",
+    "AuthModal": "app/components/AuthModal.tsx",
+    "DashSidebar": "app/components/DashSidebar.tsx",
+    "MatchesTab": "app/components/GameMatchesTab.tsx",
+    "PostMatchModal": "app/components/PostMatchModal.tsx",
+    "RichEditor": "app/components/RichEditor.tsx"
+  }
+}

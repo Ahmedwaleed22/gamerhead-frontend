@@ -706,7 +706,7 @@ export default function CoachPackagePage() {
             <div style={{ background:'#18181C', border:'1px solid rgba(255,255,255,.09)', borderRadius:14, padding:'20px', marginBottom:12 }}>
               <div style={{ fontFamily:'Rajdhani, sans-serif', fontWeight:700, fontSize:10, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:.8, marginBottom:12 }}>Starting from</div>
               <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:900, fontSize:36, color:'#4ade80', lineHeight:1, marginBottom:14 }}>
-                ${Math.min(...PACKAGES.map(p=>p.price))}
+                {PACKAGES.length ? `$${Math.min(...PACKAGES.map(p=>p.price))}` : 'Custom'}
               </div>
 
               <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:16 }}>

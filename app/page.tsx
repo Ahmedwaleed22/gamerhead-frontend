@@ -131,7 +131,7 @@ export default function HomePage() {
               className="hero-badge"
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
             >
-              <Icon icon="fluent:live-24-filled" width="20" height="20" /> Live Tournaments Running Now
+              <span className="live-dot" style={{ background: 'var(--red)', boxShadow: '0 0 8px var(--red)' }} /> Live Tournaments Running Now
             </motion.div>
             <motion.div
               className="hero-text-area"

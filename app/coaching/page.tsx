@@ -223,7 +223,7 @@ function CoachCard({ coach, serviceFilter }: { coach: CoachListing; serviceFilte
     ? coach.packages
     : coach.packages.filter(p => p.type === serviceFilter)
 
-  const lowestPrice = Math.min(...coach.packages.map(p => p.price))
+  const lowestPrice = coach.packages.length ? Math.min(...coach.packages.map(p => p.price)) : null
 
   if (serviceFilter !== 'all' && visiblePackages.length === 0) return null
 
@@ -372,7 +372,7 @@ function CoachCard({ coach, serviceFilter }: { coach: CoachListing; serviceFilte
             color: hov ? coach.accentColor : '#9CA3AF',
             transition: 'color 0.2s',
           }}>
-            From ${lowestPrice} →
+            {lowestPrice !== null ? `From $${lowestPrice} →` : 'Custom →'}
           </div>
         </div>
       </div>
@@ -452,7 +452,7 @@ export default function CoachingBrowsePage() {
     if (gameFilter !== 'all')    list = list.filter(c => c.gameSlug === gameFilter || (c.gameSlugs || []).includes(gameFilter))
     if (serviceFilter !== 'all') list = list.filter(c => c.packages.some(p => p.type === serviceFilter))
     if (onlineOnly)              list = list.filter(c => c.online)
-    if (priceMax !== null)       list = list.filter(c => Math.min(...c.packages.map(p => p.price)) <= priceMax)
+    if (priceMax !== null)       list = list.filter(c => c.packages.length > 0 && Math.min(...c.packages.map(p => p.price)) <= priceMax)
     list.sort((a, b) => b.rating - a.rating)
     return list
   }, [coaches, search, gameFilter, serviceFilter, onlineOnly, priceMax])
