@@ -229,6 +229,14 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   const openLogin    = () => { setAuthTab('login');    setAuthOpen(true) }
   const openRegister = () => { setAuthTab('register'); setAuthOpen(true) }
 
+  // Allow any page to open the login modal (e.g. when an unauthenticated
+  // user tries to check out) via a global event.
+  useEffect(() => {
+    const handler = () => { setAuthTab('login'); setAuthOpen(true) }
+    window.addEventListener('gh:open-login', handler)
+    return () => window.removeEventListener('gh:open-login', handler)
+  }, [])
+
   const handleSignOut = () => {
     logout()
     window.location.href = '/'

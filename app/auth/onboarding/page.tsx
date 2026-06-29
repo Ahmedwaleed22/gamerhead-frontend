@@ -5,7 +5,9 @@ import { useRouter }  from 'next/navigation'
 import { authApi }    from '@/lib/api'
 import { useAuth }    from '@/lib/auth-context'
 import { trackEvent } from '@/lib/gtag'
-import Logo           from '@/components/Logo'
+import {
+  AuthStyles, AuthBrandPanel, AuthHeading, Field, UserIcon, CalendarIcon, submitStyle,
+} from '@/app/components/auth-ui'
 
 // Maximum date allowed (must be at least 16 years old)
 function maxDob(): string {
@@ -14,16 +16,9 @@ function maxDob(): string {
   return d.toISOString().split('T')[0]
 }
 
-const INPUT: React.CSSProperties = {
-  width:        '100%',
-  padding:      '11px 14px',
-  background:   '#1a1a1f',
-  border:       '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 8,
-  color:        '#fff',
-  fontSize:     14,
-  outline:      'none',
-  boxSizing:    'border-box',
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontFamily: "'Rajdhani', sans-serif", fontWeight: 600, fontSize: 11,
+  letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 7px 2px',
 }
 
 function OnboardingContent() {
@@ -62,122 +57,78 @@ function OnboardingContent() {
       await refresh()
       trackEvent('onboarding_complete')
       window.location.href = '/'
-    } catch (err: any) {
-      setError(err?.message || 'Something went wrong. Please try again.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{
-      minHeight:      '100vh',
-      display:        'flex',
-      alignItems:     'center',
-      justifyContent: 'center',
-      background:     '#0f0f11',
-      padding:        24,
-    }}>
-      <div style={{
-        width:        '100%',
-        maxWidth:     400,
-        background:   '#141418',
-        border:       '1px solid rgba(255,255,255,0.07)',
-        borderRadius: 16,
-        padding:      '36px 32px',
-        display:      'flex',
-        flexDirection:'column',
-        gap:          20,
-      }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
-          <Logo className="justify-center" />
-        </div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: 24 }}>
+      <AuthStyles />
 
-        {/* Heading */}
-        <div>
-          <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: 'sans-serif' }}>
-            Almost there!
-          </h2>
-          <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF', fontFamily: 'sans-serif', lineHeight: 1.5 }}>
+      <div className="gha-card">
+
+        {/* ── LEFT BRAND PANEL ── */}
+        <AuthBrandPanel />
+
+        {/* ── RIGHT FORM PANEL ── */}
+        <div style={{ flex: 1, position: 'relative', padding: '40px 38px', overflowY: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <AuthHeading>Almost There!</AuthHeading>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 22px', lineHeight: 1.5 }}>
             Pick a username and confirm your date of birth to finish creating your account.
           </p>
+
+          {error && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(232,0,13,.1)', border: '1px solid rgba(232,0,13,.4)', borderLeft: '3px solid var(--red)', borderRadius: 8, padding: '11px 13px', marginBottom: 16 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff5a63" strokeWidth={2.2} strokeLinecap="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.01" /></svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#ff7079' }}>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={labelStyle}>Username</label>
+              <Field icon={UserIcon}>
+                <input
+                  className="gha-input"
+                  type="text"
+                  placeholder="Choose a username (3–20 chars)"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  minLength={3}
+                  maxLength={20}
+                  pattern="[a-zA-Z0-9_\-]+"
+                  title="Letters, numbers, underscores and hyphens only"
+                  required
+                  autoFocus
+                />
+              </Field>
+              <p style={{ margin: '7px 0 0 2px', fontSize: 11.5, color: 'var(--text-dim)' }}>
+                Letters, numbers, _ and - only. Cannot be changed easily later.
+              </p>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Date of Birth</label>
+              <Field icon={CalendarIcon}>
+                <input
+                  className="gha-input"
+                  type="date"
+                  value={dob}
+                  onChange={e => setDob(e.target.value)}
+                  max={maxDob()}
+                  required
+                />
+              </Field>
+            </div>
+
+            <button type="submit" disabled={loading} style={submitStyle(loading)}>
+              {loading ? 'Saving…' : 'Complete Setup →'}
+            </button>
+          </form>
         </div>
-
-        {error && (
-          <div style={{
-            background:   'rgba(239,68,68,0.12)',
-            border:       '1px solid rgba(239,68,68,0.3)',
-            borderRadius: 8,
-            padding:      '10px 14px',
-            fontSize:     13,
-            color:        '#F87171',
-            fontFamily:   'sans-serif',
-          }}>
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#9CA3AF', marginBottom: 6, fontFamily: 'sans-serif' }}>
-              Username
-            </label>
-            <input
-              style={INPUT}
-              type="text"
-              placeholder="Choose a username (3–20 chars)"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              minLength={3}
-              maxLength={20}
-              pattern="[a-zA-Z0-9_\-]+"
-              title="Letters, numbers, underscores and hyphens only"
-              required
-              autoFocus
-            />
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#4B5563', fontFamily: 'sans-serif' }}>
-              Letters, numbers, _ and - only. Cannot be changed easily later.
-            </p>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#9CA3AF', marginBottom: 6, fontFamily: 'sans-serif' }}>
-              Date of Birth
-            </label>
-            <input
-              style={INPUT}
-              type="date"
-              value={dob}
-              onChange={e => setDob(e.target.value)}
-              max={maxDob()}
-              required
-            />
-            {/* <p style={{ margin: '4px 0 0', fontSize: 11, color: '#4B5563', fontFamily: 'sans-serif' }}>
-              You must be at least 16 years old.
-            </p> */}
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              marginTop:    4,
-              padding:      '12px 0',
-              background:   loading ? '#555' : '#E74C3C',
-              color:        '#fff',
-              border:       'none',
-              borderRadius: 8,
-              fontSize:     15,
-              fontWeight:   700,
-              cursor:       loading ? 'not-allowed' : 'pointer',
-              fontFamily:   'sans-serif',
-              transition:   'background 0.15s',
-            }}
-          >
-            {loading ? 'Saving…' : 'Complete Setup'}
-          </button>
-        </form>
       </div>
     </div>
   )

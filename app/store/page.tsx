@@ -386,8 +386,17 @@ function StorePageContent() {
     walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
   }
 
+  // Prompt sign-in when an unauthenticated user tries to pay.
+  // Returns true if we redirected to login (caller should bail out).
+  const requireLogin = () => {
+    if (user) return false
+    window.dispatchEvent(new Event('gh:open-login'))
+    return true
+  }
+
   // Wallet checkout — balance deducted server-side, fulfillment immediate
   const handleCheckout = async () => {
+    if (requireLogin()) return
     setStep('processing')
     try {
       await storeApi.checkout({
@@ -403,6 +412,7 @@ function StorePageContent() {
 
   // Card checkout — backend creates PaymentIntent, we show Stripe Elements
   const handleCardCheckout = async () => {
+    if (requireLogin()) return
     setStep('processing')
     try {
       const res: any = await storeApi.checkout({
@@ -829,7 +839,17 @@ function StorePageContent() {
                     </div>
                   )}
 
-                  {payMethod === 'paypal' && (
+                  {payMethod === 'paypal' && !user && (
+                    <button
+                      className="btn-primary"
+                      style={{ width:'100%', justifyContent:'center', padding:'14px', fontSize:14 }}
+                      onClick={() => requireLogin()}
+                    >
+                      Sign in to pay with PayPal
+                    </button>
+                  )}
+
+                  {payMethod === 'paypal' && user && (
                     <PayPalScriptProvider options={{
                       clientId:          process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
                       currency:          'USD',
