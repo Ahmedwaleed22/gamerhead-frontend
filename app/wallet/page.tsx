@@ -178,6 +178,13 @@ function StripePayForm({ onSuccess, onBack }: { onSuccess: () => void; onBack: (
       setErrMsg(result.error.message ?? 'Payment failed')
       setPaying(false)
     } else if (result.paymentIntent?.status === 'succeeded') {
+      // Confirm server-side so the balance is credited immediately, rather than
+      // waiting on the async Stripe webhook. A later webhook is an idempotent no-op.
+      try {
+        await walletApi.confirmDeposit({ paymentIntentId: result.paymentIntent.id })
+      } catch {
+        // Non-fatal: the webhook (and post-payment polling) will still credit it.
+      }
       onSuccess()
     } else {
       setErrMsg('Unexpected payment status — please try again.')
