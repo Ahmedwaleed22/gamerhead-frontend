@@ -70,6 +70,28 @@ const heroSlides = [
 
 const SLIDE_INTERVAL = 4000
 
+const HOW_STEPS = [
+  { icon: 'solar:user-bold-duotone',          title: 'Create Your Account', desc: 'Sign up free in seconds — no buy-in, no catch. Verify and you’re ready to play.' },
+  { icon: 'solar:gamepad-bold-duotone',       title: 'Pick Your Game',      desc: 'Choose from 30+ titles across PC, console and mobile. Your platform, your rules.' },
+  { icon: 'solar:cup-star-bold-duotone',      title: 'Enter Matches',       desc: 'Jump into ladders, wager matches and cash tournaments the moment you’re in.' },
+  { icon: 'solar:wallet-money-bold-duotone',  title: 'Win Real Cash',       desc: 'Climb the ranks, win your matches and cash out your winnings instantly.' },
+]
+
+const WHY_FEATURES = [
+  { icon: 'solar:wallet-money-bold-duotone',        title: 'Instant Payouts',        desc: 'Cash out your winnings straight to your wallet — no waiting weeks to get paid.' },
+  { icon: 'solar:shield-bold-duotone',              title: 'Anti-Cheat Protection',  desc: 'Verified results and active anti-cheat keep every single match fair and clean.' },
+  { icon: 'solar:chart-2-bold-duotone',             title: 'Skill-Based Matchmaking',desc: 'Matched by rank and record, so every game you play actually counts for something.' },
+  { icon: 'solar:chat-round-dots-bold-duotone',     title: '24/7 Live Support',      desc: 'Real people ready to help in any time zone, any day — never an automated wall.' },
+  { icon: 'solar:gamepad-bold-duotone',             title: 'True Crossplay',         desc: 'Compete across PC, console and mobile on 30+ of the biggest competitive titles.' },
+  { icon: 'solar:users-group-rounded-bold-duotone', title: 'Global Community',       desc: 'Join 50,000+ players competing for real cash around the world every single day.' },
+]
+
+const HOME_TESTIMONIALS = [
+  { initial: 'R', color: '#e8000d', name: 'Ravyn', rank: 'Warzone · $4.2k won',       quote: 'Cashed out my first $200 the same night I won it. Payouts here are actually instant — no games.' },
+  { initial: 'K', color: '#1f6feb', name: 'Kahlo', rank: 'EA FC · Diamond',           quote: 'Matchmaking finally feels fair. Every match is a real fight, not a one-sided stomp.' },
+  { initial: 'M', color: '#8957e5', name: 'Mira',  rank: 'Fortnite · Team captain',   quote: 'Been on the other platforms — GamerHead’s payouts and support blow every one of them away.' },
+]
+
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0)
   const [animating, setAnimating] = useState(false)
@@ -179,11 +201,48 @@ export default function HomePage() {
         {/* ── STATS ── */}
         <LandingPageStats />
 
+        {/* ── HOW IT WORKS ── */}
+        <section className="how-section">
+          <div className="section-header" style={{ textAlign: 'center', marginBottom: 44 }}>
+            <h2 className="section-title">How It <span>Works</span></h2>
+            <p className="section-subtitle">From sign-up to payout in four steps. No buy-in, real cash on the line.</p>
+          </div>
+          <div className="how-grid">
+            {HOW_STEPS.map((s, i) => (
+              <div className="how-step" key={i}>
+                <span className="how-step-num">{i + 1}</span>
+                <div className="how-step-icon"><Icon icon={s.icon} width={26} height={26} /></div>
+                <h3 className="how-step-title">{s.title}</h3>
+                <p className="how-step-desc">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* ── FEATURED TOURNAMENTS ── */}
         <LandingPageTournamentsSection />
 
         {/* ── GAMES ── */}
         <LandingPageGamesSection />
+
+        {/* ── WHY GAMERHEAD ── */}
+        <section className="why-section">
+          <div className="section-header" style={{ textAlign: 'center', marginBottom: 44 }}>
+            <h2 className="section-title">Why <span>GamerHead</span></h2>
+            <p className="section-subtitle">Built for competitors — fair, fast, and made to actually pay out.</p>
+          </div>
+          <div className="why-grid">
+            {WHY_FEATURES.map((f, i) => (
+              <div className="why-card" key={i}>
+                <div className="why-icon"><Icon icon={f.icon} width={26} height={26} /></div>
+                <div>
+                  <h3 className="why-title">{f.title}</h3>
+                  <p className="why-desc">{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* ── CTA BANNER ── */}
         <HoverCard className="cta-section">
@@ -201,6 +260,33 @@ export default function HomePage() {
 
         {/* ── STREAMERS ── */}
         <LandingPageStreamersSection />
+
+        {/* ── TESTIMONIALS ── */}
+        <section style={{ padding: '64px 0' }}>
+          <div className="section-header" style={{ textAlign: 'center', marginBottom: 44 }}>
+            <h2 className="section-title">Trusted by <span>Players</span></h2>
+            <p className="section-subtitle">Real competitors. Real payouts. Real stories.</p>
+          </div>
+          <div className="premium-testimonials">
+            {HOME_TESTIMONIALS.map((t, i) => (
+              <div className="premium-testimonial" key={i}>
+                <div className="premium-testimonial-stars">
+                  {Array.from({ length: 5 }).map((_, s) => (
+                    <Icon key={s} icon="solar:star-bold-duotone" width={16} height={16} />
+                  ))}
+                </div>
+                <p className="premium-testimonial-quote">&ldquo;{t.quote}&rdquo;</p>
+                <div className="premium-testimonial-author">
+                  <span className="premium-testimonial-avatar" style={{ background: t.color }}>{t.initial}</span>
+                  <div>
+                    <div className="premium-testimonial-name">{t.name}</div>
+                    <div className="premium-testimonial-rank">{t.rank}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* ── LEADERBOARD ── */}
         <section className="leaderboard-section">
@@ -227,8 +313,14 @@ export default function HomePage() {
                       No data yet. Be the first!
                     </div>
                   )}
-                  {players.map((p, pi) => {
-                    const xpPct = Math.min(100, Math.round((p.xp / Math.max(1, (p.xp + 5000))) * 100))
+                  {(() => {
+                  const numericVal = (pl: LeaderPlayer) =>
+                    board.isMoney
+                      ? (pl.totalWinnings ?? (parseFloat(String(pl.cash).replace(/[^0-9.]/g, '')) || 0))
+                      : pl.wins
+                  const maxVal = Math.max(1, ...players.map(numericVal))
+                  return players.map((p, pi) => {
+                    const barPct = Math.round((numericVal(p) / maxVal) * 100)
                     const statVal = board.isMoney ? p.cash : p.wins
                     return (
                       <Link href={`/profile/${p.slug}`} key={pi} style={{ textDecoration: 'none' }}>
@@ -255,7 +347,7 @@ export default function HomePage() {
                           <div className="player-info">
                             <div className="player-name">{p.name}</div>
                             <div className="xp-bar-wrapper">
-                              <div className="xp-bar-fill" style={{ width: `${xpPct}%` }} />
+                              <div className="xp-bar-fill" style={{ width: `${barPct}%` }} />
                             </div>
                           </div>
                           <div className="player-stat">
@@ -267,7 +359,8 @@ export default function HomePage() {
                         </div>
                       </Link>
                     )
-                  })}
+                  })
+                  })()}
                 </HoverCard>
               )
             })}
@@ -275,6 +368,26 @@ export default function HomePage() {
         </section>
 
       </div>
+
+      {/* ── FINAL CTA BAND ── */}
+      <section className="premium-cta-band">
+        <div className="container premium-cta-inner">
+          <div className="premium-cta-glow" />
+          <div className="hero-badge" style={{ marginBottom: 18 }}>
+            <span className="live-dot" style={{ background: 'var(--red)', boxShadow: '0 0 8px var(--red)' }} /> Free to join
+          </div>
+          <h2 className="premium-cta-title">Your next match could <span>pay out</span></h2>
+          <p className="premium-cta-sub">Join GamerHead free and start competing for real cash across your favorite titles today.</p>
+          <div className="premium-cta-actions">
+            <Link href="/register" className="btn-primary">Register for Free</Link>
+            <Link href="/tournaments" className="btn-secondary">Browse Tournaments</Link>
+          </div>
+          <div className="premium-hero-trust" style={{ justifyContent: 'center', marginTop: 20 }}>
+            <Icon icon="solar:shield-bold-duotone" width={15} height={15} />
+            50,000+ players · Instant payouts · Secure &amp; verified
+          </div>
+        </div>
+      </section>
     </>
   )
 }

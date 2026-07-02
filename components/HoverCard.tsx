@@ -42,7 +42,7 @@ export function HoverCard({
           background: `radial-gradient(400px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255, 0, 0, 0.15), transparent 40%)`,
         }}
       />
-      <div className="relative z-10 w-full h-full">{children}</div>
+      <div className="relative z-10 w-full h-full flex flex-col gap-3">{children}</div>
     </motion.div>
   );
 }

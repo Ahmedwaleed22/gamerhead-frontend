@@ -261,16 +261,23 @@ export default function Header({
                   {notifOpen && (
                     <div className="nav-notif-dropdown glass-dropdown">
                       <div className="nav-notif-header">
-                        <span>Notifications</span>
+                        <span className="nav-notif-title">
+                          <Icon icon="ri:notification-3-fill" />
+                          Notifications
+                          {unreadCount > 0 && <span className="nav-notif-count">{unreadCount}</span>}
+                        </span>
                         {unreadCount > 0 && (
                           <button className="nav-notif-mark-read" onClick={handleMarkAllRead}>Mark all read</button>
                         )}
                       </div>
                       <div className="nav-notif-list">
                         {notifs.length === 0 ? (
-                          <div style={{ textAlign: 'center', padding: '20px 12px', color: 'var(--text-muted)', fontSize: 12 }}>No notifications yet</div>
+                          <div className="nav-notif-empty">
+                            <Icon icon="ri:notification-off-line" />
+                            <span>You&apos;re all caught up</span>
+                          </div>
                         ) : notifs.map((n: any) => (
-                          <div key={n._id} className={`nav-notif-item${!n.read ? ' unread' : ''}`} onClick={() => { handleNotifClick(n); setNotifOpen(false); }} style={{ cursor: n.link ? 'pointer' : 'default' }}>
+                          <div key={n.id} className={`nav-notif-item${!n.read ? ' unread' : ''}`} onClick={() => { handleNotifClick(n); setNotifOpen(false); }} style={{ cursor: n.link ? 'pointer' : 'default' }}>
                             <Icon icon="ri:notification-3-fill" className="nav-notif-icon" />
                             <div className="nav-notif-body">
                               <div className="nav-notif-text">{n.text}</div>
@@ -281,7 +288,7 @@ export default function Header({
                         ))}
                       </div>
                       <Link href="/mailbox" className="nav-notif-footer" onClick={() => setNotifOpen(false)}>
-                        View Mailbox →
+                        View Mailbox <Icon icon="ri:arrow-right-line" />
                       </Link>
                     </div>
                   )}
