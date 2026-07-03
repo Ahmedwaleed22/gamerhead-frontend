@@ -132,7 +132,7 @@ const DEPARTMENTS: Department[] = [
           'Comfortable working with real-money transactions and high-stakes disputes',
           'Available during peak hours — evenings and weekends essential',
           'Decisive, calm under pressure, and detail-oriented',
-          'Solid knowledge of competitive gaming and wager match formats',
+          'Solid knowledge of competitive gaming and prize entry match formats',
         ],
         perks: ['Monthly tickets + bonus eligibility', 'Staff badge', 'Supervisor tools access', 'Direct leadership contact'],
         openings: 1,
@@ -141,7 +141,7 @@ const DEPARTMENTS: Department[] = [
         id: 'ls-match',
         title: 'Cash Match Support Specialist',
         level: 'specialist',
-        description: 'You\'re the on-call responder for active cash wager matches. Technical issue, suspicious activity, score discrepancy mid-match — you\'re the first one in.',
+        description: 'You\'re the on-call responder for active cash prize entry matches. Technical issue, suspicious activity, score discrepancy mid-match — you\'re the first one in.',
         responsibilities: [
           'Monitor the active cash match queue in real time',
           'Respond to mid-match support requests within SLA timeframe',
@@ -151,7 +151,7 @@ const DEPARTMENTS: Department[] = [
           'Communicate clearly and fairly with all parties throughout',
         ],
         requirements: [
-          'Solid understanding of wager match and payout systems',
+          'Solid understanding of prize entry match and payout systems',
           'Fast and comfortable with multi-window monitoring setups',
           'Available minimum 15 hrs/week — peak hour shifts preferred',
           'Calm and impartial when handling conflicting player accounts',

@@ -129,7 +129,7 @@ const MILESTONES: Milestone[] = [
     year: '2024',
     month: 'Oct',
     title: 'Platform Takes Shape',
-    desc: 'Tournament system, wager matches, XP ladders, team profiles, and the coaching marketplace all come online in rapid succession.',
+    desc: 'Tournament system, prize entry matches, XP ladders, team profiles, and the coaching marketplace all come online in rapid succession.',
     icon: Solar.building,
     highlight: false,
   },
@@ -163,7 +163,7 @@ const PILLARS: Pillar[] = [
   {
     icon: Solar.sword,
     title: 'Compete',
-    desc: 'Wager matches, XP ladders, and major tournaments across all the biggest titles. Every player deserves a fair fight and a place on the board.',
+    desc: 'Prize entry matches, XP ladders, and major tournaments across all the biggest titles. Every player deserves a fair fight and a place on the board.',
     cta: 'View Tournaments',
     href: '/tournaments',
     accent: '#E8000D',

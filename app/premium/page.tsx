@@ -22,7 +22,7 @@ const features = [
 
 const freeFeatures = [
   { included: true, text: 'Play all competitions on the platform' },
-  { included: true, text: 'Access to ladder & wager matches' },
+  { included: true, text: 'Access to ladder & prize entry matches' },
   { included: true, text: 'Basic profile customization' },
   { included: true, text: 'Standard support queue' },
   { included: true, text: 'Access to all games' },

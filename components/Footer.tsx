@@ -304,7 +304,7 @@ export default function Footer() {
           >
             <Logo className="mb-4!" />
             <p className="footer-modern-desc">
-              The premier destination for competitive gaming. Engage in wager matches, epic tournaments, premium coaching, and climb the ladder across the biggest titles in esports.
+              The premier destination for competitive gaming. Engage in prize entry matches, epic tournaments, premium coaching, and climb the ladder across the biggest titles in esports.
             </p>
             <div style={{ display: 'flex', gap: 14 }}>
               {footerSocials.map((social, idx) => (

@@ -133,7 +133,7 @@ export function AcceptMatchModal({ match, onClose, onAccepted }: AcceptMatchModa
             {isCash && match.wagerPerPlayer && (
               <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(212,146,10,0.08)', border: '1px solid rgba(212,146,10,0.2)', borderRadius: 6 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <span style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Wager per player</span>
+                  <span style={{ ...R, fontSize: 11, color: '#9CA3AF' }}>Prize entry per player</span>
                   <span style={{ ...BC, fontWeight: 900, fontSize: 15, color: '#F0AA1A' }}>${(match.wagerPerPlayer / 100).toFixed(2)}</span>
                 </div>
                 {match.totalPot && (

@@ -4,9 +4,9 @@ import Image from 'next/image'
 import { HoverCard } from './HoverCard'
 
 const streamers = [
-  { name: 'PROSNIPER99', title: 'COD WARZONE — WAGER MATCH LIVE', game: 'Call of Duty: Warzone', views: '24,871', tags: ['FPS', 'SHOOTER'], image: '/games/warzone.png' },
+  { name: 'PROSNIPER99', title: 'COD WARZONE — PRIZE ENTRY MATCH LIVE', game: 'Call of Duty: Warzone', views: '24,871', tags: ['FPS', 'SHOOTER'], image: '/games/warzone.png' },
   { name: 'GOALKING07', title: 'FIFA 25 — RANKED TOURNAMENT', game: 'EA FC 25', views: '8,432', tags: ['SPORTS'], image: '/games/fc26.png' },
-  { name: 'FORTKING', title: 'FORTNITE — $500 WAGER MATCH', game: 'Fortnite', views: '15,209', tags: ['BR', 'SOLO'], image: '/games/fortnite.png' },
+  { name: 'FORTKING', title: 'FORTNITE — $500 PRIZE ENTRY MATCH', game: 'Fortnite', views: '15,209', tags: ['BR', 'SOLO'], image: '/games/fortnite.png' },
   { name: 'ICEWARDEN', title: 'WARZONE — TEAM LADDER MATCH', game: 'Warzone', views: '6,711', tags: ['FPS', 'TEAM'], image: '/games/warzone.png' },
 ]
 

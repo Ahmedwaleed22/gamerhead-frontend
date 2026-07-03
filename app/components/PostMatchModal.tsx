@@ -307,10 +307,10 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
                 </div>
               </div>
 
-              {/* ── WAGER (Cash matches only) ── */}
+              {/* ── PRIZE ENTRY (Cash matches only) ── */}
               {isCash && (
                 <div>
-                  <label style={{ ...R, fontSize: 11, color: '#9CA3AF', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Wager Per Player *</label>
+                  <label style={{ ...R, fontSize: 11, color: '#9CA3AF', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Prize Entry Per Player *</label>
                   <div style={{ position: 'relative' }}>
                     <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', ...BC, fontWeight: 900, fontSize: 18, color: '#F0AA1A' }}>$</span>
                     <input
@@ -352,7 +352,7 @@ export default function PostMatchModal({ onClose, onPosted, preTeam, gameSlug, g
                     </div>
                   )}
                   <div style={{ ...R, fontSize: 10, color: '#6B7280', marginTop: 6 }}>
-                    Wagers are held from each player's wallet when both teams ready up.
+                    Prize entries are held from each player's wallet when both teams ready up.
                   </div>
                 </div>
               )}

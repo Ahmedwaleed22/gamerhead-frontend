@@ -63,7 +63,7 @@ const LEADERBOARD_TABS = [
 
 const heroSlides = [
   { title: 'The Future of', highlight: 'Competitive', sub: 'Gaming starts here.' },
-  { title: 'Win Real', highlight: 'Cash Prizes', sub: 'in wager matches and tournaments.' },
+  { title: 'Win Real', highlight: 'Cash Prizes', sub: 'in prize entry matches and tournaments.' },
   { title: 'Rise Up The', highlight: 'Ladder', sub: "and prove you're the best." },
   { title: 'Build Your', highlight: 'Dream Team', sub: 'and dominate together.' },
 ]
@@ -73,7 +73,7 @@ const SLIDE_INTERVAL = 4000
 const HOW_STEPS = [
   { icon: 'solar:user-bold-duotone',          title: 'Create Your Account', desc: 'Sign up free in seconds — no buy-in, no catch. Verify and you’re ready to play.' },
   { icon: 'solar:gamepad-bold-duotone',       title: 'Pick Your Game',      desc: 'Choose from 30+ titles across PC, console and mobile. Your platform, your rules.' },
-  { icon: 'solar:cup-star-bold-duotone',      title: 'Enter Matches',       desc: 'Jump into ladders, wager matches and cash tournaments the moment you’re in.' },
+  { icon: 'solar:cup-star-bold-duotone',      title: 'Enter Matches',       desc: 'Jump into ladders, prize entry matches and cash tournaments the moment you’re in.' },
   { icon: 'solar:wallet-money-bold-duotone',  title: 'Win Real Cash',       desc: 'Climb the ranks, win your matches and cash out your winnings instantly.' },
 ]
 
@@ -139,9 +139,9 @@ export default function HomePage() {
       <div className="hero-section">
         <div className="hero-bg-pattern" />
         <div className="hero-glow" />
-        <div className="container" style={{ width: '100%' }}>
+        <div className="container flex! flex-col! justify-center! items-center! relative!" style={{ width: '100%' }}>
           <motion.div
-            className="hero-content"
+            className="hero-content max-w-5xl! w-full text-center"
             initial="hidden"
             animate="visible"
             variants={{
@@ -156,7 +156,7 @@ export default function HomePage() {
               <span className="live-dot" style={{ background: 'var(--red)', boxShadow: '0 0 8px var(--red)' }} /> Live Tournaments Running Now
             </motion.div>
             <motion.div
-              className="hero-text-area"
+              className="hero-text-area flex flex-col gap-2 items-center"
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
             >
               <h1
@@ -166,7 +166,7 @@ export default function HomePage() {
                 <span>{heroSlides[activeSlide].highlight}</span>
               </h1>
               <p
-                className={`hero-subtext hero-slide-text${animating ? ' hero-slide-out' : ' hero-slide-in'}`}
+                className={`hero-subtext text-lg! hero-slide-text${animating ? ' hero-slide-out' : ' hero-slide-in'}`}
               >
                 {heroSlides[activeSlide].sub}<br />
                 Join thousands of players competing for real cash prizes across
@@ -174,14 +174,14 @@ export default function HomePage() {
               </p>
             </motion.div>
             <motion.div
-              className="hero-buttons"
+              className="hero-buttons justify-center"
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
             >
               <Link href="/register" className="btn-primary">Register for Free</Link>
               <Link href="/tournaments" className="btn-secondary">Our Championships</Link>
             </motion.div>
             <motion.div
-              className="carousel-dots"
+              className="carousel-dots justify-center"
               variants={{ hidden: { opacity: 0, scale: 0.8 }, visible: { opacity: 1, scale: 1 } }}
             >
               {heroSlides.map((_, i) => (
@@ -247,14 +247,21 @@ export default function HomePage() {
         {/* ── CTA BANNER ── */}
         <HoverCard className="cta-section">
           <div className="cta-glow" />
-          <h2 className="cta-title">The Future of <span>Competitive</span></h2>
+          <div className="hero-badge max-w-42! flex! justify-center! mx-auto! mb-0!" style={{ marginBottom: 20 }}>
+            <span className="live-dot" style={{ background: 'var(--red)', boxShadow: '0 0 8px var(--red)' }} /> Ready to Compete
+          </div>
+          <h2 className="cta-title mb-0!">The Future of <span>Competitive</span></h2>
           <p className="cta-subtitle">
-            Join thousands of players already competing for real money.
-            Register for free and start climbing the ranks today.
+            Join thousands of players already competing for real money —
+            register free and start climbing the ranks today.
           </p>
           <div className="cta-buttons">
             <Link href="/register" className="btn-primary">Register for Free</Link>
             <Link href="/tournaments" className="btn-secondary">Our Championships</Link>
+          </div>
+          <div className="premium-hero-trust" style={{ justifyContent: 'center', marginTop: 24 }}>
+            <Icon icon="solar:shield-bold-duotone" width={15} height={15} />
+            50,000+ players · Free to join · Instant payouts
           </div>
         </HoverCard>
 

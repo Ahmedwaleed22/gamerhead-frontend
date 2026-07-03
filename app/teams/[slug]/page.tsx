@@ -18,7 +18,7 @@ const BC: React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif" }
 
 type MatchType = 'cash' | 'xp'
 const CFG: Record<MatchType, { accent: string; dim: string; bdr: string; badge: string; icon: string }> = {
-  cash: { accent: '#F0AA1A', dim: 'rgba(212,146,10,.15)', bdr: 'rgba(212,146,10,.3)', badge: 'WAGER', icon: '$' },
+  cash: { accent: '#F0AA1A', dim: 'rgba(212,146,10,.15)', bdr: 'rgba(212,146,10,.3)', badge: 'PRIZE ENTRY', icon: '$' },
   xp:   { accent: '#A78BFA', dim: 'rgba(124,58,237,.15)', bdr: 'rgba(124,58,237,.3)', badge: 'XP LADDER', icon: 'XP' },
 }
 
@@ -398,7 +398,7 @@ export default function TeamProfilePage() {
           {/* LIVE MATCH BLOCK — only renders when a match is active */}
           {liveMatch && liveMatch.matchId && (() => {
             const mCfg = liveMatch.matchType === 'cash'
-              ? { accent: '#F0AA1A', dim: 'rgba(212,146,10,.15)', bdr: 'rgba(212,146,10,.3)', badge: 'WAGER MATCH', sectionTitle: 'Live Match' }
+              ? { accent: '#F0AA1A', dim: 'rgba(212,146,10,.15)', bdr: 'rgba(212,146,10,.3)', badge: 'PRIZE ENTRY MATCH', sectionTitle: 'Live Match' }
               : { accent: '#A78BFA', dim: 'rgba(124,58,237,.15)', bdr: 'rgba(124,58,237,.3)', badge: 'XP LADDER', sectionTitle: 'Live Match' }
             return (
               <div style={{ background: '#18181C', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.04)', marginBottom: 16 }}>

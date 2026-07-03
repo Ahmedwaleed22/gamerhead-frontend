@@ -331,7 +331,7 @@ export default function AdminMatchesPage() {
             {cancelModal.matchType === 'cash' && (
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#DDE0EA', cursor: 'pointer' }}>
                 <input type="checkbox" checked={cancelForm.refund} onChange={e => setCancelForm(p => ({ ...p, refund: e.target.checked }))} />
-                Refund wagers to all players
+                Refund prize entries to all players
               </label>
             )}
             <ActionBtn label="CANCEL MATCH" color="#e8000d" onClick={handleCancel} />

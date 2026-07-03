@@ -115,7 +115,7 @@ const heroSlides = [
   },
   {
     title:   'Buy Tickets',
-    sub:     'Load up on Tickets and use them across tournaments and wagers.',
+    sub:     'Load up on Tickets and use them across tournaments and prize entry matches.',
     image:   '/store/hero-credits.jpg',
     accent:  '#F0C040',
     cat:     'Tickets',

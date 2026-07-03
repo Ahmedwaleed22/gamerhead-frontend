@@ -1,6 +1,4 @@
-import React from 'react'
 import Link from 'next/link'
-import { Icon } from "@iconify/react"
 import { useApi } from '@/lib/use-api'
 import { gamesApi } from '@/lib/api'
 import { GameCard } from './GameCard'
@@ -8,28 +6,23 @@ import { HoverCard } from './HoverCard'
 
 function LandingPageGamesSection() {
   const { data: games, loading, error } = useApi(() => gamesApi.getAll())
-  const visible = (games || []).slice(0, 6)
+  const visible = (games || []).slice(0, 5)
 
   return (
-    <section className="games-section" style={{ padding: '20px 0' }}>
-      <div className="section-header section-header-row">
-        <div>
-          <h2 className="section-title">Browse <span>Games</span></h2>
-          <p className="section-subtitle">Compete across the biggest titles in esports with cash ladders, tournaments and more.</p>
-        </div>
-        <Link href="/games" className="section-view-all">
-          View All Games <Icon icon="ri:arrow-right-line" />
-        </Link>
+    <section className="games-showcase">
+      <div className="section-header" style={{ textAlign: 'center', marginBottom: 44 }}>
+        <h2 className="section-title">Start Playing <span>Today</span></h2>
+        <p className="section-subtitle">Pick your title and jump into cash ladders, prize entry matches and tournaments across every platform.</p>
       </div>
 
       {loading && (
-        <div className="games-grid">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="games-showcase-grid">
+          {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
               style={{
                 aspectRatio: '3/4',
-                borderRadius: 8,
+                borderRadius: 12,
                 background: 'var(--bg-2)',
                 border: '1px solid var(--border)',
                 animation: 'pulse 1.5s ease-in-out infinite',
@@ -46,18 +39,26 @@ function LandingPageGamesSection() {
       )}
 
       {!loading && !error && (
-        <div className="games-grid">
-          {visible.map((g: any, i: number) => (
-            <HoverCard key={g.slug} delay={i * 0.1}>
-              <GameCard game={g} />
-            </HoverCard>
-          ))}
-          {visible.length === 0 && (
-            <div style={{ gridColumn: '1/-1', padding: '30px 0 10px', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
-              No games available yet. Check back soon.
+        <>
+          <div className="games-showcase-grid">
+            {visible.map((g: any, i: number) => (
+              <HoverCard key={g.slug} delay={i * 0.08}>
+                <GameCard game={g} featured={i === 0} />
+              </HoverCard>
+            ))}
+            {visible.length === 0 && (
+              <div style={{ gridColumn: '1/-1', padding: '30px 0 10px', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
+                No games available yet. Check back soon.
+              </div>
+            )}
+          </div>
+
+          {visible.length > 0 && (
+            <div style={{ textAlign: 'center', marginTop: 36 }}>
+              <Link href="/games" className="btn-primary">View All Games →</Link>
             </div>
           )}
-        </div>
+        </>
       )}
     </section>
   )

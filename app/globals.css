@@ -12,12 +12,14 @@
   --red: #e8000d;
   --red-dark: #b0000a;
   --red-glow: rgba(232, 0, 13, 0.3);
-  --bg: #0d121b;
-  --bg-1: #1c1c1c;
-  --bg-2: #111114;
-  --bg-3: #18181d;
-  --bg-4: #1f1f26;
-  --bg-5: #1a1c22;
+  /* Unified near-black surface ladder — page darkest, surfaces step lighter.
+     Faint warm undertone ties the dark to the red brand (no cool/blue cast). */
+  --bg: #0a090b;
+  --bg-1: #1c1b1c;
+  --bg-2: #121113;
+  --bg-3: #1a181b;
+  --bg-4: #211f23;
+  --bg-5: #1b191d;
   /* Subtle light border for dark theme UI */
   --border: rgba(255, 255, 255, 0.08);
   --text: #f0f0f0;
@@ -218,10 +220,14 @@ img {
   margin: 0 -20px;
   padding: 80px 20px;
   overflow: hidden;
-  background: linear-gradient(135deg, #0d0d10 0%, #16060a 50%, #0d0d10 100%);
+  /* Brand-native dark arena — warm near-black with a red halo top & bottom */
+  background:
+    radial-gradient(90% 75% at 50% -12%, rgba(232, 0, 13, 0.16), transparent 55%),
+    radial-gradient(70% 55% at 50% 118%, rgba(232, 0, 13, 0.07), transparent 60%),
+    linear-gradient(180deg, #0e0a0c 0%, #0a090b 55%, var(--bg) 100%);
 }
 
-/* Cinematic vignette — darkens edges to focus the eye on the content */
+/* Cinematic vignette — darkens edges to focus the eye on the centered content */
 .hero-section::before {
   content: "";
   position: absolute;
@@ -229,9 +235,9 @@ img {
   z-index: 1;
   pointer-events: none;
   background: radial-gradient(
-    120% 120% at 30% 40%,
+    125% 120% at 50% 34%,
     transparent 40%,
-    rgba(0, 0, 0, 0.65) 100%
+    rgba(0, 0, 0, 0.72) 100%
   );
 }
 
@@ -248,52 +254,41 @@ img {
   background: linear-gradient(transparent, var(--bg));
 }
 
+/* Perspective HUD grid — esports/arena feel, fades out toward the edges */
 .hero-bg-pattern {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(rgba(0, 0, 0, 0.4), rgba(13, 18, 27, 0.7)),
-    url(/images/backgrounds/showcase.jpg);
-  background-position: center;
-  background-size: cover;
   pointer-events: none;
-  /* Slow Ken Burns drift keeps the hero feeling alive */
-  animation: heroKenBurns 24s ease-in-out infinite alternate;
-}
-
-/* Subtle grid overlay on top of the photo for an esports/HUD feel */
-.hero-bg-pattern::after {
-  content: "";
-  position: absolute;
-  inset: 0;
   background-image:
     repeating-linear-gradient(
       0deg,
-      transparent,
-      transparent 59px,
-      rgba(232, 0, 13, 0.04) 60px
+      transparent 0 47px,
+      rgba(232, 0, 13, 0.055) 47px 48px
     ),
     repeating-linear-gradient(
       90deg,
-      transparent,
-      transparent 59px,
-      rgba(232, 0, 13, 0.04) 60px
+      transparent 0 47px,
+      rgba(232, 0, 13, 0.055) 47px 48px
     );
-  mask-image: radial-gradient(120% 80% at 50% 30%, #000 30%, transparent 75%);
-  -webkit-mask-image: radial-gradient(
-    120% 80% at 50% 30%,
-    #000 30%,
-    transparent 75%
-  );
+  mask-image: radial-gradient(115% 78% at 50% 18%, #000 20%, transparent 72%);
+  -webkit-mask-image: radial-gradient(115% 78% at 50% 18%, #000 20%, transparent 72%);
 }
 
-@keyframes heroKenBurns {
-  from {
-    transform: scale(1) translateY(0);
-  }
-  to {
-    transform: scale(1.08) translateY(-1.5%);
-  }
+/* Slow-drifting soft red aurora — keeps the hero alive without a photo */
+.hero-bg-pattern::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(38% 48% at 32% 40%, rgba(232, 0, 13, 0.13), transparent 62%),
+    radial-gradient(34% 44% at 70% 58%, rgba(150, 0, 22, 0.11), transparent 62%);
+  filter: blur(34px);
+  animation: heroAurora 18s ease-in-out infinite alternate;
+}
+
+@keyframes heroAurora {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to   { transform: translate3d(3%, 2%, 0) scale(1.1); }
 }
 
 .hero-glow {
@@ -391,10 +386,10 @@ img {
 
 .hero-subtext {
   font-size: 15px;
-  color: var(--text-muted);
+  color: #bdbdbd;
   line-height: 1.7;
   margin-bottom: 32px;
-  max-width: 460px;
+  max-width: 800px;
 }
 
 .hero-buttons {
@@ -582,6 +577,26 @@ img {
 }
 .section-view-all svg { font-size: 15px; }
 .section-view-all:hover { background: rgba(232, 0, 13, 0.16); gap: 9px; }
+
+/* ── GAMES SHOWCASE ── */
+.games-showcase {
+  padding: 64px 0;
+}
+.games-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 208px));
+  gap: 18px;
+  justify-content: center;
+}
+@media (max-width: 1100px) {
+  .games-showcase-grid { grid-template-columns: repeat(3, minmax(0, 220px)); }
+}
+@media (max-width: 720px) {
+  .games-showcase-grid { grid-template-columns: repeat(2, minmax(0, 220px)); gap: 12px; }
+}
+@media (max-width: 440px) {
+  .games-showcase-grid { grid-template-columns: minmax(0, 300px); }
+}
 
 /* ── STATS ── */
 .stats-section {
@@ -906,18 +921,40 @@ img {
 /* ── CTA BANNER ── */
 .cta-section {
   margin: 0 0 60px;
-  padding: 60px 48px;
+  padding: 52px 48px 48px;
   background:
-    linear-gradient(#000000d5, #000000d0),
-    url("/images/backgrounds/seperator.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  /* border: 1px solid rgba(232,0,13,0.2); */
-  border-radius: 12px;
+    radial-gradient(60% 85% at 50% 40%, rgba(232, 0, 13, 0.15), transparent 62%),
+    linear-gradient(180deg, #120e11 0%, #0b090b 100%);
+  border: 1px solid rgba(232, 0, 13, 0.18);
+  border-radius: 18px;
   position: relative;
   overflow: hidden;
   text-align: center;
+  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+/* Faint HUD grid, centered fade — matches the hero */
+.cta-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(232, 0, 13, 0.05) 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 39px, rgba(232, 0, 13, 0.05) 39px 40px);
+  mask-image: radial-gradient(85% 90% at 50% 45%, #000 15%, transparent 72%);
+  -webkit-mask-image: radial-gradient(85% 90% at 50% 45%, #000 15%, transparent 72%);
+}
+/* Focal top accent line */
+.cta-section::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 55%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  pointer-events: none;
 }
 
 .cta-glow {

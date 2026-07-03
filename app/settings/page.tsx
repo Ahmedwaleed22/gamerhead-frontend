@@ -727,7 +727,7 @@ function SettingsPage() {
               <>
                 <div style={{ ...R, fontWeight: 500, fontSize: 15, color: '#fff', marginBottom: 6 }}>Linked Accounts</div>
                 <div style={{ ...R, fontSize: 12, color: '#9CA3AF', lineHeight: '14px', marginBottom: 20, maxWidth: 600 }}>
-                  Manage your social profiles and gaming platform accounts. Gaming platform IDs are required to participate in XP, wager, and tournament matches.
+                  Manage your social profiles and gaming platform accounts. Gaming platform IDs are required to participate in XP, prize entry, and tournament matches.
                 </div>
 
                 {/* ── Section A: Social Accounts ── */}

@@ -37,7 +37,7 @@ export function platformLabel(game: Game) {
   return (game.platforms || []).join(' / ')
 }
 
-export function GameCard({ game }: { game: Game }) {
+export function GameCard({ game, featured = false }: { game: Game; featured?: boolean }) {
   const [hovered, setHovered] = useState(false)
   const pc = platformColor(game)
   const plLabel = platformLabel(game)
@@ -49,17 +49,48 @@ export function GameCard({ game }: { game: Game }) {
         onMouseLeave={() => setHovered(false)}
         style={{
           position: 'relative',
-          borderRadius: 10,
+          borderRadius: 12,
           overflow: 'hidden',
           aspectRatio: '3/4',
           background: '#0d0d12',
-          border: `1px solid ${hovered ? pc + '55' : 'var(--border)'}`,
+          border: `1px solid ${hovered ? pc + '55' : featured ? 'rgba(232,0,13,0.5)' : 'var(--border)'}`,
           transition: 'all 0.22s',
           transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-          boxShadow: hovered ? `0 16px 40px rgba(0,0,0,0.55)` : 'none',
+          boxShadow: hovered
+            ? `0 16px 40px rgba(0,0,0,0.55)`
+            : featured
+              ? '0 0 0 1px rgba(232,0,13,0.25), 0 18px 44px rgba(0,0,0,0.5), 0 0 46px rgba(232,0,13,0.14)'
+              : 'none',
           cursor: 'pointer',
         }}
       >
+        {featured && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              zIndex: 6,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              background: 'var(--red)',
+              color: '#fff',
+              fontFamily: "'Rajdhani', sans-serif",
+              fontWeight: 800,
+              fontSize: 10,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              padding: '4px 9px',
+              borderRadius: 5,
+              boxShadow: '0 4px 14px rgba(232,0,13,0.45)',
+            }}
+          >
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', boxShadow: '0 0 6px #fff' }} />
+            Featured
+          </div>
+        )}
+
         {game.bannerUrl && (
           <Image
             src={game.bannerUrl}

@@ -11,7 +11,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   match: '#3b82f6', tournament: '#a855f7', wager: '#f59e0b', premium: '#22c55e', technical: '#3b82f6', general: '#8890A4',
 }
 const CATEGORY_LABELS: Record<string, string> = {
-  tournament: 'Tournament', wager: 'Wager', match: 'Match', premium: 'Premium', technical: 'Technical', general: 'General',
+  tournament: 'Tournament', wager: 'Prize Entry', match: 'Match', premium: 'Premium', technical: 'Technical', general: 'General',
 }
 const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
   tournament: { label: 'HIGH', color: '#e8000d' },

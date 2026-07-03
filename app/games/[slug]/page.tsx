@@ -656,7 +656,7 @@ export default function GameProfilePage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {rulesTab === 'general' && (
                     <>
-                      {['General Match Rules', 'Wager Match Rules', 'Reporting Results', 'Dispute Process'].map((section, i) => (
+                      {['General Match Rules', 'Prize Entry Match Rules', 'Reporting Results', 'Dispute Process'].map((section, i) => (
                         <AccordionItem 
                           key={`gen-${i}`} 
                           title={section} 

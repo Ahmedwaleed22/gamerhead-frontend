@@ -43,8 +43,8 @@ const rulesData = [
     body: `GamerHead is defined as a gambling provider. Gambling services are only available for players above the age of 18. Free match-making is available for anyone above the age of 13.\n\nAccess may be denied for the following reasons:\na) Being under the age of 18 for cash matches.\nb) Fraudulent conduct.\nc) Invalid identity information.\nd) Previous misconduct and abuse.`,
   },
   {
-    title: 'Wager Matches',
-    body: `All wager amounts must be agreed upon by both parties before the match begins. Once a wager match is accepted, both players are locked into the agreed amount. Withdrawing from a wager match after acceptance may result in a penalty.\n\nGamerHead takes a platform fee on all wager matches. This fee is clearly displayed before any match is accepted.`,
+    title: 'Prize Entry Matches',
+    body: `All prize entry amounts must be agreed upon by both parties before the match begins. Once a prize entry match is accepted, both players are locked into the agreed amount. Withdrawing from a prize entry match after acceptance may result in a penalty.\n\nGamerHead takes a platform fee on all prize entry matches. This fee is clearly displayed before any match is accepted.`,
   },
   {
     title: 'Team Rules',
@@ -63,8 +63,8 @@ const faqData = [
     body: `Click the "Sign Up" button in the top right corner. You'll need a valid email address, a unique username, and a password. After signing up, check your email for a verification link to activate your account.`,
   },
   {
-    title: 'How do wager matches work?',
-    body: `Wager matches allow you to compete for real money. Both teams agree on a wager amount before the match begins. The winning team receives the pot minus a small platform fee. You must be 18 or older and have a verified account to participate in wager matches.\n\nTo post a wager match, go to the game page, click "Post a Match", select your team, set the wager amount, and wait for an opponent to accept.`,
+    title: 'How do prize entry matches work?',
+    body: `Prize entry matches allow you to compete for real money. Both teams agree on a prize entry amount before the match begins. The winning team receives the pot minus a small platform fee. You must be 18 or older and have a verified account to participate in prize entry matches.\n\nTo post a prize entry match, go to the game page, click "Post a Match", select your team, set the prize entry amount, and wait for an opponent to accept.`,
   },
   {
     title: 'How do XP matches work?',

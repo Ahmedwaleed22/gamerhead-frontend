@@ -369,7 +369,7 @@ function OverviewTab({ user, forumStats }: { user: any; forumStats?: { threads: 
         ['Losses', user.losses],
         ['Win Streak', user.winStreak],
         ['Best Streak', user.bestWinStreak],
-        ['Total Wagered', `$${((user.totalWagered || 0) / 100).toFixed(2)}`],
+        ['Total Prize Entries', `$${((user.totalWagered || 0) / 100).toFixed(2)}`],
         ['Total Won', `$${((user.totalWon || 0) / 100).toFixed(2)}`],
       ],
     },

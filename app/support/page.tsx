@@ -384,7 +384,7 @@ function LiveSupportModal({ onClose, onStarted }: { onClose: () => void; onStart
 
 // ─── LIVE CHAT VIEW ──────────────────────────────────────────────────────────────
 
-const CATEGORY_LABELS: Record<string, string> = { tournament: 'Tournament Support', technical: 'Technical Issue', general: 'General', wager: 'Wager Match', match: 'Match Support', premium: 'Premium Match' }
+const CATEGORY_LABELS: Record<string, string> = { tournament: 'Tournament Support', technical: 'Technical Issue', general: 'General', wager: 'Prize Entry Match', match: 'Match Support', premium: 'Premium Match' }
 
 function LiveChatView({ userId, onClose }: { userId: string; onClose: () => void }) {
   const [session, setSession] = useState<any>(null)
