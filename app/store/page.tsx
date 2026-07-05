@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { storeApi, walletApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { trackEvent } from '@/lib/gtag'
 import { sendActivity } from '@/lib/socket'
+import { loadCart, saveCart, subscribeCart } from '@/lib/cart'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
 import { loadStripe } from '@stripe/stripe-js'
@@ -271,52 +272,32 @@ function StorePageContent() {
   const [storeItems, setStoreItems] = useState<StoreItem[]>([])
   const [activeCategory, setActiveCategory] = useState('All')
   const [cart, setCart]           = useState<CartItem[]>([])
+  const cartLoaded                = useRef(false)
   const [catOpen, setCatOpen]     = useState(true)
   const [heroSlide, setHeroSlide] = useState(0)
-  const [showModal, setShowModal] = useState(false)
-  const [step, setStep]           = useState<CheckoutStep>('cart')
-  const [payMethod, setPayMethod] = useState<PayMethod>('wallet')
   const [coupon, setCoupon]       = useState('')
   const [couponApplied, setCouponApplied] = useState(false)
-  const [couponError, setCouponError]     = useState('')
-  const [clientSecret, setClientSecret]   = useState<string | null>(null)
-  const [stripeError,  setStripeError]    = useState<string>('')
   const [flashId,  setFlashId]  = useState<string | null>(null)
-  const [walletBalance, setWalletBalance] = useState(0) // cents
+
+  // Hydrate cart from localStorage on mount (avoids SSR hydration mismatch),
+  // then persist + broadcast on every change so the header badge stays in sync.
+  useEffect(() => { setCart(loadCart() as CartItem[]) }, [])
+  // Skip the first run: on mount this effect fires with the stale initial `[]`
+  // (before the hydrate above has committed), so persisting here would wipe the
+  // stored cart. Only save on genuine cart changes after hydration.
+  useEffect(() => {
+    if (!cartLoaded.current) { cartLoaded.current = true; return }
+    saveCart(cart)
+  }, [cart])
+
+  // React to cart changes made elsewhere (e.g. the header cart dropdown / other tabs).
+  // Equality guard returns the same ref when unchanged, so our own saves don't loop.
+  useEffect(() => subscribeCart(() => {
+    const stored = loadCart() as CartItem[]
+    setCart(prev => JSON.stringify(prev) === JSON.stringify(stored) ? prev : stored)
+  }), [])
 
   useEffect(() => { sendActivity('Browsing Store') }, [])
-
-  // ── Handle redirect return from Stripe (Cash App, etc.) ───────────────────
-  useEffect(() => {
-    const paymentIntent = searchParams.get('payment_intent')
-    const redirectStatus = searchParams.get('redirect_status')
-    if (paymentIntent && redirectStatus === 'succeeded') {
-      // Show processing state immediately
-      setShowModal(true)
-      setStep('processing')
-      // Confirm with backend, then show success
-      storeApi.confirmPayment({ paymentIntentId: paymentIntent })
-        .then(() => {
-          setCart([])
-          setStep('success')
-          refresh().catch(() => {})
-          walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
-        })
-        .catch((err) => {
-          console.warn('[Store] Redirect confirm failed:', err?.message)
-          // Payment was still taken — show success, webhook will handle fulfillment
-          setCart([])
-          setStep('success')
-          refresh().catch(() => {})
-        })
-      // Clean up URL params
-      router.replace('/store', { scroll: false })
-    }
-  }, [searchParams, router, refresh])
-
-  useEffect(() => {
-    if (user) walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
-  }, [user])
 
   useEffect(() => {
     const t = setInterval(() => setHeroSlide(s => (s + 1) % heroSlides.length), 4200)
@@ -361,30 +342,9 @@ function StorePageContent() {
   const changeQty = (id: string, d: number) =>
     setCart(p => p.map(c => c.id !== id ? c : { ...c, qty: Math.max(1, c.qty + d) }))
 
-  const applyCoupon = async () => {
-    try {
-      await storeApi.checkCoupon(coupon)
-      setCouponApplied(true)
-      setCouponError('')
-    } catch (err: any) {
-      setCouponApplied(false)
-      setCouponError(err?.message || 'Invalid coupon code')
-    }
-  }
-
   const cartItems = () => cart.map(c => ({
     id: c.id, name: c.name, price: c.price, category: c.category, image: c.image, qty: c.qty,
   }))
-
-  const handlePaySuccess = () => {
-    trackEvent('purchase', { currency: 'USD', value: total / 100, items: cart.map(c => ({ item_id: c.id, item_name: c.name, price: c.price / 100, quantity: c.qty })) })
-    setCart([])
-    setClientSecret(null)
-    setStripeError('')
-    setStep('success')
-    refresh().catch(() => {})
-    walletApi.getBalance().then((b: any) => setWalletBalance(b.cashBalance || 0)).catch(() => {})
-  }
 
   // Prompt sign-in when an unauthenticated user tries to pay.
   // Returns true if we redirected to login (caller should bail out).
@@ -392,49 +352,6 @@ function StorePageContent() {
     if (user) return false
     window.dispatchEvent(new Event('gh:open-login'))
     return true
-  }
-
-  // Wallet checkout — balance deducted server-side, fulfillment immediate
-  const handleCheckout = async () => {
-    if (requireLogin()) return
-    setStep('processing')
-    try {
-      await storeApi.checkout({
-        items: cartItems(), paymentMethod: 'wallet',
-        couponCode: couponApplied ? coupon : undefined,
-      })
-      handlePaySuccess()
-    } catch (err: any) {
-      console.error('Checkout failed:', err)
-      setStep('fail')
-    }
-  }
-
-  // Card checkout — backend creates PaymentIntent, we show Stripe Elements
-  const handleCardCheckout = async () => {
-    if (requireLogin()) return
-    setStep('processing')
-    try {
-      const res: any = await storeApi.checkout({
-        items: cartItems(), paymentMethod: 'card',
-        couponCode: couponApplied ? coupon : undefined,
-      })
-      setClientSecret(res.clientSecret)
-      setStripeError('')
-      setStep('stripe-pay')
-    } catch (err: any) {
-      console.error('Card checkout failed:', err)
-      setStep('fail')
-    }
-  }
-
-  const openModal = (goTo: CheckoutStep = 'cart') => { setShowModal(true); setStep(goTo) }
-  const closeModal = () => {
-    setShowModal(false)
-    setTimeout(() => {
-      setStep('cart'); setCoupon(''); setCouponApplied(false); setCouponError('')
-      setClientSecret(null); setStripeError('')
-    }, 280)
   }
 
   return (
@@ -481,7 +398,7 @@ function StorePageContent() {
             <button
               className="btn-primary"
               style={{ padding:'10px 28px', fontSize:13, borderRadius: 8, boxShadow: '0 4px 12px rgba(232,0,13,0.2)' }}
-              onClick={() => { setActiveCategory(slide.cat); openModal('payment') }}
+              onClick={() => { setActiveCategory(slide.cat); }}
             >
               Shop Now
             </button>
@@ -517,15 +434,15 @@ function StorePageContent() {
           <div className="store-sidebar-card">
             <div className="store-sidebar-cart-header">
               <h3 className="store-sidebar-title">Your Cart</h3>
-              <button onClick={() => openModal()} style={{ background:'none', border:'none', cursor:'pointer', position:'relative' }}>
+              {/* <button onClick={() => openModal()} style={{ background:'none', border:'none', cursor:'pointer', position:'relative' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="21" r="1" fill="#9CA3AF"/><circle cx="20" cy="21" r="1" fill="#9CA3AF"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 {totalItems > 0 && <span className="store-cart-count">{totalItems}</span>}
-              </button>
+              </button> */}
             </div>
             <p className="store-cart-qty">Quantity of items: <strong>{totalItems}</strong></p>
             <div className="store-cart-btns">
-              <button className="store-btn-outline" onClick={() => openModal()}>View Cart</button>
-              <button className="store-btn-solid"   onClick={() => openModal('payment')}>Checkout</button>
+              {/* <button className="store-btn-outline" onClick={() => window.location.href = '/cart'}>View Cart</button> */}
+              <button className="store-btn-solid"   onClick={() => window.location.href = '/checkout'}>Checkout</button>
             </div>
 
             {/* Quick links — Deposit Cash → /wallet, no Buy Tickets, no emojis, Premium Membership */}
@@ -576,394 +493,13 @@ function StorePageContent() {
                 inCart={cart.find(c => c.id === item.id)}
                 flashing={flashId === item.id}
                 onAdd={() => addToCart(item)}
-                onViewCart={() => openModal()}
+                onViewCart={() => {}}
               />
             ))}
           </div>
         </div>
       </div>
       </div>
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          CART / CHECKOUT MODAL
-      ═══════════════════════════════════════════════════════════════════════ */}
-      {showModal && (
-        <>
-          <div onClick={closeModal} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.78)', backdropFilter:'blur(5px)', zIndex:1000, animation:'gh-fadein .2s' }} />
-
-          <div style={{
-            position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
-            width: (step === 'success' || step === 'fail') ? 400 : 520,
-            maxWidth:'calc(100vw - 32px)',
-            background:'#0F0F18', border:'1px solid rgba(255,255,255,0.075)', borderRadius:14,
-            zIndex:1001, maxHeight:'90vh', overflowY:'auto',
-            boxShadow:'0 40px 100px rgba(0,0,0,0.85)',
-            animation:'gh-modalin .25s cubic-bezier(.22,1,.36,1)',
-          }}>
-
-            {/* ── STRIPE PAY ── */}
-            {step === 'stripe-pay' && clientSecret && (
-              <>
-                <ModalTop title="Card Payment" onBack={() => setStep('payment')} onClose={closeModal} />
-                <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  {/* Order total summary */}
-                  <div style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 9, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Total due</span>
-                    <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 22, fontWeight: 900, color: '#f0c040' }}>${total.toFixed(2)}</span>
-                  </div>
-
-                  {/* Stripe error */}
-                  {stripeError && (
-                    <div style={{ background: 'rgba(184,44,44,0.12)', border: '1px solid rgba(184,44,44,0.35)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#ef4444' }}>
-                      {stripeError}
-                    </div>
-                  )}
-
-                  {/* Stripe Elements form */}
-                  <Elements stripe={stripePromise} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
-                    <StripePayForm
-                      total={total}
-                      onSuccess={() => { setStripeError(''); handlePaySuccess() }}
-                      onError={(msg) => setStripeError(msg)}
-                    />
-                  </Elements>
-
-                  <p style={{ fontSize: 10, color: 'var(--text-dim)', textAlign: 'center', lineHeight: 1.6 }}>
-                    Powered by Stripe · 256-bit SSL · Your card is never stored on our servers
-                  </p>
-                </div>
-              </>
-            )}
-
-            {/* ── SUCCESS ── */}
-            {step === 'success' && (
-              <div style={{ padding:52, display:'flex', flexDirection:'column', alignItems:'center', gap:18, textAlign:'center' }}>
-                <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(39,174,96,0.12)', border:'2px solid rgba(39,174,96,0.45)', display:'flex', alignItems:'center', justifyContent:'center', animation:'gh-scalein .4s cubic-bezier(.34,1.56,.64,1)' }}><Icon icon={Solar.checkRead} width={40} height={40} /></div>
-                <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:28, fontWeight:900, textTransform:'uppercase', color:'#4ade80', letterSpacing:1 }}>Purchase Complete!</div>
-                <p style={{ fontSize:13, color:'var(--text-muted)', lineHeight:1.7, maxWidth:290 }}>
-                  Thank you for your purchase. Your items have been added to your account.
-                </p>
-                <button className="btn-primary" onClick={() => { closeModal(); setCart([]) }}>Continue Shopping</button>
-              </div>
-            )}
-
-            {/* ── FAIL ── */}
-            {step === 'fail' && (
-              <div style={{ padding:52, display:'flex', flexDirection:'column', alignItems:'center', gap:18, textAlign:'center' }}>
-                <div style={{ width:84, height:84, borderRadius:'50%', background:'rgba(184,44,44,0.12)', border:'2px solid rgba(184,44,44,0.45)', display:'flex', alignItems:'center', justifyContent:'center', animation:'gh-scalein .4s cubic-bezier(.34,1.56,.64,1)' }}><Icon icon={Solar.close} width={40} height={40} /></div>
-                <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:28, fontWeight:900, textTransform:'uppercase', color:'var(--red)', letterSpacing:1 }}>Something's Wrong</div>
-                <p style={{ fontSize:13, color:'var(--text-muted)', lineHeight:1.7, maxWidth:290 }}>
-                  Your payment could not be processed. Please check your details and try again.
-                </p>
-                <div style={{ display:'flex', gap:10 }}>
-                  <button className="btn-primary" onClick={() => setStep('payment')}>Try Again</button>
-                  <button style={{ padding:'10px 20px', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, color:'var(--text-muted)', fontSize:12, fontWeight:700, cursor:'pointer' }} onClick={closeModal}>Cancel</button>
-                </div>
-              </div>
-            )}
-
-            {/* ── PROCESSING ── */}
-            {step === 'processing' && (
-              <div style={{ padding:52, display:'flex', flexDirection:'column', alignItems:'center', gap:22, textAlign:'center' }}>
-                <div style={{ width:64, height:64, borderRadius:'50%', border:'3px solid rgba(255,255,255,0.07)', borderTop:'3px solid var(--red)', animation:'gh-spin .8s linear infinite' }} />
-                <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:22, fontWeight:800, textTransform:'uppercase', color:'#fff' }}>Processing Payment…</div>
-                <p style={{ fontSize:12, color:'var(--text-dim)' }}>Please do not close this window</p>
-              </div>
-            )}
-
-            {/* ── CART VIEW ── */}
-            {step === 'cart' && (
-              <>
-                <ModalTop
-                  title={<>
-                    <Icon icon={Solar.cart} width={22} height={22} style={{ marginRight: 10, flexShrink: 0, opacity: 0.95 }} />
-                    Cart
-                    {totalItems > 0 && <span style={{ background:'var(--red)', color:'#fff', fontSize:10, fontWeight:800, padding:'2px 7px', borderRadius:10, marginLeft:8 }}>{totalItems}</span>}
-                  </>}
-                  onClose={closeModal}
-                />
-                {cart.length === 0 ? (
-                  <div style={{
-                    padding: '40px 20px 44px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    minHeight: 300,
-                    justifyContent: 'center',
-                  }}>
-                    <div style={{
-                      width: 96,
-                      height: 96,
-                      borderRadius: '50%',
-                      background: 'linear-gradient(145deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      boxShadow: '0 16px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 28,
-                    }}>
-                      <Icon icon={Solar.cart} width={48} height={48} style={{ opacity: 0.5, color: 'rgba(255,255,255,0.9)' }} />
-                    </div>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 900, letterSpacing: 0.6, textTransform: 'uppercase', color: '#fff', marginBottom: 10 }}>
-                      Your cart is empty
-                    </div>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.55, maxWidth: 300, margin: '0 0 28px' }}>
-                      Add tickets or premium from the store — they&apos;ll show up here.
-                    </p>
-                    <button className="btn-primary text-center flex justify-center align-center" onClick={closeModal} style={{ minWidth: 220 }}>
-                      Browse store
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ padding:'14px 22px', display:'flex', flexDirection:'column', gap:10, maxHeight:320, overflowY:'auto' }}>
-                      {cart.map(item => (
-                        <div key={item.id} style={{ display:'flex', alignItems:'center', gap:12, background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:9, padding:'10px 14px' }}>
-                          <div style={{ width:40, height:40, background:'var(--bg-4)', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-                            <img src={item.image} alt={item.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e => { (e.currentTarget.parentElement!).innerHTML = '<span style="display:flex;align-items:center;justify-content:center;height:100%"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" stroke="#6B7280" stroke-width="2"/><path d="M3 6h18M16 10a4 4 0 01-8 0" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/></svg></span>' }} />
-                          </div>
-                          <div style={{ flex:1, minWidth:0 }}>
-                            <div style={{ fontSize:12, fontWeight:700, color:'#fff', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.name}</div>
-                            <div style={{ fontSize:10, color:'var(--text-muted)' }}>{item.category}</div>
-                          </div>
-                          <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                            <button onClick={() => changeQty(item.id,-1)} style={{ width:22, height:22, background:'var(--bg-4)', border:'1px solid var(--border)', borderRadius:4, color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
-                            <span style={{ fontSize:12, fontWeight:700, color:'#fff', minWidth:18, textAlign:'center' }}>{item.qty}</span>
-                            <button onClick={() => changeQty(item.id,+1)} style={{ width:22, height:22, background:'var(--bg-4)', border:'1px solid var(--border)', borderRadius:4, color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
-                          </div>
-                          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:15, fontWeight:800, color:'#f0c040', minWidth:54, textAlign:'right', flexShrink:0 }}>${(item.price*item.qty).toFixed(2)}</div>
-                          <button type="button" onClick={() => removeFromCart(item.id)} style={{ background:'none', border:'none', color:'var(--text-dim)', cursor:'pointer', padding:'2px 4px', display:'flex', alignItems:'center' }}
-                            onMouseEnter={e=>(e.currentTarget.style.color='var(--red)')}
-                            onMouseLeave={e=>(e.currentTarget.style.color='var(--text-dim)')} aria-label="Remove"><Icon icon={Solar.close} width={14} height={14} /></button>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ padding:'12px 22px', borderTop:'1px solid rgba(255,255,255,0.055)' }}>
-                      <div style={{ display:'flex', gap:8 }}>
-                        <input type="text" placeholder="Coupon code — try EMPIRE10" value={coupon}
-                          onChange={e=>{ setCoupon(e.target.value); setCouponError('') }}
-                          className="site-input" style={{ flex:1, fontSize:12, height:34 }} />
-                        <button onClick={applyCoupon} style={{ padding:'0 16px', background: couponApplied ? 'rgba(39,174,96,0.15)' : 'var(--bg-3)', border:`1px solid ${couponApplied ? 'rgba(39,174,96,0.4)' : 'var(--border)'}`, borderRadius:4, color: couponApplied ? '#4ade80' : 'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer', textTransform:'uppercase', letterSpacing:.4, whiteSpace:'nowrap' }}>
-                          {couponApplied ? (<span style={{ display:'inline-flex', alignItems:'center', gap:4 }}><Icon icon={Solar.checkRead} width={12} height={12} /> Applied</span>) : 'Apply'}
-                        </button>
-                      </div>
-                      {couponError   && <p style={{ fontSize:11, color:'var(--red)',   marginTop:5 }}>{couponError}</p>}
-                      {couponApplied && <p style={{ fontSize:11, color:'#4ade80',       marginTop:5 }}>10% discount applied!</p>}
-                    </div>
-                    <div style={{ padding:'12px 22px', borderTop:'1px solid rgba(255,255,255,0.055)', display:'flex', flexDirection:'column', gap:6 }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'var(--text-muted)' }}><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-                      {couponApplied && (
-                        <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#4ade80' }}><span>Discount (10%)</span><span>−${discount.toFixed(2)}</span></div>
-                      )}
-                      <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'Barlow Condensed, sans-serif', fontSize:20, fontWeight:900, borderTop:'1px solid rgba(255,255,255,0.055)', paddingTop:8, marginTop:2 }}>
-                        <span style={{ color:'#fff' }}>Total</span><span style={{ color:'#f0c040' }}>${total.toFixed(2)}</span>
-                      </div>
-                    </div>
-                    <div style={{ padding:'14px 22px', borderTop:'1px solid rgba(255,255,255,0.055)' }}>
-                      <button className="btn-primary" style={{ width:'100%', justifyContent:'center', padding:'13px' }} onClick={() => setStep('payment')}>
-                        Proceed to Checkout →
-                      </button>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-
-            {/* ── PAYMENT ── */}
-            {step === 'payment' && (
-              <>
-                <ModalTop title="Payment" onBack={() => setStep('cart')} onClose={closeModal} />
-                <div style={{ padding:'22px 24px', display:'flex', flexDirection:'column', gap:20 }}>
-                  {cart.length > 0 && (
-                    <div style={{ background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:9, padding:'13px 16px' }}>
-                      <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:.6, color:'var(--text-dim)', marginBottom:10 }}>Order Summary</div>
-                      {cart.map(item => (
-                        <div key={item.id} style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'var(--text-muted)', marginBottom:5 }}>
-                          <span>{item.name} ×{item.qty}</span><span>${(item.price*item.qty).toFixed(2)}</span>
-                        </div>
-                      ))}
-                      {couponApplied && (
-                        <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#4ade80', marginBottom:5 }}>
-                          <span>Coupon (EMPIRE10)</span><span>−${discount.toFixed(2)}</span>
-                        </div>
-                      )}
-                      <div style={{ borderTop:'1px solid rgba(255,255,255,0.055)', marginTop:8, paddingTop:8, display:'flex', justifyContent:'space-between', fontWeight:800, fontSize:15, fontFamily:'Barlow Condensed, sans-serif' }}>
-                        <span style={{ color:'#fff' }}>TOTAL</span><span style={{ color:'#f0c040' }}>${total.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.7, color:'var(--text-dim)', marginBottom:12 }}>Payment Method</div>
-                    <div style={{ display:'flex', gap:12 }}>
-                      {([
-                        { key:'wallet' as PayMethod, label:'Wallet Balance', icon:'wallet', sub:`$${(walletBalance / 100).toFixed(2)} available` },
-                        { key:'paypal' as PayMethod, label:'PayPal',         icon:'pp',     sub:'Securely redirect to PayPal' },
-                        { key:'card'   as PayMethod, label:'Credit / Debit', icon:'card',   sub:'Visa, Mastercard, Amex, Discover' },
-                      ]).map(m => (
-                        <button key={m.key} onClick={() => setPayMethod(m.key)} style={{
-                          flex:1, padding:'18px 16px', textAlign:'left',
-                          background: payMethod===m.key ? 'rgba(184,44,44,0.1)' : 'var(--bg-3)',
-                          border:`1px solid ${payMethod===m.key ? 'rgba(184,44,44,0.45)' : 'var(--border)'}`,
-                          borderRadius:10, cursor:'pointer', transition:'all .15s', position:'relative',
-                        }}>
-                          {payMethod===m.key && (
-                            <div style={{ position:'absolute', top:10, right:10, width:18, height:18, borderRadius:'50%', background:'var(--red)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}><Icon icon={Solar.checkRead} width={10} height={10} /></div>
-                          )}
-                          <div style={{ marginBottom:8 }}>{m.icon === 'wallet' ? <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="15" rx="3" stroke="#4ade80" strokeWidth="2"/><path d="M2 9h20" stroke="#4ade80" strokeWidth="2"/><circle cx="17" cy="14" r="1.5" fill="#4ade80"/></svg> : m.icon === 'pp' ? <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#5b9bd5" strokeWidth="2"/><text x="12" y="16" textAnchor="middle" fill="#5b9bd5" fontSize="12" fontWeight="900" fontFamily="Arial">P</text></svg> : <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="3" stroke="#9CA3AF" strokeWidth="2"/><path d="M1 10h22" stroke="#9CA3AF" strokeWidth="2"/></svg>}</div>
-                          <div style={{ fontSize:13, fontWeight:700, color: payMethod===m.key ? '#fff' : 'var(--text-muted)', marginBottom:4 }}>{m.label}</div>
-                          <div style={{ fontSize:10, color:'var(--text-dim)', lineHeight:1.4 }}>{m.sub}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {payMethod === 'wallet' && (
-                    <div style={{ background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:9, padding:'16px', display:'flex', flexDirection:'column', gap:10 }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                        <span style={{ fontSize:12, color:'var(--text-muted)', fontWeight:600 }}>Available Balance</span>
-                        <span style={{ fontSize:18, fontWeight:900, fontFamily:'Barlow Condensed, sans-serif', color:'#fff' }}>${(walletBalance / 100).toFixed(2)}</span>
-                      </div>
-                      {walletBalance >= Math.round(total * 100) ? (
-                        <div style={{ fontSize:11, color:'var(--text-dim)', borderTop:'1px solid rgba(255,255,255,0.055)', paddingTop:10 }}>
-                          Remaining after purchase: <span style={{ color:'var(--text-muted)', fontWeight:600 }}>${((walletBalance - Math.round(total * 100)) / 100).toFixed(2)}</span>
-                        </div>
-                      ) : (
-                        <div style={{ fontSize:11, color:'#ef4444', borderTop:'1px solid rgba(255,255,255,0.055)', paddingTop:10, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                          <span>Insufficient balance</span>
-                          <Link href="/wallet" style={{ color:'var(--red)', fontSize:11, fontWeight:700, textDecoration:'none' }}>Deposit funds →</Link>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {payMethod === 'paypal' && !user && (
-                    <button
-                      className="btn-primary"
-                      style={{ width:'100%', justifyContent:'center', padding:'14px', fontSize:14 }}
-                      onClick={() => requireLogin()}
-                    >
-                      Sign in to pay with PayPal
-                    </button>
-                  )}
-
-                  {payMethod === 'paypal' && user && (
-                    <PayPalScriptProvider options={{
-                      clientId:          process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
-                      currency:          'USD',
-                      'enable-funding':  'venmo',
-                      'buyer-country':   'US',
-                      components:        'buttons,funding-eligibility',
-                    }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <PayPalButtons
-                          style={{ layout: 'vertical', color: 'blue', shape: 'rect', height: 45 }}
-                          fundingSource={FUNDING.PAYPAL}
-                          createOrder={async () => {
-                            const res: any = await storeApi.createPayPalOrder({
-                              items: cartItems(), paymentMethod: 'paypal',
-                              couponCode: couponApplied ? coupon : undefined,
-                            })
-                            return res.paypalOrderId
-                          }}
-                          onApprove={async (data) => {
-                            setStep('processing')
-                            try {
-                              await storeApi.capturePayPalOrder({ paypalOrderId: data.orderID })
-                              handlePaySuccess()
-                            } catch {
-                              setStep('fail')
-                            }
-                          }}
-                          onError={() => setStep('fail')}
-                        />
-                        <PayPalButtons
-                          style={{ layout: 'vertical', color: 'blue', shape: 'rect', height: 45 }}
-                          fundingSource={FUNDING.VENMO}
-                          createOrder={async () => {
-                            const res: any = await storeApi.createPayPalOrder({
-                              items: cartItems(), paymentMethod: 'paypal',
-                              couponCode: couponApplied ? coupon : undefined,
-                            })
-                            return res.paypalOrderId
-                          }}
-                          onApprove={async (data) => {
-                            setStep('processing')
-                            try {
-                              await storeApi.capturePayPalOrder({ paypalOrderId: data.orderID })
-                              handlePaySuccess()
-                            } catch {
-                              setStep('fail')
-                            }
-                          }}
-                          onError={() => setStep('fail')}
-                        />
-                      </div>
-                    </PayPalScriptProvider>
-                  )}
-
-                  {payMethod === 'card' && (
-                    <div style={{ background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:9, padding:'14px 16px' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0, opacity:0.45 }}>
-                          <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/>
-                          <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                        <span style={{ fontSize:11, color:'var(--text-dim)' }}>You'll enter card details on the next step</span>
-                      </div>
-                      <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-                        {['Visa','Mastercard','Amex','Discover'].map(c => (
-                          <span key={c} style={{ fontSize:9, fontWeight:700, color:'var(--text-dim)', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:3, padding:'2px 6px', letterSpacing:'.3px', textTransform:'uppercase' }}>{c}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {!couponApplied ? (
-                    <div>
-                      <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.7, color:'var(--text-dim)', marginBottom:10 }}>Have a Coupon?</div>
-                      <div style={{ display:'flex', gap:8 }}>
-                        <input type="text" placeholder="Enter coupon code" value={coupon}
-                          onChange={e=>{ setCoupon(e.target.value); setCouponError('') }}
-                          className="site-input" style={{ flex:1, fontSize:12, height:34 }} />
-                        <button onClick={applyCoupon} style={{ padding:'0 14px', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:4, color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer', textTransform:'uppercase', letterSpacing:.4 }}>Apply</button>
-                      </div>
-                      {couponError && <p style={{ fontSize:11, color:'var(--red)', marginTop:5 }}>{couponError}</p>}
-                    </div>
-                  ) : (
-                    <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(39,174,96,0.08)', border:'1px solid rgba(39,174,96,0.2)', borderRadius:7, padding:'10px 14px', fontSize:12, color:'#4ade80' }}>
-                      <Icon icon={Solar.checkRead} width={14} height={14} /> Coupon EMPIRE10 applied — 10% off
-                    </div>
-                  )}
-
-                  <div style={{ background:'rgba(184,44,44,0.06)', border:'1px solid rgba(184,44,44,0.15)', borderRadius:9, padding:'14px 18px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>Total Due</span>
-                    <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:28, fontWeight:900, color:'#f0c040' }}>${total.toFixed(2)}</span>
-                  </div>
-
-                  {payMethod !== 'paypal' && (
-                    <button
-                      className="btn-primary"
-                      style={{ width:'100%', justifyContent:'center', padding:'14px', fontSize:14, opacity: payMethod === 'wallet' && walletBalance < Math.round(total * 100) ? 0.4 : 1 }}
-                      onClick={payMethod === 'card' ? handleCardCheckout : handleCheckout}
-                      disabled={payMethod === 'wallet' && walletBalance < Math.round(total * 100)}
-                    >
-                      {payMethod === 'wallet' ? 'Pay with Wallet' : 'Continue to Card Payment →'}
-                    </button>
-                  )}
-
-                  <p style={{ fontSize:10, color:'var(--text-dim)', textAlign:'center', lineHeight:1.6 }}>
-                    By completing your purchase you agree to our Terms of Service. All sales are final.
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </>
-      )}
-
       <style>{`
         @keyframes gh-fadeout { 0%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
         @keyframes gh-scalein { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
