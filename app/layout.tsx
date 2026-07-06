@@ -11,6 +11,7 @@ import { notificationsApi, supportApi } from '@/lib/api'
 import { sendHeartbeat } from '@/lib/socket'
 import { listenPrivate } from '@/lib/echo'
 import AuthModal from './components/AuthModal'
+import CartSync from '@/components/CartSync'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { ToastProvider } from '@/components/Toast'
@@ -263,9 +264,12 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         </>
       )}
     
+      {/* Keeps the cart synced to the server + across devices (renders nothing) */}
+      <CartSync />
+
       {/* ── NAVBAR (hidden on admin pages) ── */}
       {!isAdminPage && (
-        <Header 
+        <Header
           user={user}
           notifs={notifs}
           unreadCount={unreadCount}

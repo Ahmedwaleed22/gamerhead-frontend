@@ -1,262 +1,297 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { storeApi, walletApi } from '@/lib/api'
+import { storeApi } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { trackEvent } from '@/lib/gtag'
 import { sendActivity } from '@/lib/socket'
 import { loadCart, saveCart, subscribeCart } from '@/lib/cart'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
-import { loadStripe } from '@stripe/stripe-js'
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { PayPalScriptProvider, PayPalButtons, FUNDING } from '@paypal/react-paypal-js'
 
-// ─── UPDATED CATEGORIES (no Profile Badges, no Cash, no Accessories, no Gift Cards) ──
-const categories = ['Tickets', 'Premium Membership']
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface StoreItem {
+  id: string
+  name: string
+  price: number
+  image: string
+  category: string
+  badge?: string
+  credits?: number
+  days?: number
+}
+interface CartItem extends StoreItem { qty: number }
 
-interface StoreItem { id: string; name: string; price: number; image: string; category: string; badge?: string }
-interface CartItem  extends StoreItem { qty: number }
+// ─── Static content (trust + reassurance, not fetched) ─────────────────────────
+const trustChips = [
+  { icon: Solar.lock,      label: 'Secure checkout' },
+  { icon: Solar.bolt,      label: 'Instant delivery' },
+  { icon: Solar.shield,    label: 'Cancel Premium anytime' },
+  { icon: Solar.users,     label: '14,200+ players' },
+]
 
-type PayMethod    = 'wallet' | 'paypal' | 'card'
-type CheckoutStep = 'cart' | 'payment' | 'processing' | 'success' | 'fail' | 'stripe-pay'
+const premiumPerks = [
+  { icon: Solar.bolt,    name: '1.25× XP on every match',  desc: 'The same grind, a bigger payout — season after season.' },
+  { icon: Solar.forbidden, name: 'No ads, anywhere',       desc: 'A clean, distraction-free platform from the second you upgrade.' },
+  { icon: Solar.ticket,  name: 'Priority support queue',   desc: 'Your tickets jump the line when you need a hand.' },
+  { icon: Solar.palette, name: 'Ultra profile customization', desc: 'Hex themes and layouts that make your page stand out.' },
+  { icon: Solar.pen,     name: 'Monthly username change',  desc: 'A fresh name whenever you want one, on the house.' },
+  { icon: Solar.crown,   name: 'Premium badge & crown',    desc: 'A premium crown next to your name in every lobby.' },
+]
 
-// ─── Stripe setup ─────────────────────────────────────────────────────────────
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
+const guarantees = [
+  { icon: Solar.lock,   title: 'Encrypted payments',   desc: 'Card and PayPal checkout handled by PCI-compliant processors. We never store your card details.' },
+  { icon: Solar.bolt,   title: 'Delivered instantly',  desc: 'Tickets land in your wallet and Premium activates the moment your payment clears.' },
+  { icon: Solar.shield, title: '7-day Premium guarantee', desc: 'Not happy in your first week? Reach out and we’ll make it right — no questions asked.' },
+  { icon: Solar.chat,   title: 'Real human support',   desc: 'A support team that actually answers, ready whenever you need them.' },
+]
 
-const STRIPE_APPEARANCE = {
-  theme: 'night' as const,
-  variables: {
-    colorPrimary:          '#B22D2D',
-    colorBackground:       '#0C0C11',
-    colorText:             '#ffffff',
-    colorTextSecondary:    'rgba(255,255,255,0.55)',
-    borderRadius:          '8px',
-    fontFamily:            "'Inter', 'Barlow', sans-serif",
-  },
-  rules: {
-    '.Input':         { backgroundColor: '#18181C', border: '1px solid rgba(255,255,255,0.1)',  color: '#fff' },
-    '.Input:focus':   { border: '1px solid rgba(178,45,45,0.7)', boxShadow: '0 0 0 2px rgba(178,45,45,0.2)' },
-    '.Label':         { color: 'rgba(255,255,255,0.55)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em' },
-    '.Block':         { backgroundColor: '#0C0C11', border: '1px solid rgba(255,255,255,0.07)' },
-    '.CheckboxInput': { backgroundColor: '#18181C', border: '1px solid rgba(255,255,255,0.15)' },
-    '.Tab':           { backgroundColor: '#18181C', border: '1px solid rgba(255,255,255,0.1)',  color: 'rgba(255,255,255,0.55)' },
-    '.Tab--selected': { backgroundColor: '#1e1e25', border: '1px solid rgba(178,45,45,0.6)',    color: '#fff' },
-  },
+const faqs = [
+  { q: 'Do I need to buy anything to play?', a: 'No. GamerHead is free to play — you can compete in free matches and climb the ladder without spending a cent. Tickets and Premium simply unlock more when you’re ready for it.' },
+  { q: 'Do tickets ever expire?', a: 'Never. Tickets sit in your wallet until you use them, so it’s completely fine to stock up at a better rate and play whenever it suits you.' },
+  { q: 'Can I cancel Premium?', a: 'Anytime, in one click from your settings. You keep every perk until the end of the period you already paid for — no lock-in, no contracts.' },
+  { q: 'Is my payment secure?', a: 'Yes. Checkout runs through PCI-compliant processors (card & PayPal) over an encrypted connection. Your card details never touch our servers.' },
+]
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+const isPremiumItem = (i: StoreItem) => /premium/i.test(`${i.category} ${i.name}`)
+const ticketQty = (i: StoreItem) => i.credits ?? Number(i.name.match(/\d+/)?.[0] ?? 0)
+const premiumMonths = (i: StoreItem) => {
+  if (i.days) return Math.max(1, Math.round(i.days / 30))
+  const m = i.name.match(/(\d+)\s*month/i)
+  if (m) return Number(m[1])
+  if (/year/i.test(i.name)) return 12
+  return 1
 }
 
-// ─── Stripe Payment Form ──────────────────────────────────────────────────────
-function StripePayForm({
-  total, onSuccess, onError,
-}: { total: number; onSuccess: () => void; onError: (msg: string) => void }) {
-  const stripe   = useStripe()
-  const elements = useElements()
-  const [paying, setPaying] = useState(false)
+// ─── Add-to-cart control (shared by ticket + premium cards) ─────────────────────
+function CartControl({
+  inCart, flashing, onAdd, onInc, onDec, accent = 'var(--red)', label = 'Add to Cart',
+}: {
+  inCart?: CartItem
+  flashing: boolean
+  onAdd: () => void
+  onInc: () => void
+  onDec: () => void
+  accent?: string
+  label?: string
+}) {
+  if (inCart) {
+    return (
+      <div className="shop-qty">
+        <button aria-label="Remove one" onClick={onDec} className="shop-qty-btn">
+          <Icon icon="solar:minus-circle-bold-duotone" width={18} height={18} />
+        </button>
+        <span className="shop-qty-count">
+          <Icon icon={Solar.checkRead} width={15} height={15} style={{ color: '#4ade80' }} />
+          {inCart.qty} in cart
+        </span>
+        <button aria-label="Add one" onClick={onInc} className="shop-qty-btn">
+          <Icon icon="solar:add-circle-bold-duotone" width={18} height={18} />
+        </button>
+      </div>
+    )
+  }
+  return (
+    <button
+      onClick={onAdd}
+      className="shop-add-btn"
+      style={{ ['--acc' as string]: accent, animation: flashing ? 'shop-pop 0.4s ease' : undefined }}
+    >
+      <Icon icon={Solar.cart} width={15} height={15} /> {label}
+    </button>
+  )
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!stripe || !elements) return
-    setPaying(true)
-    const result = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/store?payment=success`,
-      },
-      redirect: 'if_required',
-    })
-    if (result.error) {
-      setPaying(false)
-      onError(result.error.message || 'Payment failed')
-      return
-    }
-    if (result.paymentIntent?.status === 'succeeded') {
-      // Verify payment server-side and trigger fulfillment
-      try {
-        await storeApi.confirmPayment({ paymentIntentId: result.paymentIntent.id })
-      } catch (err: any) {
-        // Even if confirm call fails, payment was taken — show success
-        // The webhook will handle fulfillment as a safety net
-        console.warn('[Store] Server confirm failed, webhook will handle:', err?.message)
-      }
-      setPaying(false)
-      onSuccess()
-    } else {
-      setPaying(false)
-      onError('Payment was not completed. Please try again.')
-    }
+// ─── Upwork-Connects-style ticket purchaser ────────────────────────────────────
+const howItWorks = [
+  { icon: Solar.tickets, title: 'Pick a bundle', desc: 'Bigger bundles drop your cost per ticket — no subscription, ever.' },
+  { icon: Solar.lock,    title: 'Check out securely', desc: 'Pay by card, PayPal or wallet balance at encrypted checkout.' },
+  { icon: Solar.bolt,    title: 'Delivered instantly', desc: 'Tickets land in your wallet the moment payment clears.' },
+  { icon: Solar.trophy,  title: 'Enter & compete', desc: 'Spend on any prize match or tournament — tickets never expire.' },
+]
+
+function TicketPurchase({
+  items, base, balance, onAdd,
+}: {
+  items: StoreItem[]
+  base: number
+  balance: number | null
+  onAdd: (item: StoreItem, qty: number) => void
+}) {
+  const defaultId = (items.find(i => /popular/i.test(i.badge ?? '')) ?? items[0])?.id ?? null
+  const [selId, setSelId] = useState<string | null>(null)
+  const [qty, setQty] = useState(1)
+  const [added, setAdded] = useState(false)
+
+  if (!items.length) return null
+  // `selId` stays null until the user picks; the default bundle is derived, no effect needed.
+  const selected = items.find(i => i.id === (selId ?? defaultId)) ?? items[0]
+
+  const packQty      = ticketQty(selected)
+  const perTicket    = packQty > 0 ? selected.price / packQty : selected.price
+  const ticketsAdded = packQty * qty
+  const subtotal     = selected.price * qty
+  const clampQty = (n: number) => Math.max(1, Math.min(99, Math.floor(n) || 1))
+
+  const handleAdd = () => {
+    onAdd(selected, qty)
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1400)
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <PaymentElement />
-      <button
-        type="submit"
-        disabled={!stripe || paying}
-        className="btn-primary"
-        style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: 14, opacity: paying ? 0.6 : 1 }}
-      >
-        {paying ? 'Verifying payment…' : `Pay $${total.toFixed(2)}`}
-      </button>
-    </form>
-  )
-}
+    <div className="shop-buy">
+      {/* Purchase card */}
+      <div className="shop-buy-card">
+        <div className="shop-buy-head">
+          <div>
+            <div className="shop-buy-title">Buy Tickets</div>
+            <div className="shop-buy-subtitle">Choose a bundle and how many you need.</div>
+          </div>
+          {balance != null && (
+            <div className="shop-buy-balance">
+              <span className="shop-buy-balance-lbl">Your balance</span>
+              <span className="shop-buy-balance-val"><Icon icon={Solar.ticket} width={16} height={16} /> {balance}</span>
+            </div>
+          )}
+        </div>
 
-// storeItems are now fetched from the API inside StorePage
+        <div className="shop-buy-label">Bundle</div>
+        <div className="shop-buy-packs">
+          {items.map(i => {
+            const q      = ticketQty(i)
+            const per    = q > 0 ? i.price / q : i.price
+            const s      = q > 0 && base > 0 ? Math.max(0, Math.round((1 - per / base) * 100)) : 0
+            const active = i.id === selected.id
+            const pop    = /popular/i.test(i.badge ?? '')
+            return (
+              <button
+                key={i.id}
+                type="button"
+                className={`shop-buy-pack${active ? ' active' : ''}`}
+                onClick={() => setSelId(i.id)}
+                aria-pressed={active}
+              >
+                <span className="shop-buy-pack-radio" />
+                <span className="shop-buy-pack-main">
+                  <span className="shop-buy-pack-count">
+                    {q} Tickets
+                    {pop && <span className="shop-buy-pack-tag">Popular</span>}
+                  </span>
+                  <span className="shop-buy-pack-per">${per.toFixed(2)} / ticket</span>
+                </span>
+                <span className="shop-buy-pack-right">
+                  <span className="shop-buy-pack-price">${i.price.toFixed(2)}</span>
+                  {s > 0 && <span className="shop-save">Save {s}%</span>}
+                </span>
+              </button>
+            )
+          })}
+        </div>
 
-// ─── HERO SLIDES — 'Badges' removed, 'Prime' → 'Premium', no emojis ──────────
-const heroSlides = [
-  {
-    title:   'Premium Membership',
-    sub:     'Get exclusive perks, entry fee discounts, and priority support.',
-    image:   '/store/hero-premium.jpg',
-    accent:  '#A78BFA',
-    cat:     'Premium Membership',
-  },
-  {
-    title:   'Buy Tickets',
-    sub:     'Load up on Tickets and use them across tournaments and prize entry matches.',
-    image:   '/store/hero-credits.jpg',
-    accent:  '#F0C040',
-    cat:     'Tickets',
-  },
-]
+        <div className="shop-buy-qtyrow">
+          <span className="shop-buy-label" style={{ margin: 0 }}>Quantity</span>
+          <div className="shop-buy-stepper">
+            <button type="button" onClick={() => setQty(q => clampQty(q - 1))} aria-label="Decrease quantity">
+              <Icon icon="solar:minus-circle-bold-duotone" width={22} height={22} />
+            </button>
+            <input
+              type="text" inputMode="numeric" value={qty}
+              onChange={e => setQty(clampQty(Number(e.target.value.replace(/\D/g, ''))))}
+              aria-label="Bundle quantity"
+            />
+            <button type="button" onClick={() => setQty(q => clampQty(q + 1))} aria-label="Increase quantity">
+              <Icon icon="solar:add-circle-bold-duotone" width={22} height={22} />
+            </button>
+          </div>
+        </div>
 
-// ─── MODAL HEADER ─────────────────────────────────────────────────────────────
-function ModalTop({ title, onBack, onClose }: { title: React.ReactNode; onBack?: () => void; onClose: () => void }) {
-  return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 22px', borderBottom:'1px solid rgba(255,255,255,0.065)' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-        {onBack && (
-          <button onClick={onBack} style={{ background:'var(--bg-4)', border:'1px solid var(--border)', color:'var(--text-muted)', borderRadius:6, padding:'4px 10px', fontSize:11, cursor:'pointer', fontWeight:600 }}>
-            ← Back
-          </button>
-        )}
-        <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:18, fontWeight:800, textTransform:'uppercase', color:'#fff', display:'flex', alignItems:'center' }}>
-          {title}
-        </span>
+        <div className="shop-buy-summary">
+          <div className="shop-buy-line">
+            <span>Tickets you’ll get</span>
+            <strong><Icon icon={Solar.ticket} width={15} height={15} style={{ color: '#F0C040' }} /> {ticketsAdded}</strong>
+          </div>
+          <div className="shop-buy-line">
+            <span>Price per ticket</span>
+            <span>${perTicket.toFixed(2)}</span>
+          </div>
+          <div className="shop-buy-line total">
+            <span>Total</span>
+            <strong>${subtotal.toFixed(2)}</strong>
+          </div>
+        </div>
+
+        <button type="button" className={`shop-buy-cta${added ? ' added' : ''}`} onClick={handleAdd}>
+          {added
+            ? <><Icon icon="solar:cart-check-bold-duotone" width={19} height={19} className="shop-buy-cta-icon" /> Added to cart</>
+            : <><Icon icon={Solar.cart} width={16} height={16} /> Add {ticketsAdded} Tickets · ${subtotal.toFixed(2)}</>}
+        </button>
+        <div className="shop-buy-note">
+          <Icon icon={Solar.lock} width={13} height={13} /> Secure checkout · instant delivery · tickets never expire
+        </div>
       </div>
-      <button type="button" onClick={onClose} style={{ background:'var(--bg-4)', border:'1px solid var(--border)', borderRadius:'50%', width:32, height:32, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }} aria-label="Close">
-        <Icon icon={Solar.close} width={16} height={16} style={{ color: 'rgba(255,255,255,0.72)' }} />
-      </button>
+
+      {/* How it works panel */}
+      <div className="shop-buy-info">
+        <div className="shop-buy-info-title">How tickets work</div>
+        {howItWorks.map((s, i) => (
+          <div className="shop-buy-step" key={i}>
+            <div className="shop-buy-step-num">
+              <Icon icon={s.icon} width={18} height={18} />
+            </div>
+            <div>
+              <div className="shop-buy-step-title">{s.title}</div>
+              <div className="shop-buy-step-desc">{s.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
-// ─── STORE ITEM CARD ──────────────────────────────────────────────────────────
-function ItemCard({
-  item, inCart, flashing, onAdd, onViewCart,
+// ─── Premium plan card ─────────────────────────────────────────────────────────
+function PremiumCard({
+  item, months, perMonth, savePct, featured, inCart, flashing, onAdd, onInc, onDec,
 }: {
   item: StoreItem
-  inCart: CartItem | undefined
+  months: number
+  perMonth: number
+  savePct: number
+  featured: boolean
+  inCart?: CartItem
   flashing: boolean
   onAdd: () => void
-  onViewCart: () => void
+  onInc: () => void
+  onDec: () => void
 }) {
-  const [hov, setHov] = useState(false)
-
+  const term = months >= 12 ? `${months / 12} year${months >= 24 ? 's' : ''}` : `${months} month${months > 1 ? 's' : ''}`
   return (
-    <div
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        background: 'var(--bg-2)',
-        border: `1px solid ${hov ? 'rgba(255,255,255,0.15)' : 'var(--border)'}`,
-        borderRadius: 12,
-        overflow: 'hidden',
-        transition: 'all 0.2s ease',
-        transform: hov ? 'translateY(-2px)' : 'none',
-        boxShadow: hov ? '0 8px 24px rgba(0,0,0,0.2)' : '0 4px 12px rgba(0,0,0,0.1)',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {/* Added-to-cart flash */}
-      {flashing && (
-        <div style={{ position:'absolute', inset:0, background:'rgba(74,222,128,0.12)', border:'1px solid rgba(74,222,128,0.4)', borderRadius:12, zIndex:10, display:'flex', alignItems:'center', justifyContent:'center', color:'#4ade80', animation:'gh-fadeout 1.1s ease forwards' }}>
-          <Icon icon={Solar.checkRead} width={40} height={40} />
-        </div>
-      )}
-
-      {/* Product image */}
-      <div style={{ position: 'relative', aspectRatio: '4/3', background: 'linear-gradient(135deg, var(--bg-3), var(--bg-4))', overflow: 'hidden', borderBottom: '1px solid var(--border)' }}>
-        <img
-          src={item.image}
-          alt={item.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: hov ? 1 : 0.85, transition: 'opacity 0.2s ease, transform 0.3s ease', transform: hov ? 'scale(1.05)' : 'scale(1)' }}
-          onError={e => {
-            // Fallback gradient if image not found
-            const el = e.currentTarget
-            el.style.display = 'none'
-            const parent = el.parentElement!
-            parent.style.background = 'linear-gradient(135deg, var(--bg-3) 0%, var(--bg-4) 100%)'
-            parent.innerHTML += `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.3"><svg width="42" height="42" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" stroke="currentColor" stroke-width="2"/><path d="M3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>`
-          }}
-        />
-        {/* Badge */}
-        {item.badge && (
-          <div style={{
-            position: 'absolute', top: 12, left: 12,
-            background: 'var(--red)', color: '#fff',
-            fontFamily: "'Rajdhani', sans-serif", fontWeight: 800,
-            fontSize: 10, letterSpacing: '0.08em',
-            padding: '4px 10px', borderRadius: 6,
-            boxShadow: '0 2px 8px rgba(232,0,13,0.3)'
-          }}>
-            {item.badge}
-          </div>
-        )}
-        {/* In-cart indicator */}
-        {inCart && (
-          <div style={{
-            position: 'absolute', top: 12, right: 12,
-            background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)',
-            borderRadius: 6, padding: '4px 10px',
-            fontFamily: "'Rajdhani', sans-serif", fontWeight: 800,
-            fontSize: 10, color: '#4ade80', backdropFilter: 'blur(4px)'
-          }}>
-            ×{inCart.qty} IN CART
-          </div>
-        )}
+    <div className={`shop-plan${featured ? ' featured' : ''}`}>
+      {featured && <div className="shop-plan-flag"><Icon icon={Solar.crown} width={12} height={12} /> Best value</div>}
+      <div className="shop-plan-term">
+        <Icon icon={Solar.crown} width={16} height={16} style={{ color: '#A78BFA' }} />
+        Premium · {term}
       </div>
-
-      {/* Card body */}
-      <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 18, color: '#fff', lineHeight: 1.2, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            {item.name}
-          </div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 22, color: '#F0C040' }}>
-            ${item.price.toFixed(2)}
-          </div>
-        </div>
-
-        <div style={{ marginTop: 'auto' }}>
-          <button
-            onClick={onAdd}
-            style={{
-              width: '100%', padding: '10px 0',
-              background: hov ? 'var(--red)' : 'rgba(232,0,13,0.12)',
-              border: `1px solid ${hov ? 'var(--red)' : 'rgba(232,0,13,0.3)'}`,
-              borderRadius: 8, cursor: 'pointer',
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 800, fontSize: 13, color: hov ? '#fff' : 'var(--red)',
-              letterSpacing: '0.04em', textTransform: 'uppercase',
-              transition: 'all 0.15s',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
-            }}
-          >
-            <Icon icon={Solar.cart} width={14} height={14} /> Add to Cart
-          </button>
-        </div>
+      <div className="shop-plan-price">
+        <span className="shop-plan-permonth">${perMonth.toFixed(2)}</span>
+        <span className="shop-plan-permonth-lbl">/ month</span>
       </div>
+      <div className="shop-plan-billed">
+        Billed ${item.price.toFixed(2)} for {term}
+        {savePct > 0 && <span className="shop-plan-save">Save {savePct}%</span>}
+      </div>
+      <CartControl
+        inCart={inCart} flashing={flashing} onAdd={onAdd} onInc={onInc} onDec={onDec}
+        accent="#7c5cff" label="Add to Cart"
+      />
     </div>
   )
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// ─── Page ──────────────────────────────────────────────────────────────────────
 export default function StorePage() {
   return (
     <Suspense fallback={null}>
@@ -266,32 +301,20 @@ export default function StorePage() {
 }
 
 function StorePageContent() {
-  const { user, refresh } = useAuth()
-  const searchParams = useSearchParams()
-  const router = useRouter()
+  const { user } = useAuth()
   const [storeItems, setStoreItems] = useState<StoreItem[]>([])
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [cart, setCart]           = useState<CartItem[]>([])
-  const cartLoaded                = useRef(false)
-  const [catOpen, setCatOpen]     = useState(true)
-  const [heroSlide, setHeroSlide] = useState(0)
-  const [coupon, setCoupon]       = useState('')
-  const [couponApplied, setCouponApplied] = useState(false)
-  const [flashId,  setFlashId]  = useState<string | null>(null)
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [flashId, setFlashId] = useState<string | null>(null)
 
-  // Hydrate cart from localStorage on mount (avoids SSR hydration mismatch),
-  // then persist + broadcast on every change so the header badge stays in sync.
+  // Set state AND persist in one step so localStorage is always the source of truth.
+  const writeCart = (next: CartItem[]) => { saveCart(next); setCart(next) }
+
+  // Hydrate once from localStorage. We deliberately do NOT auto-persist via a
+  // `[cart]` effect — that pattern writes the initial empty array over the stored
+  // cart on React's dev double-mount (the ref guard survives the remount), which
+  // is exactly how the cart ends up empty on /checkout. Instead every mutation
+  // persists explicitly through `writeCart` below.
   useEffect(() => { setCart(loadCart() as CartItem[]) }, [])
-  // Skip the first run: on mount this effect fires with the stale initial `[]`
-  // (before the hydrate above has committed), so persisting here would wipe the
-  // stored cart. Only save on genuine cart changes after hydration.
-  useEffect(() => {
-    if (!cartLoaded.current) { cartLoaded.current = true; return }
-    saveCart(cart)
-  }, [cart])
-
-  // React to cart changes made elsewhere (e.g. the header cart dropdown / other tabs).
-  // Equality guard returns the same ref when unchanged, so our own saves don't loop.
   useEffect(() => subscribeCart(() => {
     const stored = loadCart() as CartItem[]
     setCart(prev => JSON.stringify(prev) === JSON.stringify(stored) ? prev : stored)
@@ -300,212 +323,637 @@ function StorePageContent() {
   useEffect(() => { sendActivity('Browsing Store') }, [])
 
   useEffect(() => {
-    const t = setInterval(() => setHeroSlide(s => (s + 1) % heroSlides.length), 4200)
-    return () => clearInterval(t)
-  }, [])
-
-  useEffect(() => {
     storeApi.getItems().then((data: any[]) => {
-      setStoreItems(
-        data.map((item: any) => ({
-          id:       item._id || item.id,
-          name:     item.name,
-          price:    item.price,
-          image:    item.image,
-          category: item.category,
-          badge:    item.badge,
-        }))
-      )
-    }).catch((err: any) => {
-      console.error('Failed to fetch store items:', err)
-    })
+      setStoreItems(data.map((item: any) => ({
+        id:       item._id || item.id,
+        name:     item.name,
+        price:    item.price,
+        image:    item.image,
+        category: item.category,
+        badge:    item.badge,
+        credits:  item.creditsGranted ?? item.credits,
+        days:     item.premiumDays ?? item.days,
+      })))
+    }).catch((err: any) => console.error('Failed to fetch store items:', err))
   }, [])
 
-  const slide      = heroSlides[heroSlide]
-  const filtered   = activeCategory === 'All' ? storeItems : storeItems.filter(i => i.category === activeCategory)
+  // Derived groups + value math ─────────────────────────────────────────────────
+  const premiumItems = storeItems.filter(isPremiumItem)
+  const ticketItems  = storeItems.filter(i => !isPremiumItem(i))
+
+  // Reference ("base") rate = the WORST per-unit price (the smallest pack /
+  // shortest term), so bigger packs and longer terms show a genuine saving.
+  const ticketBase = ticketItems.reduce((max, i) => {
+    const q = ticketQty(i)
+    return q > 0 ? Math.max(max, i.price / q) : max
+  }, 0)
+
+  const premiumBase = premiumItems.reduce((max, i) => Math.max(max, i.price / premiumMonths(i)), 0)
+
+  // Single "Best value" plan = the one with the biggest per-month saving.
+  const premiumBestId = premiumItems.reduce<{ id: string | null; save: number }>((best, i) => {
+    const save = premiumBase > 0 ? Math.round((1 - (i.price / premiumMonths(i)) / premiumBase) * 100) : 0
+    return save > best.save ? { id: i.id, save } : best
+  }, { id: null, save: 0 }).id
+
   const totalItems = cart.reduce((s, i) => s + i.qty, 0)
   const subtotal   = cart.reduce((s, i) => s + i.price * i.qty, 0)
-  const discount   = couponApplied ? subtotal * 0.1 : 0
-  const total      = subtotal - discount
 
-  const addToCart = (item: StoreItem) => {
-    setCart(prev => {
-      const ex = prev.find(c => c.id === item.id)
-      return ex ? prev.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c) : [...prev, { ...item, qty: 1 }]
-    })
-    trackEvent('add_to_cart', { item_id: item.id, item_name: item.name, price: item.price / 100, item_category: item.category })
+  const addToCart = (item: StoreItem, count = 1) => {
+    const ex = cart.find(c => c.id === item.id)
+    const next = ex
+      ? cart.map(c => c.id === item.id ? { ...c, qty: c.qty + count } : c)
+      : [...cart, { ...item, qty: count }]
+    writeCart(next)
+    trackEvent('add_to_cart', { item_id: item.id, item_name: item.name, price: item.price, item_category: item.category, quantity: count })
     setFlashId(item.id)
-    setTimeout(() => setFlashId(null), 1100)
+    setTimeout(() => setFlashId(null), 450)
+  }
+  const changeQty = (id: string, d: number) => {
+    const next = cart.flatMap(c => {
+      if (c.id !== id) return [c]
+      const q = c.qty + d
+      return q <= 0 ? [] : [{ ...c, qty: q }]
+    })
+    writeCart(next)
   }
 
-  const removeFromCart = (id: string) => setCart(p => p.filter(c => c.id !== id))
-  const changeQty = (id: string, d: number) =>
-    setCart(p => p.map(c => c.id !== id ? c : { ...c, qty: Math.max(1, c.qty + d) }))
-
-  const cartItems = () => cart.map(c => ({
-    id: c.id, name: c.name, price: c.price, category: c.category, image: c.image, qty: c.qty,
-  }))
-
-  // Prompt sign-in when an unauthenticated user tries to pay.
-  // Returns true if we redirected to login (caller should bail out).
-  const requireLogin = () => {
-    if (user) return false
-    window.dispatchEvent(new Event('gh:open-login'))
-    return true
-  }
+  const inCartOf = (id: string) => cart.find(c => c.id === id)
 
   return (
-    <div style={{ paddingBottom: 60 }}>
+    <div className="shop-root">
 
-      {/* ── FULL-WIDTH HERO BANNER ── */}
-      <div style={{
-        position: 'relative',
-        width: '100vw',
-        left: '50%',
-        right: '50%',
-        marginLeft: '-50vw',
-        marginRight: '-50vw',
-        height: 280,
-        background: 'var(--bg-2)',
-        borderBottom: '1px solid var(--border)',
-        overflow: 'hidden',
-        marginBottom: 32
-      }}>
-        {/* Background image */}
-        <img
-          src={slide.image}
-          alt={slide.title}
-          style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.35, transition:'opacity 0.5s' }}
-          onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0' }}
-        />
-        {/* Gradient overlay */}
-        <div style={{ position:'absolute', inset:0, background:`linear-gradient(90deg, rgba(8,8,16,0.95) 20%, rgba(8,8,16,0.6) 50%, rgba(8,8,16,0.2) 100%)` }} />
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.6, pointerEvents: 'none', maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)' }} />
-
-        {/* Content */}
-        <div className="container" style={{ position:'relative', zIndex:1, height:'100%', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <div>
-            <div style={{
-              fontFamily:"'Barlow Condensed', sans-serif",
-              fontWeight:900, fontSize:48, color:'#fff',
-              letterSpacing:'0.02em', lineHeight:1, marginBottom:12, textTransform: 'uppercase'
-            }}>
-              {slide.title}
-            </div>
-            <p style={{ fontFamily:"'Barlow', sans-serif", fontSize:15, color:'rgba(255,255,255,0.65)', margin:'0 0 24px', maxWidth:480, lineHeight:1.5 }}>
-              {slide.sub}
-            </p>
-            <button
-              className="btn-primary"
-              style={{ padding:'10px 28px', fontSize:13, borderRadius: 8, boxShadow: '0 4px 12px rgba(232,0,13,0.2)' }}
-              onClick={() => { setActiveCategory(slide.cat); }}
-            >
-              Shop Now
-            </button>
+      {/* ── HERO ─────────────────────────────────────────────────────────────── */}
+      <section className="shop-hero">
+        <div className="shop-hero-glow" />
+        <div className="shop-hero-grid" />
+        <div className="container shop-hero-inner">
+          <div className="hero-badge" style={{ marginBottom: 20 }}>
+            <Icon icon={Solar.cart} width={14} height={14} /> GamerHead Store
           </div>
-
-          {/* Slide dots */}
-          <div style={{ display:'flex', gap:8, alignSelf: 'flex-end', paddingBottom: 32 }}>
-            {heroSlides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setHeroSlide(i)}
-                style={{
-                  width: heroSlide === i ? 24 : 8,
-                  height: 8, borderRadius: 4,
-                  background: heroSlide === i ? 'var(--red)' : 'rgba(255,255,255,0.2)',
-                  border: 'none', cursor: 'pointer',
-                  transition: 'all 0.3s ease', padding: 0,
-                }}
-              />
+          <h1 className="shop-hero-title">Fuel your <span>grind.</span></h1>
+          <p className="shop-hero-sub">
+            Tickets get you into prize matches and tournaments. Premium gets you more from every session.
+            Buy exactly what you need, when you need it — tickets never expire and Premium cancels anytime.
+            No pressure, no lock-in.
+          </p>
+          <div className="shop-hero-cta">
+            <a href="#tickets" className="btn-primary">Buy Tickets</a>
+            <a href="#premium" className="btn-secondary"><Icon icon={Solar.crown} width={15} height={15} /> Explore Premium</a>
+          </div>
+          <div className="shop-hero-trust">
+            {trustChips.map((c, i) => (
+              <span key={i} className="shop-hero-chip">
+                <Icon icon={c.icon} width={15} height={15} /> {c.label}
+              </span>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── LAYOUT ── */}
       <div className="container">
-        <div className="store-layout">
 
-        {/* ── SIDEBAR — no Games section ── */}
-        <aside className="store-sidebar">
-
-          {/* Cart widget */}
-          <div className="store-sidebar-card">
-            <div className="store-sidebar-cart-header">
-              <h3 className="store-sidebar-title">Your Cart</h3>
-              {/* <button onClick={() => openModal()} style={{ background:'none', border:'none', cursor:'pointer', position:'relative' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="21" r="1" fill="#9CA3AF"/><circle cx="20" cy="21" r="1" fill="#9CA3AF"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                {totalItems > 0 && <span className="store-cart-count">{totalItems}</span>}
-              </button> */}
-            </div>
-            <p className="store-cart-qty">Quantity of items: <strong>{totalItems}</strong></p>
-            <div className="store-cart-btns">
-              {/* <button className="store-btn-outline" onClick={() => window.location.href = '/cart'}>View Cart</button> */}
-              <button className="store-btn-solid"   onClick={() => window.location.href = '/checkout'}>Checkout</button>
-            </div>
-
-            {/* Quick links — Deposit Cash → /wallet, no Buy Tickets, no emojis, Premium Membership */}
-            <div className="store-quick-links">
-              <Link href="/wallet" className="store-quick-link">Deposit Cash</Link>
-              <button className="store-quick-link" onClick={() => setActiveCategory('Premium Membership')} style={{ background:'none', border:'none', cursor:'pointer', textAlign:'left', width:'100%' }}>
-                Premium Membership
-              </button>
+        {/* ── TICKETS ─────────────────────────────────────────────────────────── */}
+        <section id="tickets" className="shop-section">
+          <div className="shop-section-head">
+            <div>
+              <div className="shop-eyebrow"><Icon icon={Solar.ticket} width={14} height={14} /> Tickets</div>
+              <h2 className="section-title">Your entry pass to <span>every prize match</span></h2>
+              <p className="section-subtitle" style={{ maxWidth: 620 }}>
+                One ticket, one entry — across every game, tournament and ladder match. They never expire,
+                so grabbing a larger pack simply lowers your cost per entry. Play whenever you’re ready.
+              </p>
             </div>
           </div>
 
-          {/* Categories — updated list */}
-          <div className="store-sidebar-card">
-            <button className="store-sidebar-collapse-header" onClick={() => setCatOpen(!catOpen)}>
-              <span>Categories</span><Icon icon={catOpen ? 'solar:alt-arrow-up-bold-duotone' : 'solar:alt-arrow-down-bold-duotone'} width={14} height={14} style={{ color: 'var(--text-muted)' }} />
-            </button>
-            {catOpen && (
-              <div className="store-sidebar-links">
-                <button
-                  className={`store-sidebar-link${activeCategory === 'All' ? ' active' : ''}`}
-                  onClick={() => setActiveCategory('All')}
-                >
-                  All Items
-                </button>
-                {categories.map((c) => (
-                  <button
-                    key={c}
-                    className={`store-sidebar-link${activeCategory === c ? ' active' : ''}`}
-                    onClick={() => setActiveCategory(c)}
-                  >
-                    {c}
-                  </button>
-                ))}
+          <TicketPurchase
+            items={ticketItems}
+            base={ticketBase}
+            balance={user ? user.credits : null}
+            onAdd={(item, q) => addToCart(item, q)}
+          />
+        </section>
+
+        {/* ── PREMIUM ─────────────────────────────────────────────────────────── */}
+        <section id="premium" className="shop-section shop-premium">
+          <div className="shop-section-head">
+            <div>
+              <div className="shop-eyebrow" style={{ color: '#A78BFA', background: 'rgba(167,139,250,0.1)', borderColor: 'rgba(167,139,250,0.3)' }}>
+                <Icon icon={Solar.crown} width={14} height={14} /> Premium Membership
               </div>
-            )}
+              <h2 className="section-title">Get more from <span style={{ color: '#A78BFA' }}>every match</span></h2>
+              <p className="section-subtitle" style={{ maxWidth: 620 }}>
+                A single membership unlocks the whole platform — more XP, zero ads, priority support and a
+                profile that stands out. The longer the term, the less you pay per month. Cancel whenever you like.
+              </p>
+            </div>
           </div>
-        </aside>
 
-        {/* ── ITEMS GRID — real images ── */}
-        <div className="store-main">
-          <div className="store-main-header" />
+          <div className="shop-premium-layout">
+            {/* Perks */}
+            <div className="shop-perks">
+              {premiumPerks.map((p, i) => (
+                <div className="shop-perk" key={i}>
+                  <div className="shop-perk-icon"><Icon icon={p.icon} width={20} height={20} /></div>
+                  <div>
+                    <div className="shop-perk-name">{p.name}</div>
+                    <div className="shop-perk-desc">{p.desc}</div>
+                  </div>
+                </div>
+              ))}
+              <Link href="/premium" className="shop-perks-link">
+                See everything in Premium <Icon icon="solar:arrow-right-bold-duotone" width={16} height={16} />
+              </Link>
+            </div>
 
-          <div className="store-items-grid">
-            {filtered.map(item => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                inCart={cart.find(c => c.id === item.id)}
-                flashing={flashId === item.id}
-                onAdd={() => addToCart(item)}
-                onViewCart={() => {}}
-              />
+            {/* Plans */}
+            <div className="shop-plans">
+              {premiumItems.map(item => {
+                const months   = premiumMonths(item)
+                const perMonth = item.price / months
+                const savePct  = premiumBase > 0
+                  ? Math.max(0, Math.round((1 - perMonth / premiumBase) * 100))
+                  : 0
+                const featured = item.id === premiumBestId && savePct > 0
+                return (
+                  <PremiumCard
+                    key={item.id}
+                    item={item} months={months} perMonth={perMonth} savePct={savePct}
+                    featured={featured}
+                    inCart={inCartOf(item.id)}
+                    flashing={flashId === item.id}
+                    onAdd={() => addToCart(item)}
+                    onInc={() => changeQty(item.id, 1)}
+                    onDec={() => changeQty(item.id, -1)}
+                  />
+                )
+              })}
+              <div className="shop-plans-reassure">
+                <Icon icon={Solar.shield} width={15} height={15} /> Cancel anytime · Keep your perks until the period ends
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── GUARANTEES ──────────────────────────────────────────────────────── */}
+        <section className="shop-section">
+          <div className="shop-section-head" style={{ textAlign: 'center', display: 'block' }}>
+            <h2 className="section-title">Buy with <span>confidence</span></h2>
+            <p className="section-subtitle" style={{ margin: '6px auto 0', maxWidth: 560 }}>
+              A store built to be safe, instant and genuinely fair to players.
+            </p>
+          </div>
+          <div className="shop-guarantees">
+            {guarantees.map((g, i) => (
+              <div className="shop-guarantee" key={i}>
+                <div className="shop-guarantee-icon"><Icon icon={g.icon} width={24} height={24} /></div>
+                <div className="shop-guarantee-title">{g.title}</div>
+                <div className="shop-guarantee-desc">{g.desc}</div>
+              </div>
             ))}
           </div>
+        </section>
+
+        {/* ── FAQ ─────────────────────────────────────────────────────────────── */}
+        <section className="shop-section" style={{ paddingBottom: 40 }}>
+          <div className="shop-section-head" style={{ textAlign: 'center', display: 'block' }}>
+            <h2 className="section-title">Good to <span>know</span></h2>
+            <p className="section-subtitle" style={{ margin: '6px auto 0' }}>
+              No fine print — here’s exactly how it works.
+            </p>
+          </div>
+          <div className="shop-faq">
+            {faqs.map((f, i) => (
+              <details className="shop-faq-item" key={i}>
+                <summary className="shop-faq-q">
+                  {f.q}
+                  <Icon icon="solar:alt-arrow-down-bold-duotone" width={18} height={18} className="shop-faq-chev" />
+                </summary>
+                <p className="shop-faq-a">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {/* ── STICKY CHECKOUT BAR (only when items in cart) ────────────────────── */}
+      {totalItems > 0 && (
+        <div className="shop-checkout-bar">
+          <div className="container shop-checkout-inner">
+            <div className="shop-checkout-summary">
+              <Icon icon={Solar.cart} width={20} height={20} style={{ color: 'var(--red)' }} />
+              <span><strong>{totalItems}</strong> item{totalItems > 1 ? 's' : ''} · <strong style={{ color: '#F0C040' }}>${subtotal.toFixed(2)}</strong></span>
+            </div>
+            <Link href="/checkout" className="btn-primary shop-checkout-btn">
+              Checkout <Icon icon="solar:arrow-right-bold-duotone" width={16} height={16} />
+            </Link>
+          </div>
         </div>
-      </div>
-      </div>
+      )}
+
       <style>{`
-        @keyframes gh-fadeout { 0%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
-        @keyframes gh-scalein { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
-        @keyframes gh-spin    { to{transform:rotate(360deg)} }
-        @keyframes gh-fadein  { from{opacity:0} to{opacity:1} }
-        @keyframes gh-modalin { from{opacity:0;transform:translate(-50%,-46%)} to{opacity:1;transform:translate(-50%,-50%)} }
+        .shop-root { padding-bottom: 100px; }
+
+        /* HERO */
+        .shop-hero {
+          position: relative;
+          width: 100vw; left: 50%; right: 50%;
+          margin-left: -50vw; margin-right: -50vw;
+          padding: 52px 0 44px;
+          background: linear-gradient(180deg, #16060a 0%, #0d0a0c 60%, var(--bg) 100%);
+          border-bottom: 1px solid var(--border);
+          overflow: hidden; margin-bottom: 8px;
+        }
+        .shop-hero-glow {
+          position: absolute; top: -160px; left: 50%; transform: translateX(-50%);
+          width: 720px; height: 420px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(232,0,13,0.28), transparent 70%);
+          filter: blur(40px); pointer-events: none;
+        }
+        .shop-hero-grid {
+          position: absolute; inset: 0; pointer-events: none;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+          background-size: 40px 40px;
+          mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black, transparent 75%);
+          -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black, transparent 75%);
+        }
+        .shop-hero-inner { position: relative; z-index: 1; text-align: center; }
+        .shop-hero-title {
+          font-family: "Barlow Condensed", sans-serif;
+          font-size: 4rem; font-weight: 900; line-height: 1;
+          text-transform: uppercase; letter-spacing: -0.01em; color: #fff;
+          margin: 0 0 16px; text-shadow: 0 4px 30px rgba(0,0,0,0.5);
+        }
+        .shop-hero-title span { color: var(--red); text-shadow: 0 0 34px var(--red-glow); }
+        .shop-hero-sub {
+          font-size: 16px; color: #c7c7c7; line-height: 1.7;
+          max-width: 640px; margin: 0 auto 30px;
+        }
+        .shop-hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .shop-hero-trust {
+          display: flex; gap: 10px 20px; justify-content: center; flex-wrap: wrap;
+          margin-top: 34px;
+        }
+        .shop-hero-chip {
+          display: inline-flex; align-items: center; gap: 7px;
+          font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.62);
+        }
+        .shop-hero-chip svg { color: rgba(255,255,255,0.4); }
+
+        /* SECTION */
+        .shop-section { padding: 40px 0; }
+        .shop-section-head { margin-bottom: 22px; }
+        .shop-eyebrow {
+          display: inline-flex; align-items: center; gap: 6px;
+          font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+          color: var(--red); background: rgba(232,0,13,0.1);
+          border: 1px solid rgba(232,0,13,0.3); border-radius: 20px;
+          padding: 5px 12px; margin-bottom: 16px;
+        }
+
+        .shop-save {
+          flex-shrink: 0;
+          font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em;
+          color: #4ade80; background: rgba(74,222,128,0.12);
+          border: 1px solid rgba(74,222,128,0.3); border-radius: 20px; padding: 2px 8px;
+        }
+
+        /* UPWORK-STYLE TICKET PURCHASER */
+        .shop-buy {
+          display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start;
+        }
+        .shop-buy-card {
+          background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px;
+          padding: 22px 22px 18px;
+        }
+        .shop-buy-head {
+          display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+          margin-bottom: 18px;
+        }
+        .shop-buy-title {
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 22px;
+          text-transform: uppercase; letter-spacing: 0.02em; color: #fff;
+        }
+        .shop-buy-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+        .shop-buy-balance {
+          flex-shrink: 0; text-align: right;
+          background: var(--bg-3); border: 1px solid var(--border); border-radius: 10px;
+          padding: 8px 12px;
+        }
+        .shop-buy-balance-lbl {
+          display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+          text-transform: uppercase; color: var(--text-muted);
+        }
+        .shop-buy-balance-val {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 20px; color: #F0C040;
+        }
+        .shop-buy-label {
+          font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+          color: var(--text-muted); margin-bottom: 10px;
+        }
+        .shop-buy-packs { display: flex; flex-direction: column; gap: 8px; }
+        .shop-buy-pack {
+          display: flex; align-items: center; gap: 12px; width: 100%;
+          background: var(--bg-3); border: 1px solid var(--border); border-radius: 11px;
+          padding: 12px 14px; cursor: pointer; text-align: left;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        .shop-buy-pack:hover { border-color: rgba(255,255,255,0.18); }
+        .shop-buy-pack.active {
+          border-color: var(--red); background: rgba(232,0,13,0.07);
+          box-shadow: inset 0 0 0 1px rgba(232,0,13,0.4);
+        }
+        .shop-buy-pack-radio {
+          flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%;
+          border: 2px solid rgba(255,255,255,0.25); position: relative; transition: border-color 0.15s;
+        }
+        .shop-buy-pack.active .shop-buy-pack-radio { border-color: var(--red); }
+        .shop-buy-pack.active .shop-buy-pack-radio::after {
+          content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--red);
+        }
+        .shop-buy-pack-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .shop-buy-pack-count {
+          display: flex; align-items: center; gap: 8px;
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 17px;
+          text-transform: uppercase; letter-spacing: 0.02em; color: #fff;
+        }
+        .shop-buy-pack-tag {
+          font-family: "Inter", sans-serif; font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em;
+          text-transform: uppercase; color: var(--red); background: rgba(232,0,13,0.12);
+          border: 1px solid rgba(232,0,13,0.3); border-radius: 20px; padding: 2px 8px;
+        }
+        .shop-buy-pack-per { font-size: 12px; color: var(--text-muted); }
+        .shop-buy-pack-right {
+          flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+        }
+        .shop-buy-pack-price {
+          font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 19px; color: #F0C040;
+        }
+
+        .shop-buy-qtyrow {
+          display: flex; align-items: center; justify-content: space-between;
+          margin: 18px 0; padding-top: 16px; border-top: 1px solid var(--border);
+        }
+        .shop-buy-stepper {
+          display: flex; align-items: center; gap: 4px;
+          background: var(--bg-3); border: 1px solid var(--border); border-radius: 10px; padding: 4px;
+        }
+        .shop-buy-stepper button {
+          background: none; border: none; cursor: pointer; color: var(--text-muted);
+          display: flex; align-items: center; padding: 2px; transition: color 0.15s;
+        }
+        .shop-buy-stepper button:hover { color: #fff; }
+        .shop-buy-stepper input {
+          width: 46px; text-align: center; background: none; border: none; outline: none;
+          color: #fff; font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 18px;
+          -moz-appearance: textfield;
+        }
+
+        .shop-buy-summary {
+          background: var(--bg-3); border: 1px solid var(--border); border-radius: 11px;
+          padding: 14px 16px; margin-bottom: 14px;
+        }
+        .shop-buy-line {
+          display: flex; align-items: center; justify-content: space-between;
+          font-size: 13px; color: var(--text-muted); padding: 4px 0;
+        }
+        .shop-buy-line strong { color: #fff; display: inline-flex; align-items: center; gap: 6px; }
+        .shop-buy-line.total {
+          margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--border);
+          font-size: 14px; color: #fff;
+        }
+        .shop-buy-line.total strong {
+          font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 24px; color: #F0C040;
+        }
+
+        .shop-buy-cta {
+          width: 100%; padding: 14px 0; border-radius: 11px; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 16px;
+          letter-spacing: 0.04em; text-transform: uppercase; color: #fff;
+          background: linear-gradient(135deg, var(--red), var(--red-dark));
+          border: none; box-shadow: 0 6px 18px rgba(232,0,13,0.28);
+          transition: filter 0.15s, transform 0.1s;
+        }
+        .shop-buy-cta:hover { filter: brightness(1.1); }
+        .shop-buy-cta:active { transform: scale(0.99); }
+        .shop-buy-cta.added {
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          box-shadow: 0 6px 22px rgba(34,197,94,0.42);
+          animation: shop-cta-success 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .shop-buy-cta.added:hover { filter: none; }
+        .shop-buy-cta-icon { animation: shop-check-pop 0.45s cubic-bezier(0.34, 1.8, 0.5, 1) both; }
+        @keyframes shop-cta-success {
+          0%   { transform: scale(1); }
+          35%  { transform: scale(1.045); }
+          65%  { transform: scale(0.985); }
+          100% { transform: scale(1); }
+        }
+        @keyframes shop-check-pop {
+          0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+          60%  { transform: scale(1.25) rotate(6deg); opacity: 1; }
+          100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+        .shop-buy-note {
+          display: flex; align-items: center; justify-content: center; gap: 6px;
+          font-size: 11.5px; color: var(--text-muted); margin-top: 12px;
+        }
+
+        .shop-buy-info {
+          background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px;
+          padding: 20px; align-self: stretch;
+        }
+        .shop-buy-info-title {
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 16px;
+          text-transform: uppercase; letter-spacing: 0.04em; color: #fff; margin-bottom: 16px;
+        }
+        .shop-buy-step { display: flex; gap: 12px; margin-bottom: 16px; }
+        .shop-buy-step:last-child { margin-bottom: 0; }
+        .shop-buy-step-num {
+          flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(240,192,64,0.1); color: #F0C040; border: 1px solid rgba(240,192,64,0.22);
+        }
+        .shop-buy-step-title {
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 14px;
+          text-transform: uppercase; letter-spacing: 0.02em; color: #fff; margin-bottom: 2px;
+        }
+        .shop-buy-step-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+        /* ADD / QTY CONTROLS */
+        .shop-add-btn {
+          width: 100%; padding: 12px 0; border-radius: 10px; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; gap: 7px;
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 14px;
+          letter-spacing: 0.05em; text-transform: uppercase; color: #fff;
+          background: var(--acc, var(--red)); border: 1px solid var(--acc, var(--red));
+          transition: filter 0.15s, transform 0.1s;
+        }
+        .shop-add-btn:hover { filter: brightness(1.12); }
+        .shop-add-btn:active { transform: scale(0.98); }
+        .shop-qty {
+          width: 100%; display: flex; align-items: center; justify-content: space-between;
+          background: var(--bg-3); border: 1px solid rgba(74,222,128,0.3);
+          border-radius: 10px; padding: 6px 10px;
+        }
+        .shop-qty-btn {
+          background: none; border: none; cursor: pointer; color: var(--text-muted);
+          display: flex; align-items: center; transition: color 0.15s;
+        }
+        .shop-qty-btn:hover { color: #fff; }
+        .shop-qty-count {
+          display: flex; align-items: center; gap: 7px;
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 13px;
+          text-transform: uppercase; letter-spacing: 0.04em; color: #fff;
+        }
+
+        /* PREMIUM */
+        .shop-premium-layout {
+          display: grid; grid-template-columns: 1fr 380px; gap: 32px; align-items: start;
+        }
+        .shop-perks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; align-content: start; }
+        .shop-perk {
+          display: flex; gap: 12px; padding: 16px;
+          background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px;
+        }
+        .shop-perk-icon {
+          flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(167,139,250,0.12); color: #A78BFA;
+          border: 1px solid rgba(167,139,250,0.25);
+        }
+        .shop-perk-name {
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 15px;
+          color: #fff; text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 3px;
+        }
+        .shop-perk-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+        .shop-perks-link {
+          grid-column: 1 / -1; display: inline-flex; align-items: center; gap: 6px;
+          font-size: 13px; font-weight: 700; color: #A78BFA; padding: 4px 2px;
+        }
+        .shop-perks-link:hover { color: #c4b4fb; }
+
+        .shop-plans {
+          display: flex; flex-direction: column; gap: 12px;
+          background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 16px;
+        }
+        .shop-plan {
+          position: relative; border: 1px solid var(--border); border-radius: 12px;
+          padding: 16px 18px; background: var(--bg-3); transition: border-color 0.2s, transform 0.15s;
+        }
+        .shop-plan:hover { border-color: rgba(167,139,250,0.4); }
+        .shop-plan.featured {
+          border-color: rgba(124,92,255,0.6);
+          background: linear-gradient(180deg, rgba(124,92,255,0.1), var(--bg-3) 60%);
+          box-shadow: 0 0 0 1px rgba(124,92,255,0.25);
+        }
+        .shop-plan-flag {
+          position: absolute; top: -10px; right: 16px;
+          display: inline-flex; align-items: center; gap: 5px;
+          background: linear-gradient(135deg, #7c5cff, #a78bfa); color: #fff;
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 10.5px;
+          letter-spacing: 0.06em; text-transform: uppercase;
+          padding: 4px 10px; border-radius: 20px; box-shadow: 0 4px 12px rgba(124,92,255,0.4);
+        }
+        .shop-plan-term {
+          display: flex; align-items: center; gap: 7px;
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 15px;
+          text-transform: uppercase; letter-spacing: 0.04em; color: #fff; margin-bottom: 8px;
+        }
+        .shop-plan-price { display: flex; align-items: baseline; gap: 5px; }
+        .shop-plan-permonth {
+          font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 30px; color: #fff;
+        }
+        .shop-plan-permonth-lbl { font-size: 13px; color: var(--text-muted); }
+        .shop-plan-billed {
+          display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+          font-size: 12px; color: var(--text-muted); margin: 4px 0 14px;
+        }
+        .shop-plan-save {
+          font-size: 11px; font-weight: 800; color: #4ade80;
+          background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.3);
+          border-radius: 20px; padding: 2px 9px;
+        }
+        .shop-plans-reassure {
+          display: flex; align-items: center; gap: 7px; justify-content: center;
+          font-size: 12px; color: var(--text-muted); padding: 4px 0 2px;
+        }
+        .shop-plans-reassure svg { color: #A78BFA; }
+
+        /* GUARANTEES */
+        .shop-guarantees { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .shop-guarantee {
+          background: var(--bg-2); border: 1px solid var(--border); border-radius: 14px;
+          padding: 24px 20px; text-align: center;
+        }
+        .shop-guarantee-icon {
+          width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 14px;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(232,0,13,0.1); color: var(--red); border: 1px solid rgba(232,0,13,0.25);
+        }
+        .shop-guarantee-title {
+          font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 16px;
+          text-transform: uppercase; letter-spacing: 0.03em; color: #fff; margin-bottom: 8px;
+        }
+        .shop-guarantee-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.55; }
+
+        /* FAQ */
+        .shop-faq { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+        .shop-faq-item {
+          background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+        }
+        .shop-faq-q {
+          display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          padding: 18px 20px; cursor: pointer; list-style: none;
+          font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 17px;
+          color: #fff; text-transform: uppercase; letter-spacing: 0.01em;
+        }
+        .shop-faq-q::-webkit-details-marker { display: none; }
+        .shop-faq-chev { color: var(--text-muted); transition: transform 0.2s ease; flex-shrink: 0; }
+        .shop-faq-item[open] .shop-faq-chev { transform: rotate(180deg); }
+        .shop-faq-a {
+          padding: 0 20px 18px; font-size: 14px; color: var(--text-muted); line-height: 1.65; margin: 0;
+        }
+
+        /* STICKY CHECKOUT BAR */
+        .shop-checkout-bar {
+          position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+          background: rgba(14,12,15,0.92); backdrop-filter: blur(12px);
+          border-top: 1px solid rgba(232,0,13,0.25);
+          box-shadow: 0 -8px 30px rgba(0,0,0,0.4);
+          animation: shop-slideup 0.28s ease;
+        }
+        .shop-checkout-inner {
+          display: flex; align-items: center; justify-content: space-between; gap: 16px;
+          padding: 14px 24px;
+        }
+        .shop-checkout-summary {
+          display: flex; align-items: center; gap: 10px; font-size: 15px; color: #fff;
+        }
+        .shop-checkout-btn { padding: 12px 28px; }
+
+        @keyframes shop-slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes shop-pop { 0% { transform: scale(1); } 45% { transform: scale(0.94); } 100% { transform: scale(1); } }
+
+        /* RESPONSIVE */
+        @media (max-width: 1100px) {
+          .shop-buy { grid-template-columns: 1fr; }
+          .shop-premium-layout { grid-template-columns: 1fr; }
+          .shop-plans { max-width: 520px; }
+          .shop-guarantees { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 640px) {
+          .shop-hero-title { font-size: 2.75rem; }
+          .shop-hero { padding: 52px 0 44px; }
+          .shop-buy-head { flex-direction: column; }
+          .shop-perks { grid-template-columns: 1fr; }
+          .shop-guarantees { grid-template-columns: 1fr; }
+          .shop-checkout-inner { padding: 12px 16px; }
+        }
       `}</style>
     </div>
   )

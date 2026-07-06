@@ -231,6 +231,18 @@ export const storeApi = {
   capturePayPalOrder: (body: any)    => api.post('/store/checkout/paypal/capture', body),
 }
 
+// CART (server-side, per-user, synced across devices)
+type CartLine = { id: string; qty: number }
+const socketHeader = (socketId?: string | null) =>
+  socketId ? { headers: { 'X-Socket-ID': socketId } } : undefined
+
+export const cartApi = {
+  get:   ()                                          => api.get('/cart'),
+  put:   (items: CartLine[], socketId?: string | null) => api.put('/cart', { items }, socketHeader(socketId)),
+  merge: (items: CartLine[], socketId?: string | null) => api.post('/cart/merge', { items }, socketHeader(socketId)),
+  clear: (socketId?: string | null)                  => api.delete('/cart', socketHeader(socketId)),
+}
+
 // FORUM
 export const forumApi = {
   getBoards:         ()                            => api.get('/forum/boards'),

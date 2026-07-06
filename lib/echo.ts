@@ -90,6 +90,19 @@ export function listenPrivate(
   }
 }
 
+/**
+ * The current Reverb/Pusher socket id, or null if not connected yet.
+ * Sent as `X-Socket-ID` on cart writes so the backend can broadcast the change
+ * to the user's *other* devices without echoing it back to this one.
+ */
+export function socketId(): string | null {
+  try {
+    return getEcho()?.socketId() ?? null
+  } catch {
+    return null
+  }
+}
+
 export function disconnectEcho(): void {
   try {
     echo?.disconnect()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { storeApi, walletApi } from '@/lib/api'
@@ -103,7 +103,6 @@ function CheckoutInner() {
   const { user, refresh } = useAuth()
 
   const [cart, setCart]         = useState<StoredCartItem[]>([])
-  const cartLoaded              = useRef(false)
   const [phase, setPhase]       = useState<Phase>('form')
   const [payMethod, setPayMethod] = useState<PayMethod>('wallet')
   const [walletBalance, setWalletBalance] = useState(0) // cents
@@ -119,19 +118,20 @@ function CheckoutInner() {
   const [view, setView] = useState<'cart' | 'pay'>('cart')
   const [storeItems, setStoreItems] = useState<Array<{ id: string; name: string; price: number; image?: string; category?: string; badge?: string }>>([])
 
-  // ── Hydrate cart from localStorage, then persist genuine changes ──
+  // Hydrate once from localStorage. We do NOT auto-persist via a `[cart]` effect:
+  // on React's dev double-mount that effect writes the initial empty array over
+  // the stored cart (the ref guard survives the remount), emptying the cart the
+  // moment this page loads. Every mutation persists explicitly via `writeCart`.
   useEffect(() => { setCart(loadCart()) }, [])
-  useEffect(() => {
-    // Skip the first run (stale initial []) so we never wipe the stored cart.
-    if (!cartLoaded.current) { cartLoaded.current = true; return }
-    saveCart(cart)
-  }, [cart])
 
   // Stay in sync with the header cart / other tabs.
   useEffect(() => subscribeCart(() => {
     const stored = loadCart()
     setCart(prev => JSON.stringify(prev) === JSON.stringify(stored) ? prev : stored)
   }), [])
+
+  // Set state AND persist together so localStorage stays the source of truth.
+  const writeCart = (next: StoredCartItem[]) => { saveCart(next); setCart(next) }
 
   // ── Wallet balance ──
   const loadBalance = useCallback(() => {
@@ -160,18 +160,17 @@ function CheckoutInner() {
     id: c.id, name: c.name, price: c.price, category: c.category, image: c.image, qty: c.qty,
   }))
 
-  // ── Cart mutations ──
+  // ── Cart mutations (each persists explicitly) ──
   const changeQty = (id: string, d: number) =>
-    setCart(p => p.map(c => c.id !== id ? c : { ...c, qty: Math.max(1, c.qty + d) }))
-  const removeItem = (id: string) => setCart(p => p.filter(c => c.id !== id))
-  const clearCart  = () => setCart([])
-  const addToCart  = (it: { id: string; name: string; price: number; image?: string; category?: string }) =>
-    setCart(prev => {
-      const ex = prev.find(c => c.id === it.id)
-      return ex
-        ? prev.map(c => c.id === it.id ? { ...c, qty: c.qty + 1 } : c)
-        : [...prev, { id: it.id, name: it.name, price: it.price, image: it.image, category: it.category, qty: 1 }]
-    })
+    writeCart(cart.map(c => c.id !== id ? c : { ...c, qty: Math.max(1, c.qty + d) }))
+  const removeItem = (id: string) => writeCart(cart.filter(c => c.id !== id))
+  const clearCart  = () => writeCart([])
+  const addToCart  = (it: { id: string; name: string; price: number; image?: string; category?: string }) => {
+    const ex = cart.find(c => c.id === it.id)
+    writeCart(ex
+      ? cart.map(c => c.id === it.id ? { ...c, qty: c.qty + 1 } : c)
+      : [...cart, { id: it.id, name: it.name, price: it.price, image: it.image, category: it.category, qty: 1 }])
+  }
 
   const recommendations = storeItems.filter(s => !cart.some(c => c.id === s.id)).slice(0, 3)
 
@@ -197,7 +196,7 @@ function CheckoutInner() {
       currency: 'USD', value: total,
       items: cart.map(c => ({ item_id: c.id, item_name: c.name, price: c.price, quantity: c.qty })),
     })
-    setCart([])
+    writeCart([])
     setClientSecret(null)
     setStripeError('')
     setPhase('success')
@@ -246,10 +245,10 @@ function CheckoutInner() {
     if (paymentIntent && redirectStatus === 'succeeded') {
       setPhase('processing')
       storeApi.confirmPayment({ paymentIntentId: paymentIntent })
-        .then(() => { setCart([]); setPhase('success'); refresh().catch(() => {}); loadBalance() })
+        .then(() => { writeCart([]); setPhase('success'); refresh().catch(() => {}); loadBalance() })
         .catch((err) => {
           console.warn('[Checkout] Redirect confirm failed:', err?.message)
-          setCart([]); setPhase('success'); refresh().catch(() => {})
+          writeCart([]); setPhase('success'); refresh().catch(() => {})
         })
       router.replace('/checkout', { scroll: false })
     }
