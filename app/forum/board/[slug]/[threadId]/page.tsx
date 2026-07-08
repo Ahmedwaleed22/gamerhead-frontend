@@ -10,6 +10,7 @@ import { trackEvent } from '@/lib/gtag'
 import { useToast } from '@/components/Toast'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
+import { safeUrl } from '@/lib/utils'
 import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
 import { sendActivity } from '@/lib/socket'
 import Username from '@/components/Username'
@@ -196,7 +197,7 @@ function PostContent({ text }: { text: string }) {
         } else if (m.startsWith('[')) {
           const linkMatch = m.match(/\[([^\]]+)\]\(([^)]+)\)/)
           if (linkMatch) {
-            nodes.push(<a key={match.index} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--red)', textDecoration: 'underline', fontWeight: 600 }}>{linkMatch[1]}</a>)
+            nodes.push(<a key={match.index} href={safeUrl(linkMatch[2])} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--red)', textDecoration: 'underline', fontWeight: 600 }}>{linkMatch[1]}</a>)
           }
         } else if (m.startsWith('http')) {
           const ytMatch = m.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)

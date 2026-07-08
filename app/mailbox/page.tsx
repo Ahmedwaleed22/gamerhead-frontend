@@ -10,6 +10,7 @@ import { useToast } from '@/components/Toast'
 import { sendActivity } from '@/lib/socket'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
+import { safeUrl } from '@/lib/utils'
 
 type Message = { id?: string; side: string; initials: string; pfp?: string; color: string; date: string; time: string; body: string; editedAt?: string | null }
 type Thread  = { id: string; from: string; fromSlug: string; initials: string; pfp?: string; color: string; subject: string; date: string; time: string; unread: boolean; preview: string }
@@ -38,7 +39,7 @@ function renderFormatted(text: string) {
     }
     else if (m.startsWith('[')) {
       const linkMatch = m.match(/\[([^\]]+)\]\(([^)]+)\)/);
-      if (linkMatch) parts.push(<a key={key++} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: '#e74c3c', textDecoration: 'underline', fontWeight: 600 }}>{linkMatch[1]}</a>)
+      if (linkMatch) parts.push(<a key={key++} href={safeUrl(linkMatch[2])} target="_blank" rel="noopener noreferrer" style={{ color: '#e74c3c', textDecoration: 'underline', fontWeight: 600 }}>{linkMatch[1]}</a>)
     }
     else if (m.startsWith('http')) {
       parts.push(<a key={key++} href={m} target="_blank" rel="noopener noreferrer" style={{ color: '#e74c3c', textDecoration: 'underline', wordBreak: 'break-all' }}>{m}</a>)

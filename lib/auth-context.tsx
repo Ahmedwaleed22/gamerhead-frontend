@@ -50,7 +50,7 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   login:    (identifier: string, password: string) => Promise<void>
   register: (username: string, email: string, password: string, dob: string) => Promise<void>
-  logout:   () => void
+  logout:   () => Promise<void>
   refresh:  () => Promise<void>   // re-fetch /auth/me and update user
   clearError: () => void
 }
@@ -69,18 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error:   null,
   })
 
-  // On mount — restore session from localStorage
+  // On mount — restore the session from the HttpOnly cookie (falling back to a
+  // legacy bearer token if one is still present). /auth/me returns 401 when there
+  // is no valid session, in which case we render as logged out.
   useEffect(() => {
-    const token = localStorage.getItem('ce_token')
-    if (!token) {
-      setState(s => ({ ...s, loading: false }))
-      return
-    }
-
     authApi.me()
-      .then(res => setState({ user: res.user, token, loading: false, error: null }))
+      .then(res => setState({ user: res.user, token: localStorage.getItem('ce_token'), loading: false, error: null }))
       .catch(() => {
-        // Token expired or invalid — clear it
         localStorage.removeItem('ce_token')
         setState({ user: null, token: null, loading: false, error: null })
       })
@@ -116,7 +111,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // ── Logout ────────────────────────────────────────────────────────────────
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout() // invalidate the server session + revoke the token
+    } catch {
+      // Even if the request fails, clear local state below.
+    }
     localStorage.removeItem('ce_token')
     setState({ user: null, token: null, loading: false, error: null })
     trackEvent('logout')

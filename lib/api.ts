@@ -4,6 +4,30 @@
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
+// ─── Cookie / CSRF (Sanctum SPA auth) ──────────────────────────────────────────
+// Auth rides an HttpOnly session cookie set by the Laravel API on the shared
+// parent domain. Mutating requests must echo the XSRF-TOKEN cookie back as an
+// X-XSRF-TOKEN header (Laravel's CSRF check). A legacy bearer token, if present,
+// is still sent as a fallback until the cookie cutover is verified in production.
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1') + '=([^;]*)'))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+/** API host root (strips the trailing /api) — where /sanctum/csrf-cookie lives. */
+function apiOrigin(): string {
+  return BASE_URL.replace(/\/api\/?$/, '')
+}
+
+async function ensureCsrfCookie(): Promise<void> {
+  if (typeof window === 'undefined') return
+  // The XSRF-TOKEN cookie persists once set, so its presence is the cache.
+  if (readCookie('XSRF-TOKEN')) return
+  await fetch(`${apiOrigin()}/sanctum/csrf-cookie`, { credentials: 'include' })
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export class ApiError extends Error {
@@ -36,6 +60,17 @@ async function request<T = any>(
     ...(rest.headers as Record<string, string> || {}),
   }
 
+  const method = (rest.method || 'GET').toUpperCase()
+  const isMutation = method !== 'GET' && method !== 'HEAD'
+
+  // Primary auth is the session cookie (sent via credentials: 'include'). Mutating
+  // requests must carry the CSRF token. A legacy bearer token is still attached as
+  // a fallback so any not-yet-migrated flow (e.g. OAuth) keeps working.
+  if (isMutation) {
+    await ensureCsrfCookie()
+    const xsrf = readCookie('XSRF-TOKEN')
+    if (xsrf) headers['X-XSRF-TOKEN'] = xsrf
+  }
   if (!noAuth) {
     const jwt = token || (typeof window !== 'undefined' ? localStorage.getItem('ce_token') : null)
     if (jwt) headers['Authorization'] = `Bearer ${jwt}`
@@ -44,6 +79,7 @@ async function request<T = any>(
   const res = await fetch(`${BASE_URL}${path}`, {
     ...rest,
     headers,
+    credentials: 'include',
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
 
@@ -88,6 +124,7 @@ export const authApi = {
                    api.post('/auth/register', body, { noAuth: true }),
   login:         (body: { identifier: string; password: string }) =>
                    api.post('/auth/login', body, { noAuth: true }),
+  logout:        () => api.post('/auth/logout'),
   me:            () => api.get('/auth/me'),
   verifyEmail:   (token: string) =>
                    api.get(`/auth/verify-email?token=${token}`, { noAuth: true }),
@@ -519,13 +556,19 @@ export const adminApi = {
   awardBadgeToUser:     (body: any)                     => api.post(`/admin/badges/award`, body),
   revokeBadgeFromUser:  (userId: string, badgeId: string) => api.delete(`/admin/users/${userId}/badges/${badgeId}`),
   refreshBadgeCache:    ()                              => api.post(`/admin/badges/refresh-cache`, {}),
-  uploadFile:           (file: File): Promise<{ url: string }> => {
+  uploadFile:           async (file: File): Promise<{ url: string }> => {
+    await ensureCsrfCookie()
     const jwt = typeof window !== 'undefined' ? localStorage.getItem('ce_token') : null
+    const xsrf = readCookie('XSRF-TOKEN')
+    const headers: Record<string, string> = {}
+    if (xsrf) headers['X-XSRF-TOKEN'] = xsrf
+    if (jwt) headers['Authorization'] = `Bearer ${jwt}`
     const fd = new FormData()
     fd.append('file', file)
     return fetch(`${BASE_URL}/admin/upload`, {
       method: 'POST',
-      headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
+      headers,
+      credentials: 'include',
       body: fd,
     }).then(r => r.json())
   },

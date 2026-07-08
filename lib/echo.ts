@@ -23,6 +23,13 @@ function backendOrigin(): string {
   return base.replace(/\/api\/?$/, '')
 }
 
+/** The Sanctum CSRF token from the XSRF-TOKEN cookie, echoed as X-XSRF-TOKEN. */
+function readXsrfCookie(): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 /** Lazily create (client-side only) and return the shared Echo instance. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getEcho(): any {
@@ -50,12 +57,17 @@ export function getEcho(): any {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     authorizer: (channel: any) => ({
       authorize: (socketId: string, callback: (err: unknown, data: unknown) => void) => {
+        // Primary auth is the session cookie (credentials: 'include' + CSRF). A
+        // legacy bearer token is still sent as a fallback during the migration.
         const token = typeof window !== 'undefined' ? localStorage.getItem('ce_token') : null
+        const xsrf = readXsrfCookie()
         fetch(`${origin}/broadcasting/auth`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
+            ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({ socket_id: socketId, channel_name: channel.name }),

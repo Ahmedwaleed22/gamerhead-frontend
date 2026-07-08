@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { Solar } from '@/lib/solar-duotone'
+import { safeUrl } from '@/lib/utils'
 
 // ─── RICH CONTENT RENDERER ────────────────────────────────────────────────────
 // Renders markdown-style formatted text: **bold**, *italic*, __underline__,
@@ -56,7 +57,7 @@ export function RichContent({ text, style }: { text: string; style?: React.CSSPr
         } else if (m.startsWith('[')) {
           const linkMatch = m.match(/\[([^\]]+)\]\(([^)]+)\)/)
           if (linkMatch) {
-            nodes.push(<a key={match.index} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: '#B22D2D', textDecoration: 'underline', fontWeight: 600 }}>{linkMatch[1]}</a>)
+            nodes.push(<a key={match.index} href={safeUrl(linkMatch[2])} target="_blank" rel="noopener noreferrer" style={{ color: '#B22D2D', textDecoration: 'underline', fontWeight: 600 }}>{linkMatch[1]}</a>)
           }
         } else if (m.startsWith('http')) {
           const ytMatch = m.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
