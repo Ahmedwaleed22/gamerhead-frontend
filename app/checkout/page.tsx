@@ -461,7 +461,7 @@ function CheckoutInner() {
   //  STEP 2 — PAYMENT
   // ═══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="container" style={{ padding: '40px 16px 80px', maxWidth: 1040 }}>
+    <div className="container" style={{ padding: '40px 16px 80px', maxWidth: 1350 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
         <button type="button" onClick={() => setView('cart')} aria-label="Back to cart" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, borderRadius: 9, background: 'var(--bg-3)', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'all .15s' }}
           onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)' }}
@@ -698,10 +698,10 @@ function CheckoutInner() {
             )
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-dim)', borderTop: '1px solid rgba(255,255,255,0.055)', paddingTop: 14 }}>
+          {/* <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-dim)', borderTop: '1px solid rgba(255,255,255,0.055)', paddingTop: 14 }}>
             <Icon icon="ri:lock-2-fill" width={13} height={13} />
             <span style={{ fontSize: 10.5 }}>Secure, SSL-encrypted payment</span>
-          </div>
+          </div> */}
           <p style={{ fontSize: 10, color: 'var(--text-dim)', textAlign: 'center', lineHeight: 1.6, margin: 0 }}>
             By completing your purchase you agree to our Terms of Service. All sales are final.
           </p>

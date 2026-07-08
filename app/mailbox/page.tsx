@@ -152,6 +152,17 @@ function MailboxPage() {
     }
   }
 
+  const reportMsg = async (id: string) => {
+    const reason = window.prompt('Why are you reporting this message? Staff will see the surrounding messages for context.')
+    if (!reason || !reason.trim()) return
+    try {
+      await mailboxApi.reportMessage(id, reason.trim())
+      toast('Message reported to staff', 'success')
+    } catch (e: any) {
+      toast(e.message || 'Could not report message', 'error')
+    }
+  }
+
   // Handle ?to=slug — open a draft compose view for that user
   useEffect(() => {
     const toSlug = searchParams.get('to')
@@ -439,6 +450,16 @@ function MailboxPage() {
                                   onMouseEnter={e=>(e.currentTarget.style.color='#fff')} onMouseLeave={e=>(e.currentTarget.style.color='var(--text-dim)')}
                                 >
                                   <Icon icon={Solar.pen} width={12} height={12} />
+                                </button>
+                              )}
+                              {!isMine && msg.id && (
+                                <button
+                                  onClick={() => reportMsg(msg.id!)}
+                                  style={{ background:'none', border:'none', color:'var(--text-dim)', cursor:'pointer', fontSize:11, padding:'0 2px', fontFamily:"'Roboto',sans-serif", transition: 'color 0.2s' }}
+                                  title="Report message"
+                                  onMouseEnter={e=>(e.currentTarget.style.color='#E8000D')} onMouseLeave={e=>(e.currentTarget.style.color='var(--text-dim)')}
+                                >
+                                  ⚑
                                 </button>
                               )}
                             </div>

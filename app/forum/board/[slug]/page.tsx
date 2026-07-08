@@ -602,7 +602,11 @@ export default function ForumBoardPage() {
                   className="site-input"
                   style={{ width:'100%', fontSize:14, padding:'10px 14px' }}
                 />
-                <div style={{ fontSize:10, color:'var(--text-dim)', marginTop:4, textAlign:'right' }}>{newTitle.length}/200</div>
+                <div style={{ fontSize:10, marginTop:4, textAlign:'right', color: newTitle.trim().length < 5 ? '#e8000d' : 'var(--text-dim)' }}>
+                  {newTitle.trim().length < 5
+                    ? `${5 - newTitle.trim().length} more character${5 - newTitle.trim().length === 1 ? '' : 's'} needed (min 5)`
+                    : `${newTitle.length}/200`}
+                </div>
               </div>
 
               {/* Content */}
@@ -648,7 +652,11 @@ export default function ForumBoardPage() {
                   onFocus={e => (e.target.style.borderColor='rgba(232,0,13,0.4)')}
                   onBlur={e => (e.target.style.borderColor='var(--border)')}
                 />
-                <div style={{ fontSize:10, color:'var(--text-dim)', marginTop:4, textAlign:'right' }}>{newContent.length}/10,000</div>
+                <div style={{ fontSize:10, marginTop:4, textAlign:'right', color: newContent.trim().length < 10 ? '#e8000d' : 'var(--text-dim)' }}>
+                  {newContent.trim().length < 10
+                    ? `${10 - newContent.trim().length} more character${10 - newContent.trim().length === 1 ? '' : 's'} needed (min 10)`
+                    : `${newContent.length}/10,000`}
+                </div>
               </div>
 
               {/* Tags */}

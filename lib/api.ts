@@ -330,6 +330,7 @@ export const mailboxApi = {
   reply:        (id: string, body: any)     => api.post(`/mailbox/${id}/reply`, body),
   deleteThread: (id: string)                => api.delete(`/mailbox/${id}`),
   editMessage:  (msgId: string, body: string) => api.patch(`/mailbox/messages/${msgId}`, { body }),
+  reportMessage:(msgId: string, reason: string) => api.post(`/mailbox/messages/${msgId}/report`, { reason }),
 }
 
 // NOTIFICATIONS
