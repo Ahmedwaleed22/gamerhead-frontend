@@ -53,7 +53,9 @@ async function request<T = any>(
   path:    string,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { body, token, noAuth = false, ...rest } = options
+  // `noAuth`/`token` are accepted for backwards compatibility but no longer used:
+  // auth rides the HttpOnly session cookie (sent via credentials: 'include').
+  const { body, ...rest } = options
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -63,17 +65,11 @@ async function request<T = any>(
   const method = (rest.method || 'GET').toUpperCase()
   const isMutation = method !== 'GET' && method !== 'HEAD'
 
-  // Primary auth is the session cookie (sent via credentials: 'include'). Mutating
-  // requests must carry the CSRF token. A legacy bearer token is still attached as
-  // a fallback so any not-yet-migrated flow (e.g. OAuth) keeps working.
+  // Mutating requests must echo the CSRF token (Laravel's stateful-SPA check).
   if (isMutation) {
     await ensureCsrfCookie()
     const xsrf = readCookie('XSRF-TOKEN')
     if (xsrf) headers['X-XSRF-TOKEN'] = xsrf
-  }
-  if (!noAuth) {
-    const jwt = token || (typeof window !== 'undefined' ? localStorage.getItem('ce_token') : null)
-    if (jwt) headers['Authorization'] = `Bearer ${jwt}`
   }
 
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -558,11 +554,9 @@ export const adminApi = {
   refreshBadgeCache:    ()                              => api.post(`/admin/badges/refresh-cache`, {}),
   uploadFile:           async (file: File): Promise<{ url: string }> => {
     await ensureCsrfCookie()
-    const jwt = typeof window !== 'undefined' ? localStorage.getItem('ce_token') : null
     const xsrf = readCookie('XSRF-TOKEN')
     const headers: Record<string, string> = {}
     if (xsrf) headers['X-XSRF-TOKEN'] = xsrf
-    if (jwt) headers['Authorization'] = `Bearer ${jwt}`
     const fd = new FormData()
     fd.append('file', file)
     return fetch(`${BASE_URL}/admin/upload`, {

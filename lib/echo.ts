@@ -1,8 +1,8 @@
 // Laravel Echo + Reverb (Pusher protocol) client.
 //
 // Replaces the old socket.io gateway. Private channels are authorized against
-// the Laravel backend's POST /broadcasting/auth using the Sanctum bearer token
-// in localStorage (read fresh on every authorization so it survives re-login).
+// the Laravel backend's POST /broadcasting/auth using the Sanctum SPA session
+// cookie (credentials: 'include') plus the CSRF token.
 //
 // Required env (frontend):
 //   NEXT_PUBLIC_API_URL          → Laravel API base, e.g. http://localhost:8000/api
@@ -57,9 +57,7 @@ export function getEcho(): any {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     authorizer: (channel: any) => ({
       authorize: (socketId: string, callback: (err: unknown, data: unknown) => void) => {
-        // Primary auth is the session cookie (credentials: 'include' + CSRF). A
-        // legacy bearer token is still sent as a fallback during the migration.
-        const token = typeof window !== 'undefined' ? localStorage.getItem('ce_token') : null
+        // Channel auth rides the session cookie (credentials: 'include') + CSRF.
         const xsrf = readXsrfCookie()
         fetch(`${origin}/broadcasting/auth`, {
           method: 'POST',
@@ -68,7 +66,6 @@ export function getEcho(): any {
             'Content-Type': 'application/json',
             Accept: 'application/json',
             ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({ socket_id: socketId, channel_name: channel.name }),
         })

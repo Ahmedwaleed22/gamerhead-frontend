@@ -80,7 +80,11 @@ export function subscribeCart(cb: () => void): () => void {
 }
 
 // ── Server sync ───────────────────────────────────────────────────────────────
-const isSignedIn = () => typeof window !== 'undefined' && !!localStorage.getItem('ce_token')
+// Auth is an HttpOnly cookie (unreadable by JS), so sign-in is tracked via the
+// cart lifecycle: initCartSync() flips this on when the user is known, and
+// clearLocalCart() flips it off on sign-out.
+let signedIn = false
+const isSignedIn = () => signedIn
 const toLines = (cart: StoredCartItem[]) => cart.map(i => ({ id: i.id, qty: i.qty }))
 
 let pushTimer: ReturnType<typeof setTimeout> | null = null
@@ -111,6 +115,7 @@ function schedulePush(cart: StoredCartItem[]): void {
  */
 export function initCartSync(userId: string): () => void {
   let cancelled = false
+  signedIn = true
 
   // First sync after login merges the local guest cart up; later syncs just read.
   const initial = mergedForUser === userId
@@ -136,6 +141,7 @@ export function initCartSync(userId: string): () => void {
 
 /** Called on sign-out: the cart belongs to the account, so clear this device. */
 export function clearLocalCart(): void {
+  signedIn = false
   mergedForUser = null
   writeLocal([])
 }

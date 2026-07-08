@@ -10,7 +10,6 @@ type Status = 'loading' | 'done' | 'error'
 function OAuthCompleteContent() {
   const searchParams = useSearchParams()
   const router       = useRouter()
-  const token        = searchParams.get('token')
   const error        = searchParams.get('error')
 
   const [status, setStatus] = useState<Status>('loading')
@@ -23,16 +22,9 @@ function OAuthCompleteContent() {
       return
     }
 
-    if (!token) {
-      setStatus('error')
-      setMessage('No token received. Please try signing in again.')
-      return
-    }
-
     const complete = async () => {
       try {
-        localStorage.setItem('ce_token', token)
-        // Validate token and get user data
+        // The OAuth callback already set the HttpOnly session cookie; confirm it.
         const { user } = await authApi.me()
         setStatus('done')
         // New OAuth users who haven't set a username/dob go to onboarding
@@ -42,14 +34,13 @@ function OAuthCompleteContent() {
           window.location.href = '/'
         }
       } catch {
-        localStorage.removeItem('ce_token')
         setStatus('error')
-        setMessage('Sign-in failed. The session token is invalid or expired.')
+        setMessage('Sign-in failed. Please try signing in again.')
       }
     }
 
     complete()
-  }, [token, error, router])
+  }, [error, router])
 
   return (
     <div className="gha-backdrop" style={{ animation: 'none' }}>

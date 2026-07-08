@@ -69,25 +69,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error:   null,
   })
 
-  // On mount — restore the session from the HttpOnly cookie (falling back to a
-  // legacy bearer token if one is still present). /auth/me returns 401 when there
-  // is no valid session, in which case we render as logged out.
+  // On mount — restore the session from the HttpOnly cookie. /auth/me returns 401
+  // when there is no valid session, in which case we render as logged out.
   useEffect(() => {
+    // Clean up any legacy bearer token left in localStorage by an older build.
+    localStorage.removeItem('ce_token')
     authApi.me()
-      .then(res => setState({ user: res.user, token: localStorage.getItem('ce_token'), loading: false, error: null }))
-      .catch(() => {
-        localStorage.removeItem('ce_token')
-        setState({ user: null, token: null, loading: false, error: null })
-      })
+      .then(res => setState({ user: res.user, token: null, loading: false, error: null }))
+      .catch(() => setState({ user: null, token: null, loading: false, error: null }))
   }, [])
 
   // ── Login ─────────────────────────────────────────────────────────────────
   const login = useCallback(async (identifier: string, password: string) => {
     setState(s => ({ ...s, loading: true, error: null }))
     try {
-      const { accessToken, user } = await authApi.login({ identifier, password })
-      localStorage.setItem('ce_token', accessToken)
-      setState({ user, token: accessToken, loading: false, error: null })
+      // The login response establishes the HttpOnly session cookie; no token is stored.
+      const { user } = await authApi.login({ identifier, password })
+      setState({ user, token: null, loading: false, error: null })
       trackEvent('login', { method: 'email' })
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Login failed'
@@ -113,11 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Logout ────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     try {
-      await authApi.logout() // invalidate the server session + revoke the token
+      await authApi.logout() // invalidate the server session
     } catch {
       // Even if the request fails, clear local state below.
     }
-    localStorage.removeItem('ce_token')
     setState({ user: null, token: null, loading: false, error: null })
     trackEvent('logout')
   }, [])
