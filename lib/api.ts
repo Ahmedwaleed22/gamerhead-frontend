@@ -2,7 +2,7 @@
 // Central fetch wrapper — all API calls go through here.
 // Automatically injects the JWT token and handles common errors.
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 // ─── Cookie / CSRF (Sanctum SPA auth) ──────────────────────────────────────────
 // Auth rides an HttpOnly session cookie set by the Laravel API on the shared

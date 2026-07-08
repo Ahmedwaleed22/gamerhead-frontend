@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
+import { authApi, ApiError } from '@/lib/api'
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams()
@@ -26,17 +27,11 @@ function ResetPasswordContent() {
 
     setLoading(true)
     try {
-      const res  = await fetch('http://localhost:3001/auth/reset-password', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ token, password }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Reset failed.')
+      await authApi.resetPassword({ token, password })
       setSuccess(true)
       setTimeout(() => router.push('/'), 3000)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Reset failed.')
     } finally {
       setLoading(false)
     }

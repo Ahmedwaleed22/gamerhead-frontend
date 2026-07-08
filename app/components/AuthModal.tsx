@@ -11,7 +11,7 @@ import {
 
 const emptyForgot = { email: '', loading: false, error: '', success: false }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 function maxDob(): string {
   const d = new Date()

@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
+import { authApi, ApiError } from '@/lib/api'
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams()
@@ -22,19 +23,13 @@ function VerifyEmailContent() {
 
     const verify = async () => {
       try {
-        const res  = await fetch(`http://localhost:3001/auth/verify-email?token=${token}`)
-        const data = await res.json()
-        if (res.ok) {
-          setStatus('success')
-          setMessage(data.message)
-          setTimeout(() => router.push('/'), 3000)
-        } else {
-          setStatus('error')
-          setMessage(data.message || 'Verification failed.')
-        }
-      } catch {
+        const data = await authApi.verifyEmail(token)
+        setStatus('success')
+        setMessage(data.message)
+        setTimeout(() => router.push('/'), 3000)
+      } catch (err) {
         setStatus('error')
-        setMessage('Could not connect to the server. Please try again.')
+        setMessage(err instanceof ApiError ? (err.message || 'Verification failed.') : 'Could not connect to the server. Please try again.')
       }
     }
 

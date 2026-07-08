@@ -6,7 +6,7 @@ import {
   AuthStyles, AuthBrandPanel, AuthHeading, Field, MailIcon, submitStyle, switchLinkStyle,
 } from '@/app/components/auth-ui'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 export default function ForgotPasswordPage() {
   const [email,   setEmail]   = useState('')
