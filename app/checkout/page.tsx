@@ -156,9 +156,8 @@ function CheckoutInner() {
   const total      = subtotal - discount
   const totalCents = Math.round(total * 100)
 
-  const cartItems = () => cart.map(c => ({
-    id: c.id, name: c.name, price: c.price, category: c.category, image: c.image, qty: c.qty,
-  }))
+  // Server resolves price/name/category from the catalogue; only id + qty are sent.
+  const cartItems = () => cart.map(c => ({ id: c.id, qty: c.qty }))
 
   // ── Cart mutations (each persists explicitly) ──
   const changeQty = (id: string, d: number) =>
