@@ -230,8 +230,9 @@ function MailboxPage() {
     if (!user?.id) return
     const unsub = listenPrivate(`mailbox.${user.id}`, '.mail.message', (payload: any) => {
       loadThreads()
-      if (payload?.conversationId && payload.conversationId === selected?.id) {
-        loadThreadMessages(selected.id, selected.color)
+      const current = selected
+      if (current && payload?.conversationId && payload.conversationId === current.id) {
+        loadThreadMessages(current.id, current.color)
         setTimeout(() => scrollToBottom(), 0)
       }
     })
