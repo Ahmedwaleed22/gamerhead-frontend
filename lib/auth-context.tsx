@@ -88,7 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setState({ user, token: null, loading: false, error: null })
       trackEvent('login', { method: 'email' })
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Login failed'
+      const message = err instanceof ApiError
+        ? err.message
+        : "We couldn't reach the server. Please check your connection and try again."
       setState(s => ({ ...s, loading: false, error: message }))
       throw err
     }
@@ -102,7 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setState(s => ({ ...s, loading: false }))
       trackEvent('sign_up', { method: 'email' })
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Registration failed'
+      const message = err instanceof ApiError
+        ? err.message
+        : "We couldn't reach the server. Please check your connection and try again."
       setState(s => ({ ...s, loading: false, error: message }))
       throw err
     }

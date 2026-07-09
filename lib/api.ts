@@ -47,6 +47,25 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
   noAuth?: boolean
 }
 
+// Human-readable fallback when the server sends no `message` (e.g. an HTML error
+// page, a proxy 502, or an empty body). Never surface "Request failed with status N".
+function friendlyStatusMessage(status: number): string {
+  switch (status) {
+    case 400: return 'Something was wrong with that request. Please check your details and try again.'
+    case 401: return 'Your session has expired or your credentials are incorrect. Please sign in again.'
+    case 403: return "You don't have permission to do that."
+    case 404: return "We couldn't find what you were looking for."
+    case 408: return 'The request timed out. Please try again.'
+    case 419: return 'Your session expired. Please refresh the page and try again.'
+    case 422: return 'Some of the information provided was invalid. Please review and try again.'
+    case 429: return 'Too many attempts. Please wait a moment and try again.'
+    case 503: return 'The service is temporarily unavailable. Please try again shortly.'
+    default:
+      if (status >= 500) return 'Something went wrong on our end. Please try again in a moment.'
+      return 'Something went wrong. Please try again.'
+  }
+}
+
 // ─── Core fetch wrapper ───────────────────────────────────────────────────────
 
 async function request<T = any>(
@@ -59,6 +78,10 @@ async function request<T = any>(
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    // Tell Laravel we want JSON. Without this, `abort(403, '...')` on an /api
+    // route renders an HTML error page (expectsJson() is false), the body has
+    // no `message` field, and callers fall back to "Request failed with status N".
+    'Accept': 'application/json',
     ...(rest.headers as Record<string, string> || {}),
   }
 
@@ -90,7 +113,7 @@ async function request<T = any>(
   if (!res.ok) {
     const message =
       (Array.isArray(data?.message) ? data.message.join(', ') : data?.message) ||
-      `Request failed with status ${res.status}`
+      friendlyStatusMessage(res.status)
     throw new ApiError(res.status, message, data)
   }
 
