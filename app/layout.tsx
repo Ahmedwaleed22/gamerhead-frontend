@@ -14,7 +14,7 @@ import AuthModal from './components/AuthModal'
 import CartSync from '@/components/CartSync'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { ToastProvider } from '@/components/Toast'
+import { ToastProvider, useToast } from '@/components/Toast'
 import Image from 'next/image'
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,7 @@ function timeAgo(dateStr: string) {
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth()
+  const { toast } = useToast()
   const pathname = usePathname()
   const router   = useRouter()
 
@@ -75,7 +76,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   const fetchNotifs = useCallback(() => {
     if (!user) return
     notificationsApi.getAll().then((res: any) => {
-      setNotifs(Array.isArray(res) ? res : [])
+      setNotifs((Array.isArray(res) ? res : []).map((n: any) => ({ ...n, createdAt: n.createdAt || n.created_at })))
     }).catch(() => {})
     notificationsApi.getUnreadCount().then((res: any) => {
       setUnreadCount(typeof res === 'number' ? res : res?.count || 0)
@@ -84,12 +85,26 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { fetchNotifs() }, [fetchNotifs])
 
-  // ── Notifications: the old socket.io push is gone — poll every 30s instead. ──
+  // ── Notifications: slow poll as a fallback for missed pushes. ──
   useEffect(() => {
     if (!user) return
     const iv = setInterval(() => { fetchNotifs() }, 30000)
     return () => clearInterval(iv)
   }, [user, fetchNotifs])
+
+  // ── Realtime notifications via Reverb (private `notifications.{userId}`):
+  // update the bell instantly and toast what happened (friend request, new
+  // message, ...) so the user doesn't have to open the mailbox to find out. ──
+  useEffect(() => {
+    const uid = (user as any)?.id || (user as any)?._id
+    if (!uid) return
+    const unsub = listenPrivate(`notifications.${uid}`, '.notification.created', (n: any) => {
+      setNotifs(prev => [n, ...prev])
+      setUnreadCount(prev => prev + 1)
+      toast(`${n.icon ? `${n.icon} ` : ''}${n.text}`, 'info')
+    })
+    return unsub
+  }, [user, toast])
 
   // ── Heartbeat interval + idle detection ──
   useEffect(() => {
@@ -164,9 +179,10 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   }
 
   const handleNotifClick = async (n: any) => {
-    if (!n.read) {
-      notificationsApi.markRead(n._id).catch(() => {})
-      setNotifs(prev => prev.map(x => x._id === n._id ? { ...x, read: true } : x))
+    const id = n.id ?? n._id
+    if (!n.read && id) {
+      notificationsApi.markRead(String(id)).catch(() => {})
+      setNotifs(prev => prev.map(x => (x.id ?? x._id) === id ? { ...x, read: true } : x))
       setUnreadCount(prev => Math.max(0, prev - 1))
     }
     if (n.link) router.push(n.link)

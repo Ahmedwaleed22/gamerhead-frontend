@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { authApi } from '@/lib/api'
 import { trackEvent } from '@/lib/gtag'
 import {
   AuthStyles, AuthBrandPanel, AuthHeading, Field,
@@ -99,13 +100,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
     e.preventDefault()
     setForgot(f => ({ ...f, loading: true, error: '' }))
     try {
-      const res  = await fetch(`${API_URL}/auth/forgot-password`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: forgot.email }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Something went wrong')
+      // Route through the API wrapper so the request carries the Sanctum session
+      // cookie + X-XSRF-TOKEN header; a raw fetch omits both and gets a 419.
+      await authApi.forgotPassword(forgot.email)
       setForgot(f => ({ ...f, loading: false, success: true }))
     } catch (err) {
       setForgot(f => ({ ...f, loading: false, error: err instanceof Error ? err.message : 'Something went wrong' }))

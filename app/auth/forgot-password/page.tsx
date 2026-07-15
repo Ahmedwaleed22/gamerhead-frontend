@@ -5,8 +5,7 @@ import Link from 'next/link'
 import {
   AuthStyles, AuthBrandPanel, AuthHeading, Field, MailIcon, submitStyle, switchLinkStyle,
 } from '@/app/components/auth-ui'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+import { authApi } from '@/lib/api'
 
 export default function ForgotPasswordPage() {
   const [email,   setEmail]   = useState('')
@@ -20,13 +19,9 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      const res  = await fetch(`${API_URL}/auth/forgot-password`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Something went wrong')
+      // Route through the API wrapper so the request carries the Sanctum session
+      // cookie + X-XSRF-TOKEN header; a raw fetch omits both and gets a 419.
+      await authApi.forgotPassword(email)
       setSuccess(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')

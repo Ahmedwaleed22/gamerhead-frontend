@@ -83,6 +83,7 @@ function MailboxPage() {
   const [loadingMsgs, setLoadingMsgs] = useState(false)
   const [friends,    setFriends]    = useState<Friend[]>([])
   const [friendSearch, setFriendSearch] = useState('')
+  const [threadSearch, setThreadSearch] = useState('')
   const [draft,      setDraft]      = useState<DraftCompose>(null)
   const [draftMsg,   setDraftMsg]   = useState('')
   const [sendingDraft, setSendingDraft] = useState(false)
@@ -171,6 +172,24 @@ function MailboxPage() {
     }
   }
 
+  // Deep link: /mailbox?c={conversationId} (e.g. from a bell notification) —
+  // auto-open that thread once the list has loaded.
+  const pendingOpenRef = useRef<string | null>(null)
+  useEffect(() => {
+    const c = searchParams.get('c')
+    if (c) pendingOpenRef.current = c
+  }, [searchParams])
+  useEffect(() => {
+    const c = pendingOpenRef.current
+    if (!c || threads.length === 0) return
+    const target = threads.find(t => t.id === c)
+    if (target) {
+      pendingOpenRef.current = null
+      selectThread(target)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threads])
+
   // Handle ?to=slug — open a draft compose view for that user
   useEffect(() => {
     const toSlug = searchParams.get('to')
@@ -231,32 +250,78 @@ function MailboxPage() {
     loadThreads()
   }, [loadThreads])
 
+  // Keep the current selection in a ref so the realtime/poll effects can read it
+  // without being torn down and re-created every time the open thread changes.
+  const selectedRef = useRef<Thread | null>(null)
+  useEffect(() => { selectedRef.current = selected }, [selected])
+
+  // Refresh the inbox, and the open thread's messages, from the server.
+  const refreshInbox = useCallback(() => {
+    loadThreads()
+    const current = selectedRef.current
+    if (current) loadThreadMessages(current.id, current.color)
+  }, [loadThreads, loadThreadMessages])
+
   // Real-time inbox via Reverb (private `mailbox.{userId}` channel): refresh the
   // thread list on any new message, and the open thread's messages if it matches.
+  // Subscribe once per user (reading the live selection from a ref) — re-running
+  // this on every thread switch would leave + re-auth the channel and drop any
+  // message that arrived during the rejoin gap.
   useEffect(() => {
     if (!user?.id) return
     const unsub = listenPrivate(`mailbox.${user.id}`, '.mail.message', (payload: any) => {
       loadThreads()
-      const current = selected
+      const current = selectedRef.current
       if (current && payload?.conversationId && payload.conversationId === current.id) {
         loadThreadMessages(current.id, current.color)
         setTimeout(() => scrollToBottom(), 0)
       }
     })
     return unsub
-  }, [user?.id, selected?.id, selected?.color, loadThreads, loadThreadMessages, scrollToBottom])
+  }, [user?.id, loadThreads, loadThreadMessages, scrollToBottom])
+
+  // Self-healing fallback for the realtime channel: if the socket briefly drops
+  // or a frame is missed, refetch when the tab regains focus/visibility and on a
+  // slow interval while visible — so the inbox never gets stuck until a manual
+  // page refresh. Only polls while the tab is visible to avoid idle load.
+  useEffect(() => {
+    if (!user?.id) return
+    const onFocus = () => refreshInbox()
+    const onVisible = () => { if (document.visibilityState === 'visible') refreshInbox() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisible)
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') refreshInbox()
+    }, 15000)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisible)
+      clearInterval(interval)
+    }
+  }, [user?.id, refreshInbox])
 
   const unreadCount = threads.filter(t => t.unread).length
+
+  // Thread search — filters the list by partner name, subject, and preview.
+  const q = threadSearch.trim().toLowerCase()
+  const visibleThreads = q
+    ? threads.filter(t =>
+        t.from.toLowerCase().includes(q) ||
+        t.subject.toLowerCase().includes(q) ||
+        t.preview.toLowerCase().includes(q))
+    : threads
 
   const selectThread = (thread: Thread) => {
     setDraft(null)
     setSelected(thread)
     atBottomRef.current = true
     setUnreadCountChat(0)
-    if (!messages[thread.id]) {
-      setLoadingMsgs(true)
-      loadThreadMessages(thread.id, thread.color).finally(() => setLoadingMsgs(false))
-    }
+    // Always refetch on open — the cached copy can be stale: a thread that was
+    // deleted then resurrected must drop its old history, and messages that
+    // arrived while this thread was closed (only the sidebar was refreshed) must
+    // now show. Show any cached copy immediately but only spin when there's none.
+    if (!messages[thread.id]) setLoadingMsgs(true)
+    loadThreadMessages(thread.id, thread.color).finally(() => setLoadingMsgs(false))
   }
 
   const selectedMsgs = selected ? (messages[selected.id] || []) : []
@@ -336,6 +401,13 @@ function MailboxPage() {
     e.stopPropagation()
     mailboxApi.deleteThread(id).then(() => {
       setThreads(prev => prev.filter(t => t.id !== id))
+      // Drop the cached history so a later resurrection (new message from the
+      // same person) doesn't briefly flash the messages we just cleared.
+      setMessages(prev => {
+        const next = { ...prev }
+        delete next[id]
+        return next
+      })
       if (selected?.id === id) setSelected(null)
     }).catch(() => {})
   }
@@ -369,12 +441,17 @@ function MailboxPage() {
           <div style={{ borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', overflow:'hidden', background:'rgba(0,0,0,0.2)' }}>
             {/* Search */}
             <div style={{ padding:'12px 14px', borderBottom:'1px solid var(--border)' }}>
-              <input placeholder="Search messages..." style={{ width:'100%', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, padding:'8px 12px', fontFamily:"'Roboto',sans-serif", fontSize:12, color:'#fff', outline:'none', boxSizing:'border-box', transition:'all 0.2s' }} onFocus={e => e.target.style.borderColor='rgba(232,0,13,0.4)'} onBlur={e => e.target.style.borderColor='var(--border)'} />
+              <input placeholder="Search messages..." value={threadSearch} onChange={e => setThreadSearch(e.target.value)} style={{ width:'100%', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, padding:'8px 12px', fontFamily:"'Roboto',sans-serif", fontSize:12, color:'#fff', outline:'none', boxSizing:'border-box', transition:'all 0.2s' }} onFocus={e => e.target.style.borderColor='rgba(232,0,13,0.4)'} onBlur={e => e.target.style.borderColor='var(--border)'} />
             </div>
 
             {/* Thread items */}
             <div style={{ flex:1, overflowY:'auto' }}>
-              {threads.map(t => (
+              {visibleThreads.length === 0 && (
+                <div style={{ padding:'24px 14px', textAlign:'center', color:'var(--text-muted)', fontFamily:"'Roboto',sans-serif", fontSize:12 }}>
+                  {threads.length === 0 ? 'No conversations yet' : 'No matches'}
+                </div>
+              )}
+              {visibleThreads.map(t => (
                 <div
                   key={t.id}
                   onClick={() => selectThread(t)}
@@ -410,13 +487,24 @@ function MailboxPage() {
                 {/* Message header */}
                 <div style={{ padding:'18px 28px 14px', borderBottom:'1px solid var(--border)', flexShrink:0, background:'var(--bg-2)' }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                      <Avatar src={selected.pfp} size={42} style={{ borderRadius:10 }} />
-                      <div>
-                        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:22, color:'#fff', lineHeight:1.2 }}>{selected.from}</div>
-                        <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:13, color:'var(--text-muted)', marginTop:2 }}>Conversation started {selected.date}</div>
+                    {/* Partner name + avatar link to their profile */}
+                    {selected.fromSlug ? (
+                      <Link href={`/profile/${selected.fromSlug}`} title={`View ${selected.from}'s profile`} style={{ display:'flex', alignItems:'center', gap:12, textDecoration:'none' }}>
+                        <Avatar src={selected.pfp} size={42} style={{ borderRadius:10 }} />
+                        <div>
+                          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:22, color:'#fff', lineHeight:1.2 }}>{selected.from}</div>
+                          <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:13, color:'var(--text-muted)', marginTop:2 }}>Conversation started {selected.date} · View profile</div>
+                        </div>
+                      </Link>
+                    ) : (
+                      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                        <Avatar src={selected.pfp} size={42} style={{ borderRadius:10 }} />
+                        <div>
+                          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:22, color:'#fff', lineHeight:1.2 }}>{selected.from}</div>
+                          <div style={{ fontFamily:"'Barlow',sans-serif", fontSize:13, color:'var(--text-muted)', marginTop:2 }}>Conversation started {selected.date}</div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                     <button onClick={e => { deleteThread(selected.id, e); }} style={{ background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, padding:'8px 12px', color:'var(--text-muted)', fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:6, transition:'all 0.2s' }} onMouseEnter={e=>(e.currentTarget.style.color='var(--red)', e.currentTarget.style.borderColor='rgba(232,0,13,0.4)')} onMouseLeave={e=>(e.currentTarget.style.color='var(--text-muted)', e.currentTarget.style.borderColor='var(--border)')}>
                       <Icon icon={Solar.trash} width={14} height={14} />
                       Delete

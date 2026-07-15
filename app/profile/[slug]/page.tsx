@@ -653,6 +653,14 @@ export default function ProfilePage() {
   const [error,     setError]     = useState<string|null>(null)
   const [activeTab, setActiveTab] = useState('Overview')
 
+  // Deep link: /profile/{slug}?tab=Friends (e.g. from a friend-request
+  // notification). Read via window.location to avoid the useSearchParams
+  // Suspense requirement.
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get('tab')
+    if (tab && TABS.includes(tab)) setActiveTab(tab)
+  }, [slug])
+
   // Matches filters
   const [matchGame,   setMatchGame]   = useState('All')
   const [matchResult, setMatchResult] = useState('All')

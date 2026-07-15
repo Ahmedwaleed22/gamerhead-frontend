@@ -208,7 +208,7 @@ function SettingsPage() {
     // Notifications
     const notif = user.notifications || {}
     const notifState: Record<string, { inApp: boolean; email: boolean }> = {}
-    const keys = ['matchAccepted','matchResult','disputeUpdate','tournamentUpdates','payoutReady','teamInvites','friendActivity','platformAnnouncements']
+    const keys = ['matchAccepted','matchResult','disputeUpdate','tournamentUpdates','payoutReady','teamInvites','friendActivity','newMessage','platformAnnouncements']
     keys.forEach(k => {
       notifState[k] = { inApp: (notif as any)[`${k}_inApp`] !== false, email: !!(notif as any)[`${k}_email`] }
     })
@@ -868,7 +868,8 @@ function SettingsPage() {
                   { key: 'tournamentUpdates',     label: 'Tournament Updates',     desc: 'Registration, bracket updates, and results'        },
                   { key: 'payoutReady',           label: 'Payout Ready',           desc: 'When earnings are available to withdraw'          },
                   { key: 'teamInvites',           label: 'Team Invites',           desc: 'When a team invites you to join'                  },
-                  { key: 'friendActivity',        label: 'Friend Activity',        desc: 'When friends go online or start a match'          },
+                  { key: 'friendActivity',        label: 'Friend Activity',        desc: 'Friend requests and when friends go online'       },
+                  { key: 'newMessage',            label: 'Direct Messages',        desc: 'When someone sends you a mailbox message'         },
                   { key: 'platformAnnouncements', label: 'Platform Announcements', desc: 'Major platform news and feature releases'         },
                 ].map((n, i, arr) => (
                   <div key={n.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
