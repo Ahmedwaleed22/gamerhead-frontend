@@ -115,6 +115,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
     try {
       await login(loginData.identifier, loginData.password)
       handleClose()
+      window.location.reload()
       // No reload needed — AuthContext updates user state reactively
     } catch {
       // error is already set in context
