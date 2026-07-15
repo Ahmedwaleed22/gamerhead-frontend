@@ -87,6 +87,9 @@ function MailboxPage() {
   const [draftMsg,   setDraftMsg]   = useState('')
   const [sendingDraft, setSendingDraft] = useState(false)
   const [editingMsg, setEditingMsg] = useState<{ id: string; body: string } | null>(null)
+  const [reportMsgId, setReportMsgId] = useState<string | null>(null)
+  const [reportReason, setReportReason] = useState('')
+  const [reportingMsg, setReportingMsg] = useState(false)
   const replyRef = useRef<HTMLTextAreaElement>(null)
 
   const [unreadCountChat, setUnreadCountChat] = useState(0)
@@ -153,14 +156,18 @@ function MailboxPage() {
     }
   }
 
-  const reportMsg = async (id: string) => {
-    const reason = window.prompt('Why are you reporting this message? Staff will see the surrounding messages for context.')
-    if (!reason || !reason.trim()) return
+  const submitReport = async () => {
+    if (!reportMsgId || reportReason.trim().length < 3 || reportingMsg) return
+    setReportingMsg(true)
     try {
-      await mailboxApi.reportMessage(id, reason.trim())
+      await mailboxApi.reportMessage(reportMsgId, reportReason.trim())
       toast('Message reported to staff', 'success')
+      setReportMsgId(null)
+      setReportReason('')
     } catch (e: any) {
       toast(e.message || 'Could not report message', 'error')
+    } finally {
+      setReportingMsg(false)
     }
   }
 
@@ -456,12 +463,12 @@ function MailboxPage() {
                               )}
                               {!isMine && msg.id && (
                                 <button
-                                  onClick={() => reportMsg(msg.id!)}
-                                  style={{ background:'none', border:'none', color:'var(--text-dim)', cursor:'pointer', fontSize:11, padding:'0 2px', fontFamily:"'Roboto',sans-serif", transition: 'color 0.2s' }}
+                                  onClick={() => { setReportMsgId(msg.id!); setReportReason('') }}
+                                  style={{ background:'none', border:'none', color:'var(--text-dim)', cursor:'pointer', fontSize:11, padding:'0 2px', fontFamily:"'Roboto',sans-serif", transition: 'color 0.2s', display:'flex', alignItems:'center' }}
                                   title="Report message"
                                   onMouseEnter={e=>(e.currentTarget.style.color='#E8000D')} onMouseLeave={e=>(e.currentTarget.style.color='var(--text-dim)')}
                                 >
-                                  ⚑
+                                  <Icon icon={Solar.flag} width={12} height={12} />
                                 </button>
                               )}
                             </div>
@@ -683,6 +690,45 @@ function MailboxPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Report message modal ── */}
+      {reportMsgId && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center' }} onClick={() => setReportMsgId(null)}>
+          <div style={{ background:'#18181C', border:'1px solid var(--border)', borderRadius:12, padding:'28px 32px', width:420, maxWidth:'90vw' }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:18, fontWeight:800, textTransform:'uppercase', color:'#fff', marginBottom:6 }}>Report Message</div>
+            <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:18 }}>Please describe why you are reporting this message. Staff will see the surrounding messages for context.</div>
+            <div style={{ marginBottom:8 }}>
+              <label style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:0.5, color:'var(--text-dim)', marginBottom:6, display:'block' }}>Reason</label>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:10 }}>
+                {['Spam', 'Harassment', 'Inappropriate Content', 'Scam/Phishing'].map(r => (
+                  <button key={r} onClick={() => setReportReason(r)} style={{ padding:'5px 12px', background:reportReason===r?'rgba(232,0,13,0.15)':'var(--bg-3)', border:`1px solid ${reportReason===r?'rgba(232,0,13,0.4)':'var(--border)'}`, borderRadius:6, color:reportReason===r?'var(--red)':'var(--text-muted)', fontSize:11, fontWeight:600, cursor:'pointer' }}>{r}</button>
+                ))}
+              </div>
+              <textarea
+                value={reportReason}
+                onChange={e => setReportReason(e.target.value)}
+                placeholder="Or type a custom reason..."
+                rows={3}
+                maxLength={500}
+                style={{ width:'100%', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, padding:'10px 12px', color:'#fff', fontSize:13, fontFamily:"'Barlow',sans-serif", resize:'vertical', outline:'none', boxSizing:'border-box' }}
+                onFocus={e => (e.target.style.borderColor = 'rgba(232,0,13,0.4)')}
+                onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+              />
+            </div>
+            <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:16 }}>
+              <button onClick={() => setReportMsgId(null)} style={{ padding:'8px 18px', background:'var(--bg-3)', border:'1px solid var(--border)', borderRadius:6, color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer' }}>Cancel</button>
+              <button
+                onClick={submitReport}
+                disabled={reportReason.trim().length < 3 || reportingMsg}
+                className="btn-primary"
+                style={{ fontSize:11, padding:'8px 18px', opacity:(reportReason.trim().length < 3 || reportingMsg) ? 0.5 : 1, cursor:(reportReason.trim().length < 3 || reportingMsg) ? 'not-allowed' : 'pointer' }}
+              >
+                {reportingMsg ? 'Reporting...' : 'Submit Report'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .mailbox-thread-row:hover .thread-delete-btn { opacity: 1 !important; transform: scale(1.05); }

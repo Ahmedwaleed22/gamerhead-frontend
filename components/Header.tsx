@@ -575,9 +575,9 @@ export default function Header({
                           </Link>
                         )}
                         {(user as any).role === 'admin' && (
-                          <Link href="/admin" className="nav-user-dd-item admin" onClick={() => setUserOpen(false)}>
+                          <a href={process.env.NEXT_PUBLIC_BACKEND_URL + '/admin'} className="nav-user-dd-item admin" onClick={() => setUserOpen(false)}>
                             <Icon icon="ri:shield-star-fill" className="nav-user-dd-item-icon" /> Admin Dashboard
-                          </Link>
+                          </a>
                         )}
                       </div>
 

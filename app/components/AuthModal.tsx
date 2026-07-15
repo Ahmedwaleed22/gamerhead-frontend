@@ -53,7 +53,6 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   const [registerData, setRegisterData] = useState({
     username:        '',
     email:           '',
-    emailConfirm:    '',
     password:        '',
     passwordConfirm: '',
     dob:             '',
@@ -129,8 +128,6 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
     e.preventDefault()
     setAttempted(true)
     clearError()
-    if (registerData.email !== registerData.emailConfirm)
-      return clearError() // handled below with local validation
     if (registerData.password !== registerData.passwordConfirm)
       return clearError()
     if (!registerData.dob) return
@@ -147,8 +144,6 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   // Local validation errors (before hitting API)
   const getLocalError = () => {
     if (tab === 'register') {
-      if (registerData.email && registerData.emailConfirm && registerData.email !== registerData.emailConfirm)
-        return 'Emails do not match'
       if (registerData.password && registerData.passwordConfirm && registerData.password !== registerData.passwordConfirm)
         return 'Passwords do not match'
       if (registerData.dob) {
@@ -283,9 +278,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                   <Field icon={MailIcon}>
                     <input type="email" className="gha-input" placeholder="Email address" value={registerData.email} onChange={e => setRegisterData({ ...registerData, email: e.target.value })} required />
                   </Field>
-                  <Field icon={MailIcon}>
+                  {/* <Field icon={MailIcon}>
                     <input type="email" className="gha-input" placeholder="Confirm email" value={registerData.emailConfirm} onChange={e => setRegisterData({ ...registerData, emailConfirm: e.target.value })} required />
-                  </Field>
+                  </Field> */}
                   <Field icon={LockIcon}>
                     <input type="password" className="gha-input" placeholder="Password" value={registerData.password} onChange={e => setRegisterData({ ...registerData, password: e.target.value })} required minLength={8} />
                   </Field>
@@ -300,7 +295,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                   </div>
                   <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', marginTop: 2 }}>
                     <input type="checkbox" checked={registerData.acceptTerms} onChange={e => setRegisterData({ ...registerData, acceptTerms: e.target.checked })} style={{ width: 18, height: 18, marginTop: 1, accentColor: 'var(--red)', cursor: 'pointer', flexShrink: 0 }} />
-                    <span style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>I&apos;m 18+ and agree to GamerHead&apos;s <a href="/terms" style={{ color: 'var(--red)', fontWeight: 600 }}>Terms of Service</a> and <a href="/privacy" style={{ color: 'var(--red)', fontWeight: 600 }}>Privacy Policy</a>.</span>
+                    <span style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>I agree to GamerHead&apos;s <a href="/terms" style={{ color: 'var(--red)', fontWeight: 600 }}>Terms of Service</a> and <a href="/privacy" style={{ color: 'var(--red)', fontWeight: 600 }}>Privacy Policy</a>.</span>
                   </label>
                   <button type="submit" disabled={loading} style={submitStyle(loading)}>
                     {loading ? 'Creating account…' : 'Create Account →'}

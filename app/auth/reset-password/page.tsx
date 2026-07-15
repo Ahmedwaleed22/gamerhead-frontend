@@ -3,8 +3,10 @@
 import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { SimpleTrophyIcon } from '@/components/simple-trophy-icon'
 import { authApi, ApiError } from '@/lib/api'
+import {
+  AuthStyles, AuthBrandPanel, AuthHeading, Field, LockIcon, submitStyle,
+} from '@/app/components/auth-ui'
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams()
@@ -38,93 +40,72 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-0)', padding: 24 }}>
-      <div style={{ background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 16, padding: '48px 40px', maxWidth: 440, width: '100%' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: 24 }}>
+      <AuthStyles />
 
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', color: '#f0c040', lineHeight: 0 }}>
-            <SimpleTrophyIcon size={40} />
-          </div>
-          <div style={{ fontWeight: 800, fontSize: 20, color: 'var(--text)', marginTop: 8 }}>GamerHead</div>
+      <div className="gha-card">
+
+        {/* ── LEFT BRAND PANEL ── */}
+        <AuthBrandPanel />
+
+        {/* ── RIGHT FORM PANEL ── */}
+        <div style={{ flex: 1, position: 'relative', padding: '40px 38px', overflowY: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+
+          {!token ? (
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              <div style={{ width: 64, height: 64, margin: '0 auto 18px', borderRadius: '50%', background: 'rgba(232,0,13,.12)', border: '1px solid rgba(232,0,13,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--red)' }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v5M12 16.5v.01" /></svg>
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 28, textTransform: 'uppercase', color: '#fff', lineHeight: 1 }}>Invalid Link</div>
+              <p style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 12, lineHeight: 1.6 }}>
+                This reset link is invalid or missing. Please request a new one.
+              </p>
+              <Link href="/auth/forgot-password" style={{ ...submitStyle(false), display: 'inline-flex', width: 'auto', padding: '13px 30px', marginTop: 22, textDecoration: 'none' }}>
+                Request New Link →
+              </Link>
+            </div>
+          ) : !success ? (
+            <div>
+              <AuthHeading>Reset Password</AuthHeading>
+              <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 22px', lineHeight: 1.5 }}>
+                Enter your new password below.
+              </p>
+
+              {error && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(232,0,13,.1)', border: '1px solid rgba(232,0,13,.4)', borderLeft: '3px solid var(--red)', borderRadius: 8, padding: '11px 13px', marginBottom: 16 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff5a63" strokeWidth={2.2} strokeLinecap="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.01" /></svg>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#ff7079' }}>{error}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+                <Field icon={LockIcon}>
+                  <input type="password" className="gha-input" placeholder="New password (min 8 characters)" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} />
+                </Field>
+                <Field icon={LockIcon}>
+                  <input type="password" className="gha-input" placeholder="Confirm new password" value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)} required />
+                </Field>
+                <button type="submit" disabled={loading} style={submitStyle(loading)}>
+                  {loading ? 'Resetting…' : 'Reset Password →'}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              <div style={{ width: 64, height: 64, margin: '0 auto 18px', borderRadius: '50%', background: 'rgba(232,0,13,.14)', border: '1px solid rgba(232,0,13,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--red)' }}>
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+              </div>
+              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 28, textTransform: 'uppercase', color: '#fff', lineHeight: 1 }}>Password Reset</div>
+              <p style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 12, lineHeight: 1.6 }}>
+                Your password has been updated successfully. Redirecting you to sign in…
+              </p>
+              <Link href="/" style={{ ...submitStyle(false), display: 'inline-flex', width: 'auto', padding: '13px 30px', marginTop: 22, textDecoration: 'none' }}>
+                Go to Sign In →
+              </Link>
+            </div>
+          )}
+
         </div>
-
-        {!token ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>❌</div>
-            <h2 style={{ color: 'var(--text)', marginBottom: 8 }}>Invalid Link</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
-              This reset link is invalid or missing. Please request a new one.
-            </p>
-            <Link href="/auth/forgot-password" style={{ display: 'inline-block', background: 'var(--accent)', color: 'white', padding: '12px 28px', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 14 }}>
-              Request New Link
-            </Link>
-          </div>
-        ) : !success ? (
-          <>
-            <h2 style={{ color: 'var(--text)', marginBottom: 8, textAlign: 'center' }}>Reset Password</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', marginBottom: 28 }}>
-              Enter your new password below.
-            </p>
-
-            {error && (
-              <div style={{ background: 'rgba(232,0,13,0.1)', border: '1px solid rgba(232,0,13,0.3)', borderRadius: 8, padding: '12px 16px', marginBottom: 20, color: '#e8000d', fontSize: 14 }}>
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: 16 }}>
-                <input
-                  type="password"
-                  className="modal-input"
-                  placeholder="New password (min 8 characters)"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div style={{ marginBottom: 24 }}>
-                <input
-                  type="password"
-                  className="modal-input"
-                  placeholder="Confirm new password"
-                  value={passwordConfirm}
-                  onChange={e => setPasswordConfirm(e.target.value)}
-                  required
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="modal-submit-btn"
-                disabled={loading}
-                style={{ width: '100%' }}
-              >
-                {loading ? 'Resetting...' : 'Reset Password'}
-              </button>
-            </form>
-          </>
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-            <h2 style={{ color: 'var(--text)', marginBottom: 8 }}>Password Reset!</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6, marginBottom: 8 }}>
-              Your password has been updated successfully.
-            </p>
-            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>
-              Redirecting you to sign in...
-            </p>
-            <Link href="/" style={{ display: 'inline-block', background: 'var(--accent)', color: 'white', padding: '12px 28px', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 14 }}>
-              Go to Sign In
-            </Link>
-          </div>
-        )}
-
       </div>
     </div>
   )
